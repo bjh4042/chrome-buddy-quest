@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Trophy, Star, RotateCcw, Award } from "lucide-react";
+import { Trophy, Star, RotateCcw, Award, Medal } from "lucide-react";
 
 interface CompletionScreenProps {
   score: number;
@@ -8,16 +8,44 @@ interface CompletionScreenProps {
   onRestart: () => void;
 }
 
+const MEDAL_THRESHOLD = 10; // 10 stars = 1 gold medal
+
 const CompletionScreen = ({ score, totalScore, totalStars, onRestart }: CompletionScreenProps) => {
   const percentage = Math.round((score / totalScore) * 100);
 
   const getBadge = () => {
-    if (percentage >= 90) return { label: "골드", emoji: "🥇", color: "from-yellow-400 to-yellow-600", textColor: "text-yellow-600", desc: "최고의 윈도우 탐험가!" };
-    if (percentage >= 60) return { label: "실버", emoji: "🥈", color: "from-gray-300 to-gray-500", textColor: "text-gray-500", desc: "훌륭한 윈도우 탐험가!" };
-    return { label: "브론즈", emoji: "🥉", color: "from-orange-300 to-orange-500", textColor: "text-orange-500", desc: "멋진 윈도우 초보 탐험가!" };
+    if (percentage >= 90) return {
+      label: "골드",
+      color: "from-[hsl(45,90%,50%)] to-[hsl(35,95%,40%)]",
+      textColor: "text-[hsl(45,90%,40%)]",
+      ringColor: "ring-[hsl(45,90%,50%)]",
+      desc: "최고의 윈도우 탐험가!",
+      innerColor: "hsl(45,90%,55%)",
+      ribbonColor: "hsl(35,80%,35%)",
+    };
+    if (percentage >= 60) return {
+      label: "실버",
+      color: "from-[hsl(210,15%,70%)] to-[hsl(210,10%,50%)]",
+      textColor: "text-[hsl(210,15%,45%)]",
+      ringColor: "ring-[hsl(210,15%,60%)]",
+      desc: "훌륭한 윈도우 탐험가!",
+      innerColor: "hsl(210,15%,75%)",
+      ribbonColor: "hsl(210,10%,45%)",
+    };
+    return {
+      label: "브론즈",
+      color: "from-[hsl(25,70%,55%)] to-[hsl(20,65%,40%)]",
+      textColor: "text-[hsl(25,70%,45%)]",
+      ringColor: "ring-[hsl(25,70%,55%)]",
+      desc: "멋진 윈도우 초보 탐험가!",
+      innerColor: "hsl(25,70%,60%)",
+      ribbonColor: "hsl(20,60%,35%)",
+    };
   };
 
   const badge = getBadge();
+  const goldMedals = Math.floor(totalStars / MEDAL_THRESHOLD);
+  const remainingStars = totalStars % MEDAL_THRESHOLD;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-accent/80 to-primary p-6">
@@ -34,21 +62,34 @@ const CompletionScreen = ({ score, totalScore, totalStars, onRestart }: Completi
           transition={{ delay: 0.3, duration: 0.8 }}
           className="mb-6"
         >
-          <div className={`inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br ${badge.color} shadow-lg`}>
+          <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full bg-gradient-to-br ${badge.color} shadow-xl ring-4 ${badge.ringColor} ring-offset-2`}>
             <motion.div
-              animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              animate={{ scale: [1, 1.08, 1], rotate: [0, 3, -3, 0] }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
+              className="flex flex-col items-center"
             >
-              <Award className="w-14 h-14 text-white" />
+              {/* Custom badge SVG */}
+              <svg viewBox="0 0 80 80" className="w-20 h-20">
+                {/* Medal circle */}
+                <circle cx="40" cy="32" r="22" fill="white" fillOpacity="0.3" />
+                <circle cx="40" cy="32" r="18" fill="white" fillOpacity="0.2" />
+                {/* Award icon */}
+                <circle cx="40" cy="28" r="8" fill="none" stroke="white" strokeWidth="2.5" />
+                <line x1="40" y1="36" x2="40" y2="42" stroke="white" strokeWidth="2.5" />
+                <line x1="34" y1="48" x2="40" y2="42" stroke="white" strokeWidth="2.5" />
+                <line x1="46" y1="48" x2="40" y2="42" stroke="white" strokeWidth="2.5" />
+                {/* Ribbon */}
+                <path d="M30 55 L35 65 L40 58 L45 65 L50 55" fill="white" fillOpacity="0.4" />
+              </svg>
             </motion.div>
           </div>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className={`font-display text-2xl mt-3 ${badge.textColor}`}
+            className={`font-display text-2xl mt-4 ${badge.textColor}`}
           >
-            {badge.emoji} {badge.label} 뱃지 획득!
+            🏅 {badge.label} 뱃지 획득!
           </motion.p>
         </motion.div>
 
@@ -83,26 +124,45 @@ const CompletionScreen = ({ score, totalScore, totalStars, onRestart }: Completi
           </div>
           <div className="flex items-center justify-between">
             <span className="font-body text-muted-foreground">별</span>
-            <div className="flex items-center gap-0.5">
-              {[...Array(Math.min(totalStars, 20))].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.8 + i * 0.05 }}
-                >
-                  <Star className="w-4 h-4 text-star fill-star" />
-                </motion.div>
-              ))}
-              {totalStars > 20 && (
-                <span className="text-xs text-star font-display ml-1">+{totalStars - 20}</span>
+            <div className="flex items-center gap-1 flex-wrap justify-end">
+              {/* Gold medals for every 10 stars */}
+              {goldMedals > 0 && (
+                <div className="flex items-center gap-0.5">
+                  {[...Array(goldMedals)].map((_, i) => (
+                    <motion.div
+                      key={`medal-${i}`}
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.8 + i * 0.1 }}
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[hsl(45,90%,55%)] to-[hsl(35,85%,40%)] flex items-center justify-center shadow-sm">
+                        <span className="text-[10px]">🏅</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+              {/* Remaining stars */}
+              {remainingStars > 0 && (
+                <div className="flex items-center gap-0.5">
+                  {[...Array(remainingStars)].map((_, i) => (
+                    <motion.div
+                      key={`star-${i}`}
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ delay: 0.8 + goldMedals * 0.1 + i * 0.05 }}
+                    >
+                      <Star className="w-4 h-4 text-star fill-star" />
+                    </motion.div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-body text-muted-foreground">등급</span>
             <span className={`font-display text-lg ${badge.textColor}`}>
-              {badge.emoji} {badge.label}
+              🏅 {badge.label}
             </span>
           </div>
         </div>
