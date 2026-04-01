@@ -61,6 +61,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [dropSuccess, setDropSuccess] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const dragFileRef = useRef<HTMLDivElement>(null);
 
   // Finger guide & hint
   const [showFingerGuide, setShowFingerGuide] = useState(false);
