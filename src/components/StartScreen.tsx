@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Monitor, MousePointer, Star } from "lucide-react";
+import { QUESTS } from "@/types/quest";
 
 interface StartScreenProps {
   onStart: () => void;
@@ -30,15 +31,24 @@ const StartScreen = ({ onStart }: StartScreenProps) => {
           <span className="text-primary font-bold">윈도우 사용법 모험</span>이 시작됩니다!
         </p>
 
-        <div className="flex items-center justify-center gap-6 mb-8 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center gap-6 mb-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <MousePointer className="w-4 h-4 text-primary" />
-            <span>10개 미션</span>
+            <span>{QUESTS.length}개 미션</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-star" />
             <span>별 모으기</span>
           </div>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-2 mb-6 text-xs">
+          <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">🖱️ 마우스</span>
+          <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">🪟 윈도우</span>
+          <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full">🌐 인터넷</span>
+          <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">📝 한글</span>
+          <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">📊 엑셀</span>
+          <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">📽️ PPT</span>
         </div>
 
         <motion.button
