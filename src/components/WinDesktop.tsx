@@ -367,6 +367,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             {/* Draggable file */}
             {dragFile && (
               <div
+                ref={dragFileRef}
                 className={`absolute cursor-grab active:cursor-grabbing z-30 ${
                   isDragging ? "opacity-80 scale-110" : "animate-pulse-highlight"
                 }`}
