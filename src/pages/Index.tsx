@@ -31,7 +31,6 @@ const Index = () => {
     });
     setScore(prev => prev + quests[currentQuest].points);
 
-    // Auto-advance after delay
     setTimeout(() => {
       if (currentQuest < QUESTS.length - 1) {
         setCurrentQuest(prev => prev + 1);
@@ -68,7 +67,6 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      {/* Quest panel - sidebar on desktop, top on mobile */}
       <div className="md:h-full h-auto max-h-[30vh] md:max-h-full overflow-auto">
         <QuestPanel
           quests={quests}
@@ -80,8 +78,6 @@ const Index = () => {
           showComplete={quests.every(q => q.completed)}
         />
       </div>
-
-      {/* Simulated desktop */}
       <div className="flex-1 h-full overflow-hidden">
         <WinDesktop
           key={currentQuest}
