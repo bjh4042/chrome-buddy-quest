@@ -71,13 +71,13 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const wrongClickCount = useRef(0);
 
   // Show finger guide after delay
-  useState(() => {
+  useEffect(() => {
     const fp = FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
       return () => clearTimeout(timer);
     }
-  });
+  }, [currentQuestType]);
 
   const triggerSuccess = useCallback(() => {
     setShowSuccess(true);
