@@ -17,18 +17,16 @@ const Index = () => {
   const [currentQuest, setCurrentQuest] = useState(0);
   const [score, setScore] = useState(0);
   const [showPraise, setShowPraise] = useState(false);
+  // Persistent key — don't remount WinDesktop on quest change
+  const [desktopKey] = useState(() => Math.random());
 
   const totalScore = QUESTS.reduce((sum, q) => sum + q.points, 0);
 
-  // Determine unlocked categories based on completion
   const unlockedCategories = useMemo(() => {
     const unlocked: string[] = [];
     for (const cat of QUEST_CATEGORIES) {
-      const catQuests = quests.filter(q => q.category === cat.id);
       const prevCatIndex = QUEST_CATEGORIES.findIndex(c => c.id === cat.id) - 1;
-
       if (prevCatIndex < 0) {
-        // First category always unlocked
         unlocked.push(cat.id);
       } else {
         const prevCat = QUEST_CATEGORIES[prevCatIndex];
@@ -54,8 +52,6 @@ const Index = () => {
       return updated;
     });
     setScore(prev => prev + quests[currentQuest].points);
-
-    // Show character praise
     setShowPraise(true);
 
     setTimeout(() => {
@@ -120,7 +116,7 @@ const Index = () => {
       </div>
       <div className="flex-1 h-full overflow-hidden relative">
         <WinDesktop
-          key={currentQuest}
+          key={desktopKey}
           currentQuestType={quests[currentQuest].type}
           onQuestComplete={handleQuestComplete}
           instruction={quests[currentQuest].instruction}

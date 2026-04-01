@@ -16,8 +16,13 @@ interface QuestPanelProps {
   unlockedCategories: string[];
 }
 
+const MEDAL_THRESHOLD = 10;
+
 const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, onRestart, onRetryQuest, showComplete, unlockedCategories }: QuestPanelProps) => {
   const progress = (quests.filter(q => q.completed).length / quests.length) * 100;
+  const totalStars = quests.reduce((sum, q) => sum + q.starsEarned, 0);
+  const goldMedals = Math.floor(totalStars / MEDAL_THRESHOLD);
+  const remainingStars = totalStars % MEDAL_THRESHOLD;
   const [expandedCats, setExpandedCats] = useState<string[]>(
     QUEST_CATEGORIES.map(c => c.id)
   );
@@ -35,9 +40,9 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
 
   const getBadge = () => {
     const pct = (score / totalScore) * 100;
-    if (pct >= 90) return { label: "🥇 골드", color: "text-yellow-500" };
-    if (pct >= 60) return { label: "🥈 실버", color: "text-gray-400" };
-    return { label: "🥉 브론즈", color: "text-orange-400" };
+    if (pct >= 90) return { label: "🏅 골드", color: "text-[hsl(45,90%,40%)]" };
+    if (pct >= 60) return { label: "🥈 실버", color: "text-[hsl(210,15%,45%)]" };
+    return { label: "🥉 브론즈", color: "text-[hsl(25,70%,45%)]" };
   };
 
   return (
@@ -47,8 +52,21 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-display text-base text-foreground">🗺️ 탐험 지도</h2>
           <div className="flex items-center gap-1 bg-secondary/30 px-2 py-0.5 rounded-full">
-            <Star className="w-3 h-3 text-star fill-star" />
-            <span className="font-display text-xs text-foreground">{score}</span>
+            {goldMedals > 0 && (
+              <span className="text-xs">🏅×{goldMedals}</span>
+            )}
+            {remainingStars > 0 && (
+              <>
+                <Star className="w-3 h-3 text-star fill-star" />
+                <span className="font-display text-xs text-foreground">×{remainingStars}</span>
+              </>
+            )}
+            {totalStars === 0 && (
+              <>
+                <Star className="w-3 h-3 text-star fill-star" />
+                <span className="font-display text-xs text-foreground">{score}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -60,7 +78,6 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5 }}
           />
-          {/* Character on progress */}
           <motion.div
             className="absolute top-1/2 -translate-y-1/2 text-sm"
             animate={{ left: `${Math.max(progress - 3, 0)}%` }}
@@ -81,7 +98,7 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
         </div>
       </div>
 
-      {/* World map quest list */}
+      {/* Quest list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {categories.map(cat => {
           const isCatUnlocked = unlockedCategories.includes(cat.id);
@@ -90,7 +107,6 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
 
           return (
             <div key={cat.id} className="relative">
-              {/* Category header */}
               <button
                 onClick={() => isCatUnlocked && toggleCat(cat.id)}
                 className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs font-display transition-all ${
@@ -116,7 +132,6 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
                 )}
               </button>
 
-              {/* Quest nodes (world map style) */}
               <AnimatePresence>
                 {isExpanded && isCatUnlocked && (
                   <motion.div
@@ -126,17 +141,15 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
                     className="overflow-hidden"
                   >
                     <div className="relative pl-5 py-1">
-                      {/* Connecting line */}
                       <div className="absolute left-[18px] top-0 bottom-0 w-0.5 bg-border" />
 
-                      {cat.quests.map((quest, qi) => {
+                      {cat.quests.map((quest) => {
                         const isCurrent = quest.index === currentQuest;
                         const isCompleted = quest.completed;
                         const isLocked = quest.index > currentQuest && !quest.completed;
 
                         return (
                           <div key={quest.id} className="relative flex items-center gap-2 py-1">
-                            {/* Node dot */}
                             <div className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${
                               isCompleted
                                 ? "bg-accent border-accent"
@@ -155,7 +168,6 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
                               )}
                             </div>
 
-                            {/* Quest button */}
                             <button
                               onClick={() => {
                                 if (!isLocked) onSelectQuest(quest.index);
@@ -208,7 +220,6 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
         })}
       </div>
 
-      {/* Restart button */}
       {showComplete && (
         <div className="p-3 border-t border-border">
           <motion.button

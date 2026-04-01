@@ -23,7 +23,20 @@ interface WinDesktopProps {
 
 type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
 
-// Finger guide positions by quest type
+// Which quest types require which app to be open
+const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
+  "open-hangul": null,
+  "hangul-typing": "hangul",
+  "hangul-font-size": "hangul",
+  "hangul-table": "hangul",
+  "hangul-save": "hangul",
+  "open-excel": null,
+  "excel-input": "excel",
+  "open-ppt": null,
+  "ppt-text": "ppt",
+  "type-url": "edge",
+};
+
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
   "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
   "double-click": { x: "48px", y: "80px", label: "더블클릭!", delay: 3000 },
@@ -38,7 +51,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
   const [openApp, setOpenApp] = useState<OpenApp>(
-    currentQuestType === "type-url" ? "edge" : null
+    QUEST_APP_MAP[currentQuestType] ?? null
   );
   const [clickTargets, setClickTargets] = useState([
     { id: 1, x: 35, y: 25, clicked: false },
@@ -71,6 +84,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   });
   const wrongClickCount = useRef(0);
 
+  // Auto-open app for continuation quests
+  useEffect(() => {
+    const neededApp = QUEST_APP_MAP[currentQuestType];
+    if (neededApp && openApp !== neededApp) {
+      setOpenApp(neededApp);
+    }
+  }, [currentQuestType]);
+
   // Show finger guide after delay
   useEffect(() => {
     const fp = FINGER_POSITIONS[currentQuestType];
@@ -89,7 +110,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }, 1200);
   }, [onQuestComplete]);
 
-  // Wrong click handler
   const handleWrongClick = (e: React.MouseEvent) => {
     wrongClickCount.current += 1;
     if (wrongClickCount.current >= 2) {
@@ -102,7 +122,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   };
 
-  // Click stars
   const handleStarClick = (id: number) => {
     if (currentQuestType !== "click") return;
     const updated = clickTargets.map(t => t.id === id ? { ...t, clicked: true } : t);
@@ -110,7 +129,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (updated.every(t => t.clicked)) triggerSuccess();
   };
 
-  // Double click handler
   const handleIconDoubleClick = (app: OpenApp, questTypes: QuestType[]) => {
     const now = Date.now();
     if (now - lastClickTime < 500) {
@@ -128,7 +146,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setLastClickTime(now);
   };
 
-  // Right click desktop
   const handleDesktopRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (currentQuestType === "right-click" || currentQuestType === "create-file") {
@@ -140,7 +157,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   };
 
-  // File right-click for delete
   const handleFileRightClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -184,7 +200,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "shutdown") triggerSuccess();
   };
 
-  // Drag handlers
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
     if (currentQuestType !== "drag-drop" || !dragFile) return;
     e.preventDefault();
@@ -207,8 +222,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const handleDragEnd = () => {
     if (!isDragging) return;
     setIsDragging(false);
-
-    // Check if dropped on folder using viewport coordinates
     if (dropZoneRef.current && dragFileRef.current) {
       const dropRect = dropZoneRef.current.getBoundingClientRect();
       const fileRect = dragFileRef.current.getBoundingClientRect();
@@ -261,20 +274,22 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       onTouchEnd={handleDragEnd}
     >
       {/* Windows 11 Desktop Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a5c] via-[#1e5799] to-[#2989d8]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,50%,25%)] via-[hsl(213,60%,40%)] to-[hsl(210,70%,50%)]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(125,185,232,0.3)_0%,_transparent_70%)]" />
       </div>
 
-      {/* Instruction banner */}
+      {/* Instruction banner - centered blue style */}
       <motion.div
         key={instruction}
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute top-3 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-sm border border-blue-200 rounded-xl px-5 py-2.5 shadow-lg max-w-lg"
+        className="absolute top-0 left-0 right-0 z-50 flex justify-center"
       >
-        <p className="font-display text-sm md:text-base text-gray-800 text-center">
-          💡 {instruction}
-        </p>
+        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-8 py-3 shadow-lg max-w-lg mx-auto">
+          <p className="font-display text-sm md:text-base text-white text-center">
+            💡 {instruction}
+          </p>
+        </div>
       </motion.div>
 
       {/* Desktop area */}
@@ -315,7 +330,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("ppt", ["open-ppt"]); }}
           />
 
-          {/* File to delete */}
           {currentQuestType === "delete-file" && fileToDelete && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
               <div
@@ -347,7 +361,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         {/* Drag and drop zone */}
         {currentQuestType === "drag-drop" && (
           <>
-            {/* Drop target folder */}
             <div
               ref={dropZoneRef}
               className={`absolute right-12 top-1/3 flex flex-col items-center gap-1 p-4 rounded-xl border-2 border-dashed transition-all ${
@@ -364,7 +377,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               </span>
             </div>
 
-            {/* Draggable file */}
             {dragFile && (
               <div
                 ref={dragFileRef}
