@@ -208,14 +208,16 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (!isDragging) return;
     setIsDragging(false);
 
-    // Check if dropped on folder
-    if (dropZoneRef.current) {
-      const rect = dropZoneRef.current.getBoundingClientRect();
-      const fileX = dragPos.x + 48;
-      const fileY = dragPos.y + 320;
+    // Check if dropped on folder using viewport coordinates
+    if (dropZoneRef.current && dragFileRef.current) {
+      const dropRect = dropZoneRef.current.getBoundingClientRect();
+      const fileRect = dragFileRef.current.getBoundingClientRect();
+      const fileCenterX = fileRect.left + fileRect.width / 2;
+      const fileCenterY = fileRect.top + fileRect.height / 2;
+      const tolerance = 60;
       if (
-        fileX > rect.left - 40 && fileX < rect.right + 40 &&
-        fileY > rect.top - 40 && fileY < rect.bottom + 40
+        fileCenterX > dropRect.left - tolerance && fileCenterX < dropRect.right + tolerance &&
+        fileCenterY > dropRect.top - tolerance && fileCenterY < dropRect.bottom + tolerance
       ) {
         setDropSuccess(true);
         setDragFile(false);
