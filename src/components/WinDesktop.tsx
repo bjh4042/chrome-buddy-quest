@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Monitor, FolderOpen, Trash2, Star as StarIcon,
@@ -6,11 +6,14 @@ import {
   FileText, Folder, Square, ChevronDown
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
+import { WRONG_CLICK_HINTS } from "@/types/quest";
 import MyPcWindow from "./apps/MyPcWindow";
 import EdgeWindow, { EdgeIcon } from "./apps/EdgeWindow";
 import HangulWindow, { HangulIcon } from "./apps/HangulWindow";
 import ExcelWindow, { ExcelIcon } from "./apps/ExcelWindow";
 import PowerPointWindow, { PptIcon } from "./apps/PowerPointWindow";
+import FingerGuide from "./FingerGuide";
+import WrongClickHint from "./WrongClickHint";
 
 interface WinDesktopProps {
   currentQuestType: QuestType;
@@ -19,6 +22,16 @@ interface WinDesktopProps {
 }
 
 type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
+
+// Finger guide positions by quest type
+const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
+  "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
+  "double-click": { x: "48px", y: "80px", label: "더블클릭!", delay: 3000 },
+  "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
+  "start-menu": { x: "50%", y: "calc(100% - 28px)", label: "시작 버튼!", delay: 2000 },
+  "open-browser": { x: "calc(50% + 80px)", y: "calc(100% - 28px)", label: "Edge!", delay: 2000 },
+  "drag-drop": { x: "48px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
+};
 
 const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDesktopProps) => {
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -41,13 +54,52 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [lastClickTime, setLastClickTime] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // Drag and drop
+  const [dragFile, setDragFile] = useState(true);
+  const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dropSuccess, setDropSuccess] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  // Finger guide & hint
+  const [showFingerGuide, setShowFingerGuide] = useState(false);
+  const [wrongHint, setWrongHint] = useState<{ visible: boolean; pos: { x: number; y: number } }>({
+    visible: false,
+    pos: { x: 0, y: 0 },
+  });
+  const wrongClickCount = useRef(0);
+
+  // Show finger guide after delay
+  useEffect(() => {
+    const fp = FINGER_POSITIONS[currentQuestType];
+    if (fp) {
+      const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
+      return () => clearTimeout(timer);
+    }
+  }, [currentQuestType]);
+
   const triggerSuccess = useCallback(() => {
     setShowSuccess(true);
+    setShowFingerGuide(false);
     setTimeout(() => {
       setShowSuccess(false);
       onQuestComplete();
     }, 1200);
   }, [onQuestComplete]);
+
+  // Wrong click handler
+  const handleWrongClick = (e: React.MouseEvent) => {
+    wrongClickCount.current += 1;
+    if (wrongClickCount.current >= 2) {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setWrongHint({
+        visible: true,
+        pos: { x: e.clientX - rect.left, y: e.clientY - rect.top },
+      });
+      setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3000);
+    }
+  };
 
   // Click stars
   const handleStarClick = (id: number) => {
@@ -57,7 +109,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (updated.every(t => t.clicked)) triggerSuccess();
   };
 
-  // Double click handler for desktop icons
+  // Double click handler
   const handleIconDoubleClick = (app: OpenApp, questTypes: QuestType[]) => {
     const now = Date.now();
     if (now - lastClickTime < 500) {
@@ -101,14 +153,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   };
 
-  // Delete file from context menu
   const handleDeleteFile = () => {
     setFileToDelete(false);
     setFileContextMenu(false);
     if (currentQuestType === "delete-file") triggerSuccess();
   };
 
-  // Start menu
   const handleStartClick = () => {
     setStartMenuOpen(!startMenuOpen);
     setContextMenuOpen(false);
@@ -117,7 +167,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "shutdown") setShutdownStep(1);
   };
 
-  // Create folder
   const handleCreateFolder = () => {
     setNewFolderCreated(true);
     setContextMenuOpen(false);
@@ -125,15 +174,54 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "create-file") triggerSuccess();
   };
 
-  // Open browser
   const handleBrowserClick = () => {
     setOpenApp("edge");
     if (currentQuestType === "open-browser") triggerSuccess();
   };
 
-  // Shutdown
   const handleShutdown = () => {
     if (currentQuestType === "shutdown") triggerSuccess();
+  };
+
+  // Drag handlers
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (currentQuestType !== "drag-drop" || !dragFile) return;
+    e.preventDefault();
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    dragStartPos.current = { x: clientX - dragPos.x, y: clientY - dragPos.y };
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragPos({
+      x: clientX - dragStartPos.current.x,
+      y: clientY - dragStartPos.current.y,
+    });
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    // Check if dropped on folder
+    if (dropZoneRef.current) {
+      const rect = dropZoneRef.current.getBoundingClientRect();
+      const fileX = dragPos.x + 48;
+      const fileY = dragPos.y + 320;
+      if (
+        fileX > rect.left - 40 && fileX < rect.right + 40 &&
+        fileY > rect.top - 40 && fileY < rect.bottom + 40
+      ) {
+        setDropSuccess(true);
+        setDragFile(false);
+        if (currentQuestType === "drag-drop") triggerSuccess();
+        return;
+      }
+    }
   };
 
   const closeAll = () => {
@@ -159,8 +247,16 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     return map[target]?.includes(currentQuestType) || false;
   };
 
+  const fingerPos = FINGER_POSITIONS[currentQuestType];
+
   return (
-    <div className="relative w-full h-full flex flex-col overflow-hidden select-none">
+    <div
+      className="relative w-full h-full flex flex-col overflow-hidden select-none"
+      onMouseMove={handleDragMove}
+      onMouseUp={handleDragEnd}
+      onTouchMove={handleDragMove}
+      onTouchEnd={handleDragEnd}
+    >
       {/* Windows 11 Desktop Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a5c] via-[#1e5799] to-[#2989d8]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(125,185,232,0.3)_0%,_transparent_70%)]" />
@@ -182,42 +278,33 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       <div
         className="desktop-area flex-1 relative p-3 pt-14"
         onContextMenu={handleDesktopRightClick}
-        onClick={closeAll}
+        onClick={(e) => { closeAll(); handleWrongClick(e); }}
       >
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
-          {/* My PC */}
           <DesktopIcon
             icon={<Monitor className="w-7 h-7 text-blue-400" />}
             label="내 PC"
             highlight={isHighlighted("mypc")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("mypc", ["double-click", "open-mypc"]); }}
           />
-
-          {/* Recycle Bin */}
           <DesktopIcon
             icon={<Trash2 className="w-7 h-7 text-gray-300" />}
             label="휴지통"
             onClick={(e) => e.stopPropagation()}
           />
-
-          {/* 한글 */}
           <DesktopIcon
             icon={<HangulIcon className="w-8 h-8" />}
             label="한글"
             highlight={isHighlighted("hangul")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("hangul", ["open-hangul"]); }}
           />
-
-          {/* Excel */}
           <DesktopIcon
             icon={<ExcelIcon className="w-8 h-8" />}
             label="Excel"
             highlight={isHighlighted("excel")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("excel", ["open-excel"]); }}
           />
-
-          {/* PowerPoint */}
           <DesktopIcon
             icon={<PptIcon className="w-8 h-8" />}
             label="PowerPoint"
@@ -243,7 +330,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             </motion.div>
           )}
 
-          {/* New folder */}
           {newFolderCreated && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
               <DesktopIcon
@@ -254,6 +340,49 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             </motion.div>
           )}
         </div>
+
+        {/* Drag and drop zone */}
+        {currentQuestType === "drag-drop" && (
+          <>
+            {/* Drop target folder */}
+            <div
+              ref={dropZoneRef}
+              className={`absolute right-12 top-1/3 flex flex-col items-center gap-1 p-4 rounded-xl border-2 border-dashed transition-all ${
+                dropSuccess
+                  ? "border-green-400 bg-green-500/20"
+                  : isDragging
+                  ? "border-yellow-400 bg-yellow-400/10 animate-pulse-highlight"
+                  : "border-white/40 bg-white/5"
+              }`}
+            >
+              <Folder className={`w-12 h-12 ${dropSuccess ? "text-green-400" : "text-yellow-400"}`} />
+              <span className="text-xs text-white font-display">
+                {dropSuccess ? "성공! ✨" : "여기에 넣어주세요!"}
+              </span>
+            </div>
+
+            {/* Draggable file */}
+            {dragFile && (
+              <div
+                className={`absolute cursor-grab active:cursor-grabbing z-30 ${
+                  isDragging ? "opacity-80 scale-110" : "animate-pulse-highlight"
+                }`}
+                style={{
+                  left: 48 + dragPos.x,
+                  top: 320 + dragPos.y,
+                }}
+                onMouseDown={handleDragStart}
+                onTouchStart={handleDragStart}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="flex flex-col items-center gap-0.5 p-2 rounded-md bg-blue-500/30 w-20">
+                  <FileText className="w-8 h-8 text-blue-300" />
+                  <span className="text-[10px] text-white text-center drop-shadow-sm">보고서.txt</span>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Click targets (stars) */}
         {currentQuestType === "click" && clickTargets.map(target => (
@@ -272,6 +401,23 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             </div>
           </motion.div>
         ))}
+
+        {/* Finger guide */}
+        {fingerPos && (
+          <FingerGuide
+            visible={showFingerGuide && !showSuccess}
+            x={fingerPos.x}
+            y={fingerPos.y}
+            label={fingerPos.label}
+          />
+        )}
+
+        {/* Wrong click hint */}
+        <WrongClickHint
+          visible={wrongHint.visible}
+          message={WRONG_CLICK_HINTS[currentQuestType] || ""}
+          position={wrongHint.pos}
+        />
 
         {/* Desktop context menu */}
         <AnimatePresence>
@@ -309,12 +455,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                           currentQuestType === "create-file" ? "bg-yellow-50 text-blue-600 font-bold animate-pulse-highlight" : "text-gray-700"
                         }`}
                       >📂 폴더</button>
-                      <button className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50">
-                        📄 텍스트 문서
-                      </button>
-                      <button className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50">
-                        📋 바로 가기
-                      </button>
+                      <button className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50">📄 텍스트 문서</button>
+                      <button className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50">📋 바로 가기</button>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -326,7 +468,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </AnimatePresence>
 
-        {/* File context menu (for delete) */}
+        {/* File context menu */}
         <AnimatePresence>
           {fileContextMenu && (
             <motion.div
@@ -357,37 +499,21 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         <AnimatePresence>
           {openApp === "mypc" && <MyPcWindow onClose={() => setOpenApp(null)} />}
           {openApp === "edge" && (
-            <EdgeWindow
-              onClose={() => setOpenApp(null)}
-              currentQuestType={currentQuestType}
-              onQuestComplete={triggerSuccess}
-            />
+            <EdgeWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "hangul" && (
-            <HangulWindow
-              onClose={() => setOpenApp(null)}
-              currentQuestType={currentQuestType}
-              onQuestComplete={triggerSuccess}
-            />
+            <HangulWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "excel" && (
-            <ExcelWindow
-              onClose={() => setOpenApp(null)}
-              currentQuestType={currentQuestType}
-              onQuestComplete={triggerSuccess}
-            />
+            <ExcelWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "ppt" && (
-            <PowerPointWindow
-              onClose={() => setOpenApp(null)}
-              currentQuestType={currentQuestType}
-              onQuestComplete={triggerSuccess}
-            />
+            <PowerPointWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
         </AnimatePresence>
       </div>
 
-      {/* Start Menu - Windows 11 centered style */}
+      {/* Start Menu */}
       <AnimatePresence>
         {startMenuOpen && (
           <motion.div
@@ -397,16 +523,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-80 md:w-96 p-5 z-40"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Search */}
             <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4">
               <Search className="w-4 h-4 text-gray-400" />
-              <input
-                placeholder="앱, 설정 및 문서 검색"
-                className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
-              />
+              <input placeholder="앱, 설정 및 문서 검색" className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400" />
             </div>
-
-            {/* Pinned */}
             <p className="text-xs font-medium text-gray-600 mb-2">고정됨</p>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[
@@ -425,8 +545,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 </button>
               ))}
             </div>
-
-            {/* Bottom: user + power */}
             <div className="border-t border-gray-200 pt-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center">
@@ -443,8 +561,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 <Power className="w-4 h-4 text-gray-600" />
               </button>
             </div>
-
-            {/* Shutdown submenu */}
             <AnimatePresence>
               {shutdownStep >= 2 && (
                 <motion.div
@@ -453,20 +569,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                   exit={{ opacity: 0, y: 5 }}
                   className="absolute bottom-full right-4 mb-2 bg-white rounded-lg border border-gray-200 shadow-xl py-1 min-w-[150px]"
                 >
-                  <button className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
-                    😴 절전
-                  </button>
+                  <button className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">😴 절전</button>
                   <button
                     onClick={handleShutdown}
                     className={`w-full text-left px-3 py-2 text-xs hover:bg-red-50 ${
                       currentQuestType === "shutdown" ? "bg-red-50 font-bold text-red-600 animate-pulse-highlight" : "text-gray-700"
                     }`}
-                  >
-                    🔴 시스템 종료
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">
-                    🔄 다시 시작
-                  </button>
+                  >🔴 시스템 종료</button>
+                  <button className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">🔄 다시 시작</button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -474,15 +584,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         )}
       </AnimatePresence>
 
-      {/* Taskbar - Windows 11 style (centered, translucent dark) */}
+      {/* Taskbar */}
       <div className="h-12 bg-gray-900/80 backdrop-blur-xl flex items-center justify-center px-3 z-50 border-t border-white/10">
         <div className="flex items-center gap-1">
-          {/* Start */}
           <button
             onClick={(e) => { e.stopPropagation(); handleStartClick(); }}
-            className={`p-2 rounded-md hover:bg-white/10 transition-colors ${
-              isHighlighted("start") ? "animate-pulse-highlight" : ""
-            }`}
+            className={`p-2 rounded-md hover:bg-white/10 transition-colors ${isHighlighted("start") ? "animate-pulse-highlight" : ""}`}
           >
             <svg width="20" height="20" viewBox="0 0 20 20">
               <rect x="1" y="1" width="8" height="8" rx="1.5" fill="#4FC3F7" />
@@ -491,29 +598,19 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               <rect x="11" y="11" width="8" height="8" rx="1.5" fill="#4FC3F7" opacity="0.5" />
             </svg>
           </button>
-
-          {/* Search */}
           <button className="p-2 rounded-md hover:bg-white/10 transition-colors">
             <Search className="w-5 h-5 text-white/70" />
           </button>
-
-          {/* File Explorer */}
           <button className="p-2 rounded-md hover:bg-white/10 transition-colors">
             <FolderOpen className="w-5 h-5 text-yellow-400" />
           </button>
-
-          {/* Edge */}
           <button
             onClick={(e) => { e.stopPropagation(); handleBrowserClick(); }}
-            className={`p-2 rounded-md hover:bg-white/10 transition-colors ${
-              isHighlighted("edge") ? "animate-pulse-highlight" : ""
-            }`}
+            className={`p-2 rounded-md hover:bg-white/10 transition-colors ${isHighlighted("edge") ? "animate-pulse-highlight" : ""}`}
           >
             <EdgeIcon className="w-5 h-5" />
           </button>
         </div>
-
-        {/* System tray */}
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
           <span>🔊</span>
           <span>🌐</span>
@@ -554,17 +651,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   );
 };
 
-// Desktop icon component
 const DesktopIcon = ({
-  icon,
-  label,
-  highlight,
-  onClick,
+  icon, label, highlight, onClick,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  highlight?: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  icon: React.ReactNode; label: string; highlight?: boolean; onClick: (e: React.MouseEvent) => void;
 }) => (
   <div
     className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 hover:bg-white/10 transition-colors ${
@@ -577,7 +667,6 @@ const DesktopIcon = ({
   </div>
 );
 
-// Context menu item
 const CtxItem = ({ icon, label }: { icon: string; label: string }) => (
   <button className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 text-gray-700 hover:bg-blue-50 transition-colors">
     <span>{icon}</span> {label}
