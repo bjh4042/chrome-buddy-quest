@@ -25,25 +25,39 @@ type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
 
 // Which quest types require which app to be open
 const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
-  "open-hangul": null,
+  "close-mypc": "mypc",
+  "close-edge": "edge",
   "hangul-typing": "hangul",
   "hangul-font-size": "hangul",
+  "hangul-font-family": "hangul",
+  "hangul-image": "hangul",
+  "hangul-image-resize": "hangul",
   "hangul-table": "hangul",
   "hangul-save": "hangul",
-  "open-excel": null,
+  "hangul-open-file": "hangul",
   "excel-input": "excel",
-  "open-ppt": null,
-  "ppt-text": "ppt",
   "type-url": "edge",
+  "ppt-text": "ppt",
+  "ppt-font-size": "ppt",
+  "ppt-font-family": "ppt",
+  "ppt-image": "ppt",
+  "ppt-image-resize": "ppt",
 };
 
+// Finger guide only for desktop-level quests (not app-internal ones)
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
   "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
-  "double-click": { x: "48px", y: "80px", label: "더블클릭!", delay: 3000 },
+  "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
   "start-menu": { x: "50%", y: "calc(100% - 28px)", label: "시작 버튼!", delay: 2000 },
+  "open-mypc": { x: "52px", y: "76px", label: "더블클릭!", delay: 2000 },
+  "close-mypc": { x: "calc(100% - 44px)", y: "68px", label: "X를 눌러 닫기!", delay: 2000 },
   "open-browser": { x: "calc(50% + 80px)", y: "calc(100% - 28px)", label: "Edge!", delay: 2000 },
+  "close-edge": { x: "calc(100% - 44px)", y: "68px", label: "X를 눌러 닫기!", delay: 2000 },
   "drag-drop": { x: "48px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
+  "open-hangul": { x: "52px", y: "196px", label: "더블클릭!", delay: 2000 },
+  "open-excel": { x: "52px", y: "256px", label: "더블클릭!", delay: 2000 },
+  "open-ppt": { x: "52px", y: "316px", label: "더블클릭!", delay: 2000 },
 };
 
 const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDesktopProps) => {
@@ -79,8 +93,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   // Finger guide & hint
   const [showFingerGuide, setShowFingerGuide] = useState(false);
   const [wrongHint, setWrongHint] = useState<{ visible: boolean; pos: { x: number; y: number } }>({
-    visible: false,
-    pos: { x: 0, y: 0 },
+    visible: false, pos: { x: 0, y: 0 },
   });
   const wrongClickCount = useRef(0);
 
@@ -92,8 +105,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   }, [currentQuestType]);
 
-  // Show finger guide after delay
+  // Show finger guide after delay - reset on quest change
   useEffect(() => {
+    setShowFingerGuide(false);
+    wrongClickCount.current = 0;
     const fp = FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
@@ -109,6 +124,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       onQuestComplete();
     }, 1200);
   }, [onQuestComplete]);
+
+  const handleCloseApp = useCallback((app: OpenApp) => {
+    setOpenApp(null);
+    if (app === "mypc" && currentQuestType === "close-mypc") triggerSuccess();
+    if (app === "edge" && currentQuestType === "close-edge") triggerSuccess();
+  }, [currentQuestType, triggerSuccess]);
 
   const handleWrongClick = (e: React.MouseEvent) => {
     wrongClickCount.current += 1;
@@ -278,15 +299,15 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(125,185,232,0.3)_0%,_transparent_70%)]" />
       </div>
 
-      {/* Instruction banner - centered blue style */}
+      {/* Instruction banner - centered, prevent vertical text */}
       <motion.div
         key={instruction}
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="absolute top-0 left-0 right-0 z-50 flex justify-center"
+        className="absolute top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-8 py-3 shadow-lg max-w-lg mx-auto">
-          <p className="font-display text-sm md:text-base text-white text-center">
+        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-6 py-3 shadow-lg pointer-events-auto max-w-[90%]">
+          <p className="font-display text-sm md:text-base text-white text-center whitespace-nowrap">
             💡 {instruction}
           </p>
         </div>
@@ -383,10 +404,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 className={`absolute cursor-grab active:cursor-grabbing z-30 ${
                   isDragging ? "opacity-80 scale-110" : "animate-pulse-highlight"
                 }`}
-                style={{
-                  left: 48 + dragPos.x,
-                  top: 320 + dragPos.y,
-                }}
+                style={{ left: 48 + dragPos.x, top: 320 + dragPos.y }}
                 onMouseDown={handleDragStart}
                 onTouchStart={handleDragStart}
                 onClick={e => e.stopPropagation()}
@@ -418,7 +436,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           </motion.div>
         ))}
 
-        {/* Finger guide */}
+        {/* Finger guide - only show when relevant and no app is blocking */}
         {fingerPos && (
           <FingerGuide
             visible={showFingerGuide && !showSuccess}
@@ -513,18 +531,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
         {/* App windows */}
         <AnimatePresence>
-          {openApp === "mypc" && <MyPcWindow onClose={() => setOpenApp(null)} />}
+          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} />}
           {openApp === "edge" && (
-            <EdgeWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <EdgeWindow onClose={() => handleCloseApp("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "hangul" && (
-            <HangulWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <HangulWindow onClose={() => handleCloseApp("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "excel" && (
-            <ExcelWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <ExcelWindow onClose={() => handleCloseApp("excel")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "ppt" && (
-            <PowerPointWindow onClose={() => setOpenApp(null)} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <PowerPointWindow onClose={() => handleCloseApp("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
         </AnimatePresence>
       </div>

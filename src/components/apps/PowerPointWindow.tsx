@@ -35,16 +35,16 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [selectedImage, setSelectedImage] = useState(false);
+  const [imageResized, setImageResized] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const slideRef = useRef<HTMLDivElement>(null);
 
-  const isTextQuest = currentQuestType === "ppt-text";
+  const isQuest = (t: QuestType) => currentQuestType === t;
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
-    if (isTextQuest && e.target.value.includes("나의 발표")) {
+    if (isQuest("ppt-text") && e.target.value.includes("나의 발표")) {
       onQuestComplete();
     }
   };
@@ -52,10 +52,30 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
+    if (isQuest("ppt-font-size") && size === "28") {
+      onQuestComplete();
+    }
+  };
+
+  const handleFontFamilyChange = (f: string) => {
+    setFontFamily(f);
+    setShowFontDropdown(false);
+    if (isQuest("ppt-font-family") && f === "바탕") {
+      onQuestComplete();
+    }
   };
 
   const handleImageInsert = () => {
-    fileInputRef.current?.click();
+    if (isQuest("ppt-image")) {
+      // Auto-insert sample image for quest
+      setInsertedImage("data:image/svg+xml," + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="100" viewBox="0 0 150 100"><rect fill="#fff7ed" width="150" height="100" rx="8"/><text x="75" y="45" text-anchor="middle" fill="#ea580c" font-size="14" font-family="sans-serif">🖼️ 샘플 이미지</text><text x="75" y="70" text-anchor="middle" fill="#ea580c" font-size="10" font-family="sans-serif">그림이 삽입되었어요!</text></svg>'
+      ));
+      setSelectedImage(true);
+      onQuestComplete();
+    } else {
+      fileInputRef.current?.click();
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,7 +90,6 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
     }
   };
 
-  // Image drag
   const handleImageMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedImage(true);
@@ -80,18 +99,18 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
 
   const handleImageMove = (e: React.MouseEvent) => {
     if (isDraggingImage) {
-      setImagePos({
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y,
-      });
+      setImagePos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
     }
     if (isResizing) {
       const dx = e.clientX - resizeStart.current.x;
       const dy = e.clientY - resizeStart.current.y;
-      setImageSize({
-        w: Math.max(50, resizeStart.current.w + dx),
-        h: Math.max(30, resizeStart.current.h + dy),
-      });
+      const newW = Math.max(50, resizeStart.current.w + dx);
+      const newH = Math.max(30, resizeStart.current.h + dy);
+      setImageSize({ w: newW, h: newH });
+      if (isQuest("ppt-image-resize") && !imageResized && (Math.abs(dx) > 20 || Math.abs(dy) > 20)) {
+        setImageResized(true);
+        onQuestComplete();
+      }
     }
   };
 
@@ -129,7 +148,11 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         <div className="relative">
           <button
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
-            className="flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-300 rounded text-[11px] min-w-[80px] hover:border-gray-400"
+            className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[80px] ${
+              isQuest("ppt-font-family")
+                ? "border-yellow-400 ring-2 ring-yellow-200 animate-pulse-highlight"
+                : "border-gray-300 hover:border-gray-400"
+            }`}
           >
             <span>{fontFamily}</span>
             <ChevronDown className="w-3 h-3" />
@@ -137,8 +160,10 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
           {showFontDropdown && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
               {fonts.map(f => (
-                <button key={f} onClick={() => { setFontFamily(f); setShowFontDropdown(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50">{f}</button>
+                <button key={f} onClick={() => handleFontFamilyChange(f)}
+                  className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 ${
+                    isQuest("ppt-font-family") && f === "바탕" ? "bg-yellow-50 font-bold text-orange-600" : ""
+                  }`}>{f}</button>
               ))}
             </div>
           )}
@@ -147,7 +172,11 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         <div className="relative">
           <button
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
-            className="flex items-center gap-0.5 px-2 py-0.5 bg-white border border-gray-300 rounded text-[11px] min-w-[40px] hover:border-gray-400"
+            className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[40px] ${
+              isQuest("ppt-font-size")
+                ? "border-yellow-400 ring-2 ring-yellow-200 animate-pulse-highlight"
+                : "border-gray-300 hover:border-gray-400"
+            }`}
           >
             <span>{fontSize}</span>
             <ChevronDown className="w-3 h-3" />
@@ -156,7 +185,9 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[55px]">
               {fontSizes.map(s => (
                 <button key={s} onClick={() => handleFontSizeChange(s)}
-                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50">{s}</button>
+                  className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 ${
+                    isQuest("ppt-font-size") && s === "28" ? "bg-yellow-50 font-bold text-orange-600" : ""
+                  }`}>{s}</button>
               ))}
             </div>
           )}
@@ -170,8 +201,10 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         <button className="p-1 rounded hover:bg-gray-200"><AlignCenter className="w-3.5 h-3.5 text-gray-600" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><AlignRight className="w-3.5 h-3.5 text-gray-600" /></button>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
-        {/* Image insert */}
-        <button onClick={handleImageInsert} className="p-1 rounded hover:bg-gray-200" title="그림 삽입">
+        <button onClick={handleImageInsert}
+          className={`p-1 rounded hover:bg-gray-200 transition-colors ${
+            isQuest("ppt-image") ? "bg-yellow-100 ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+          }`} title="그림 삽입">
           <ImageIcon className="w-4 h-4 text-gray-600" />
         </button>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
@@ -208,7 +241,6 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         <div className="flex-1 bg-gray-300 flex flex-col">
           <div className="flex-1 flex items-center justify-center p-4">
             <div
-              ref={slideRef}
               className="bg-white shadow-lg rounded-sm w-full max-w-xl aspect-[16/9] flex flex-col items-center justify-center relative overflow-hidden"
               onClick={() => setSelectedImage(false)}
             >
@@ -216,30 +248,29 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
               <div className="w-4/5 mb-2">
                 {isEditingTitle ? (
                   <div className={`border-2 rounded px-4 py-3 ${
-                    isTextQuest ? "border-orange-400" : "border-blue-400"
+                    isQuest("ppt-text") ? "border-orange-400" : "border-blue-400"
                   }`}>
                     <input
                       value={title}
                       onChange={handleTitleChange}
-                      placeholder={isTextQuest ? "'나의 발표'를 입력하세요!" : "제목을 추가하려면 클릭하십시오."}
+                      placeholder={isQuest("ppt-text") ? "'나의 발표'를 입력하세요!" : "제목을 추가하려면 클릭하십시오."}
                       className="w-full text-center outline-none text-gray-800 font-bold"
                       style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}
                       autoFocus
-                      onBlur={() => !isTextQuest && setIsEditingTitle(false)}
+                      onBlur={() => !isQuest("ppt-text") && setIsEditingTitle(false)}
                     />
                   </div>
                 ) : (
                   <button
                     onClick={(e) => { e.stopPropagation(); setIsEditingTitle(true); }}
                     className={`w-full border-2 border-dashed rounded px-4 py-3 transition-colors text-center ${
-                      isTextQuest
+                      isQuest("ppt-text")
                         ? "border-orange-400 bg-orange-50/50 animate-pulse-highlight hover:bg-orange-100/50"
                         : "border-gray-200 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    <span className={`font-bold ${
-                      title ? "text-gray-800" : "text-gray-400"
-                    }`} style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}>
+                    <span className={`font-bold ${title ? "text-gray-800" : "text-gray-400"}`}
+                      style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}>
                       {title || "제목을 추가하려면 클릭하십시오."}
                     </span>
                   </button>
@@ -275,24 +306,15 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
               {/* Inserted image */}
               {insertedImage && (
                 <div
-                  className={`absolute cursor-move ${selectedImage ? "ring-2 ring-blue-500" : ""}`}
-                  style={{
-                    left: imagePos.x,
-                    top: imagePos.y,
-                    width: imageSize.w,
-                    height: imageSize.h,
-                  }}
+                  className={`absolute cursor-move ${selectedImage ? "ring-2 ring-blue-500" : ""} ${
+                    isQuest("ppt-image-resize") && !imageResized ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+                  }`}
+                  style={{ left: imagePos.x, top: imagePos.y, width: imageSize.w, height: imageSize.h }}
                   onMouseDown={handleImageMouseDown}
                   onClick={(e) => { e.stopPropagation(); setSelectedImage(true); }}
                 >
-                  <img
-                    src={insertedImage}
-                    alt="삽입된 이미지"
-                    className="w-full h-full object-contain"
-                    draggable={false}
-                  />
-                  {/* Resize handles */}
-                  {selectedImage && (
+                  <img src={insertedImage} alt="삽입된 이미지" className="w-full h-full object-contain" draggable={false} />
+                  {(selectedImage || isQuest("ppt-image-resize")) && (
                     <>
                       <div className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-nw-resize" />
                       <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-ne-resize" />
