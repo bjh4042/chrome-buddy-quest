@@ -28,8 +28,6 @@ const drives = [
 ];
 
 const networkFolders = [
-  { label: "video(Watermelon)", icon: "📁" },
-  { label: "배구(Watermelon)", icon: "📁" },
   { label: "백업(Watermelon)", icon: "📁" },
 ];
 

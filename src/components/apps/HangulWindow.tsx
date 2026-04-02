@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Save, Table, Image, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough } from "lucide-react";
+import { useState, useRef } from "react";
+import { Save, Table, Image as ImageIcon, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough, FolderOpen } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
 import type { QuestType } from "@/types/quest";
@@ -29,6 +29,19 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontDropdown, setShowFontDropdown] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
+  const [fileLoaded, setFileLoaded] = useState(false);
+
+  // Image state
+  const [insertedImage, setInsertedImage] = useState<string | null>(null);
+  const [imagePos, setImagePos] = useState({ x: 60, y: 80 });
+  const [imageSize, setImageSize] = useState({ w: 160, h: 110 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(false);
+  const [imageResized, setImageResized] = useState(false);
+  const dragStart = useRef({ x: 0, y: 0 });
+  const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isQuest = (t: QuestType) => currentQuestType === t;
 
@@ -43,6 +56,14 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     setFontSize(size);
     setShowFontSizeDropdown(false);
     if (isQuest("hangul-font-size") && size === "20") {
+      onQuestComplete();
+    }
+  };
+
+  const handleFontFamilyChange = (f: string) => {
+    setFontFamily(f);
+    setShowFontDropdown(false);
+    if (isQuest("hangul-font-family") && f === "돋움") {
       onQuestComplete();
     }
   };
@@ -62,7 +83,74 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     }
   };
 
-  // Realistic Hangul toolbar matching the screenshot
+  const handleOpenFile = () => {
+    setFileLoaded(true);
+    if (isQuest("hangul-open-file")) {
+      onQuestComplete();
+    }
+  };
+
+  const handleImageInsert = () => {
+    if (isQuest("hangul-image")) {
+      // Auto-insert a sample image for the quest
+      setInsertedImage("data:image/svg+xml," + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="110" viewBox="0 0 160 110"><rect fill="#e0f2fe" width="160" height="110" rx="8"/><text x="80" y="50" text-anchor="middle" fill="#0284c7" font-size="14" font-family="sans-serif">🖼️ 샘플 이미지</text><text x="80" y="75" text-anchor="middle" fill="#0284c7" font-size="10" font-family="sans-serif">그림이 삽입되었어요!</text></svg>'
+      ));
+      setSelectedImage(true);
+      onQuestComplete();
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setInsertedImage(ev.target?.result as string);
+        setSelectedImage(true);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Image drag
+  const handleImageMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedImage(true);
+    setIsDraggingImage(true);
+    dragStart.current = { x: e.clientX - imagePos.x, y: e.clientY - imagePos.y };
+  };
+
+  const handleImageMove = (e: React.MouseEvent) => {
+    if (isDraggingImage) {
+      setImagePos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+    }
+    if (isResizing) {
+      const dx = e.clientX - resizeStart.current.x;
+      const dy = e.clientY - resizeStart.current.y;
+      const newW = Math.max(50, resizeStart.current.w + dx);
+      const newH = Math.max(30, resizeStart.current.h + dy);
+      setImageSize({ w: newW, h: newH });
+      if (isQuest("hangul-image-resize") && !imageResized && (Math.abs(dx) > 20 || Math.abs(dy) > 20)) {
+        setImageResized(true);
+        onQuestComplete();
+      }
+    }
+  };
+
+  const handleImageUp = () => {
+    setIsDraggingImage(false);
+    setIsResizing(false);
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStart.current = { x: e.clientX, y: e.clientY, w: imageSize.w, h: imageSize.h };
+  };
+
   const toolbar = (
     <div className="flex flex-col border-b border-gray-200">
       {/* Tab bar */}
@@ -76,7 +164,7 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
         <span className="px-3 py-1 text-gray-600 hover:bg-gray-200 cursor-pointer">검토</span>
         <span className="px-3 py-1 text-gray-600 hover:bg-gray-200 cursor-pointer">도구</span>
       </div>
-      {/* Icon toolbar row 1 */}
+      {/* Icon toolbar row */}
       <div className="flex items-center gap-0.5 px-1 py-1 bg-gray-50 border-b border-gray-100 flex-wrap">
         <button onClick={handleSave}
           className={`p-1 rounded hover:bg-gray-200 transition-colors ${
@@ -84,18 +172,19 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
           }`} title="저장">
           <Save className="w-4 h-4 text-gray-600" />
         </button>
+        <button onClick={handleOpenFile}
+          className={`p-1 rounded hover:bg-gray-200 transition-colors ${
+            isQuest("hangul-open-file") ? "bg-yellow-100 ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+          }`} title="불러오기">
+          <FolderOpen className="w-4 h-4 text-gray-600" />
+        </button>
         <button className="p-1 rounded hover:bg-gray-200"><Undo className="w-4 h-4 text-gray-500" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><Redo className="w-4 h-4 text-gray-500" /></button>
         <span className="w-px h-5 bg-gray-300 mx-0.5" />
-        {/* Paragraph shapes / formatting icons */}
         <button className="p-1 rounded hover:bg-gray-200 text-[10px] text-gray-600 font-bold px-1.5">가</button>
         <button className="p-1 rounded hover:bg-gray-200 text-[10px] text-gray-600 px-1.5">문단</button>
         <button className="p-1 rounded hover:bg-gray-200 text-[10px] text-gray-600 px-1.5">스타일</button>
         <span className="w-px h-5 bg-gray-300 mx-0.5" />
-        <button className="p-1 rounded hover:bg-gray-200 text-[10px] text-blue-600 bg-blue-50 px-1.5 font-bold">새로</button>
-        <button className="p-1 rounded hover:bg-gray-200 text-[10px] text-gray-600 px-1.5">가로</button>
-        <span className="w-px h-5 bg-gray-300 mx-0.5" />
-        {/* Table insert */}
         <button
           onClick={() => setShowTableDialog(true)}
           className={`p-1 rounded hover:bg-gray-200 transition-colors ${
@@ -103,9 +192,14 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
           }`} title="표 삽입">
           <Table className="w-4 h-4 text-gray-600" />
         </button>
-        <button className="p-1 rounded hover:bg-gray-200" title="그림 삽입">
-          <Image className="w-4 h-4 text-gray-600" />
+        <button
+          onClick={handleImageInsert}
+          className={`p-1 rounded hover:bg-gray-200 transition-colors ${
+            isQuest("hangul-image") ? "bg-yellow-100 ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+          }`} title="그림 삽입">
+          <ImageIcon className="w-4 h-4 text-gray-600" />
         </button>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
       </div>
       {/* Font controls row */}
       <div className="flex items-center gap-1 px-2 py-1 bg-white flex-wrap">
@@ -113,7 +207,11 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
         <div className="relative">
           <button
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
-            className="flex items-center gap-1 px-2 py-0.5 bg-white border border-gray-300 rounded text-[11px] min-w-[90px] hover:border-gray-400"
+            className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[90px] ${
+              isQuest("hangul-font-family")
+                ? "border-yellow-400 ring-2 ring-yellow-200 animate-pulse-highlight"
+                : "border-gray-300 hover:border-gray-400"
+            }`}
           >
             <span>{fontFamily}</span>
             <ChevronDown className="w-3 h-3" />
@@ -121,8 +219,10 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
           {showFontDropdown && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[130px]">
               {fonts.map(f => (
-                <button key={f} onClick={() => { setFontFamily(f); setShowFontDropdown(false); }}
-                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 transition-colors">{f}</button>
+                <button key={f} onClick={() => handleFontFamilyChange(f)}
+                  className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 transition-colors ${
+                    isQuest("hangul-font-family") && f === "돋움" ? "bg-yellow-50 font-bold text-blue-600" : ""
+                  }`}>{f}</button>
               ))}
             </div>
           )}
@@ -158,7 +258,6 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
         </div>
         <span className="text-[10px] text-gray-500">pt</span>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
-        {/* Format buttons */}
         <button className="p-1 rounded hover:bg-gray-200"><Bold className="w-3.5 h-3.5 text-gray-600" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><Italic className="w-3.5 h-3.5 text-gray-600" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><Underline className="w-3.5 h-3.5 text-gray-600" /></button>
@@ -178,7 +277,10 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
       onClose={onClose}
       toolbar={toolbar}
     >
-      <div className="flex h-full">
+      <div className="flex h-full"
+        onMouseMove={handleImageMove}
+        onMouseUp={handleImageUp}
+      >
         {/* Left page navigation panel */}
         <div className="w-6 bg-gray-100 border-r border-gray-200 flex flex-col items-center pt-2">
           {[1,2,3,4,5,6,7,8,9,10].map(n => (
@@ -187,7 +289,7 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
         </div>
         {/* Document area */}
         <div className="flex-1 bg-gray-200 p-4 md:p-6 min-h-[300px] overflow-auto"
-          onClick={() => { setShowFontDropdown(false); setShowFontSizeDropdown(false); }}>
+          onClick={() => { setShowFontDropdown(false); setShowFontSizeDropdown(false); setSelectedImage(false); }}>
           {/* Ruler */}
           <div className="bg-white border-b border-gray-300 h-5 mb-2 mx-auto max-w-2xl flex items-end px-2">
             {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
@@ -208,10 +310,35 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
               value={text}
               onChange={handleTextChange}
               placeholder={isQuest("hangul-typing") ? "'안녕하세요'를 입력해보세요!" : "여기에 글을 입력하세요..."}
-              className="w-full h-full min-h-[350px] outline-none resize-none text-gray-800"
+              className="w-full h-full min-h-[200px] outline-none resize-none text-gray-800"
               style={{ fontFamily: fontFamily, fontSize: `${parseFloat(fontSize) * 1.5}px` }}
               autoFocus={isQuest("hangul-typing")}
             />
+
+            {/* Inserted image */}
+            {insertedImage && (
+              <div
+                className={`absolute cursor-move ${selectedImage ? "ring-2 ring-blue-500" : ""} ${
+                  isQuest("hangul-image-resize") && !imageResized ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+                }`}
+                style={{ left: imagePos.x, top: imagePos.y, width: imageSize.w, height: imageSize.h }}
+                onMouseDown={handleImageMouseDown}
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(true); }}
+              >
+                <img src={insertedImage} alt="삽입된 이미지" className="w-full h-full object-contain" draggable={false} />
+                {(selectedImage || isQuest("hangul-image-resize")) && (
+                  <>
+                    <div className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-nw-resize" />
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-ne-resize" />
+                    <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-sw-resize" />
+                    <div
+                      className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-se-resize"
+                      onMouseDown={handleResizeStart}
+                    />
+                  </>
+                )}
+              </div>
+            )}
 
             {tableData && (
               <div className="mt-4 border border-gray-400">
@@ -227,6 +354,11 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
           {saved && (
             <div className="text-center mt-3 text-sm text-green-600 font-display">
               💾 파일이 저장되었습니다!
+            </div>
+          )}
+          {fileLoaded && (
+            <div className="text-center mt-3 text-sm text-blue-600 font-display">
+              📂 파일을 불러왔습니다!
             </div>
           )}
         </div>
@@ -249,7 +381,6 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
         </div>
       </div>
 
-      {/* Table creation dialog */}
       {showTableDialog && (
         <TableDialog
           onInsert={handleInsertTable}
