@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Save, Table, Image as ImageIcon, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough, FolderOpen } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
@@ -31,6 +31,10 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
 
+  // Text selection state
+  const [textSelected, setTextSelected] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
   // Image state
   const [insertedImage, setInsertedImage] = useState<string | null>(null);
   const [imagePos, setImagePos] = useState({ x: 60, y: 80 });
@@ -45,6 +49,14 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
 
   const isQuest = (t: QuestType) => currentQuestType === t;
 
+  // Check if text is selected in textarea
+  const checkTextSelection = useCallback(() => {
+    if (textAreaRef.current) {
+      const { selectionStart, selectionEnd } = textAreaRef.current;
+      setTextSelected(selectionStart !== selectionEnd);
+    }
+  }, []);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     if (isQuest("hangul-typing") && e.target.value.includes("안녕하세요")) {
@@ -56,7 +68,9 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     setFontSize(size);
     setShowFontSizeDropdown(false);
     if (isQuest("hangul-font-size") && size === "20") {
-      onQuestComplete();
+      if (textSelected || text.length === 0) {
+        onQuestComplete();
+      }
     }
   };
 
@@ -64,7 +78,9 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     setFontFamily(f);
     setShowFontDropdown(false);
     if (isQuest("hangul-font-family") && f === "돋움") {
-      onQuestComplete();
+      if (textSelected || text.length === 0) {
+        onQuestComplete();
+      }
     }
   };
 
@@ -78,21 +94,16 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
 
   const handleSave = () => {
     setSaved(true);
-    if (isQuest("hangul-save")) {
-      onQuestComplete();
-    }
+    if (isQuest("hangul-save")) onQuestComplete();
   };
 
   const handleOpenFile = () => {
     setFileLoaded(true);
-    if (isQuest("hangul-open-file")) {
-      onQuestComplete();
-    }
+    if (isQuest("hangul-open-file")) onQuestComplete();
   };
 
   const handleImageInsert = () => {
     if (isQuest("hangul-image")) {
-      // Auto-insert a sample image for the quest
       setInsertedImage("data:image/svg+xml," + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="110" viewBox="0 0 160 110"><rect fill="#e0f2fe" width="160" height="110" rx="8"/><text x="80" y="50" text-anchor="middle" fill="#0284c7" font-size="14" font-family="sans-serif">🖼️ 샘플 이미지</text><text x="80" y="75" text-anchor="middle" fill="#0284c7" font-size="10" font-family="sans-serif">그림이 삽입되었어요!</text></svg>'
       ));
@@ -115,21 +126,32 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     }
   };
 
-  // Image drag
-  const handleImageMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedImage(true);
-    setIsDraggingImage(true);
-    dragStart.current = { x: e.clientX - imagePos.x, y: e.clientY - imagePos.y };
+  // Unified pointer handler for both mouse and touch
+  const getPointerPos = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      const t = e.touches[0] || (e as React.TouchEvent).changedTouches[0];
+      return { x: t.clientX, y: t.clientY };
+    }
+    return { x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY };
   };
 
-  const handleImageMove = (e: React.MouseEvent) => {
+  const handleImagePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if ('preventDefault' in e && 'touches' in e) e.preventDefault();
+    setSelectedImage(true);
+    setIsDraggingImage(true);
+    const pos = getPointerPos(e);
+    dragStart.current = { x: pos.x - imagePos.x, y: pos.y - imagePos.y };
+  };
+
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const pos = getPointerPos(e);
     if (isDraggingImage) {
-      setImagePos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+      setImagePos({ x: pos.x - dragStart.current.x, y: pos.y - dragStart.current.y });
     }
     if (isResizing) {
-      const dx = e.clientX - resizeStart.current.x;
-      const dy = e.clientY - resizeStart.current.y;
+      const dx = pos.x - resizeStart.current.x;
+      const dy = pos.y - resizeStart.current.y;
       const newW = Math.max(50, resizeStart.current.w + dx);
       const newH = Math.max(30, resizeStart.current.h + dy);
       setImageSize({ w: newW, h: newH });
@@ -140,16 +162,22 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
     }
   };
 
-  const handleImageUp = () => {
+  const handlePointerUp = () => {
     setIsDraggingImage(false);
     setIsResizing(false);
   };
 
-  const handleResizeStart = (e: React.MouseEvent) => {
+  const handleResizePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    if ('preventDefault' in e && 'touches' in e) e.preventDefault();
     setIsResizing(true);
-    resizeStart.current = { x: e.clientX, y: e.clientY, w: imageSize.w, h: imageSize.h };
+    const pos = getPointerPos(e);
+    resizeStart.current = { x: pos.x, y: pos.y, w: imageSize.w, h: imageSize.h };
   };
+
+  // Determine if font controls should require selection
+  const needsSelection = (isQuest("hangul-font-size") || isQuest("hangul-font-family")) && text.length > 0;
+  const selectionHint = needsSelection && !textSelected;
 
   const toolbar = (
     <div className="flex flex-col border-b border-gray-200">
@@ -203,6 +231,12 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
       </div>
       {/* Font controls row */}
       <div className="flex items-center gap-1 px-2 py-1 bg-white flex-wrap">
+        {/* Selection hint */}
+        {selectionHint && (
+          <div className="w-full text-[10px] text-orange-500 font-bold mb-1 animate-pulse">
+            ⚠️ 먼저 글자를 드래그해서 블록 지정하세요!
+          </div>
+        )}
         {/* Font family dropdown */}
         <div className="relative">
           <button
@@ -278,8 +312,10 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
       toolbar={toolbar}
     >
       <div className="flex h-full"
-        onMouseMove={handleImageMove}
-        onMouseUp={handleImageUp}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
       >
         {/* Left page navigation panel */}
         <div className="w-6 bg-gray-100 border-r border-gray-200 flex flex-col items-center pt-2">
@@ -307,8 +343,12 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
             <div className="absolute bottom-4 right-4 w-3 h-3 border-b border-r border-gray-300" />
 
             <textarea
+              ref={textAreaRef}
               value={text}
               onChange={handleTextChange}
+              onSelect={checkTextSelection}
+              onMouseUp={checkTextSelection}
+              onTouchEnd={checkTextSelection}
               placeholder={isQuest("hangul-typing") ? "'안녕하세요'를 입력해보세요!" : "여기에 글을 입력하세요..."}
               className="w-full h-full min-h-[200px] outline-none resize-none text-gray-800"
               style={{ fontFamily: fontFamily, fontSize: `${parseFloat(fontSize) * 1.5}px` }}
@@ -322,7 +362,8 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
                   isQuest("hangul-image-resize") && !imageResized ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
                 }`}
                 style={{ left: imagePos.x, top: imagePos.y, width: imageSize.w, height: imageSize.h }}
-                onMouseDown={handleImageMouseDown}
+                onMouseDown={handleImagePointerDown}
+                onTouchStart={handleImagePointerDown}
                 onClick={(e) => { e.stopPropagation(); setSelectedImage(true); }}
               >
                 <img src={insertedImage} alt="삽입된 이미지" className="w-full h-full object-contain" draggable={false} />
@@ -332,8 +373,9 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
                     <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-ne-resize" />
                     <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-sw-resize" />
                     <div
-                      className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-se-resize"
-                      onMouseDown={handleResizeStart}
+                      className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 cursor-se-resize"
+                      onMouseDown={handleResizePointerDown}
+                      onTouchStart={handleResizePointerDown}
                     />
                   </>
                 )}
@@ -370,14 +412,14 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
           <span>1/1쪽</span>
           <span>1단</span>
           <span>1줄</span>
-          <span>0글자</span>
+          <span>{text.length}글자</span>
           <span>문자 입력</span>
           <span>1/1 구역</span>
           <span>삽입</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-blue-500">변경 내용 [기록 중지]</span>
-          <span>타수 : 0타</span>
+          <span>타수 : {text.length}타</span>
         </div>
       </div>
 
