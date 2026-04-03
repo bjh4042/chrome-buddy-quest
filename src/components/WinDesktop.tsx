@@ -23,7 +23,6 @@ interface WinDesktopProps {
 
 type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
 
-// Which quest types require which app to be open
 const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "close-mypc": "mypc",
   "close-edge": "edge",
@@ -44,7 +43,15 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "ppt-image-resize": "ppt",
 };
 
-// Finger guide only for desktop-level quests (not app-internal ones)
+// App-internal quests where finger guide should NOT show
+const APP_INTERNAL_QUESTS: QuestType[] = [
+  "hangul-typing", "hangul-font-size", "hangul-font-family", "hangul-image", "hangul-image-resize",
+  "hangul-table", "hangul-save", "hangul-open-file",
+  "excel-input",
+  "ppt-text", "ppt-font-size", "ppt-font-family", "ppt-image", "ppt-image-resize",
+  "type-url",
+];
+
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
   "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
   "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
@@ -59,6 +66,33 @@ const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label:
   "open-excel": { x: "52px", y: "256px", label: "더블클릭!", delay: 2000 },
   "open-ppt": { x: "52px", y: "316px", label: "더블클릭!", delay: 2000 },
 };
+
+// Real-time Korean clock
+function useKoreanClock() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const kr = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(now);
+      const date = new Intl.DateTimeFormat("ko-KR", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(now);
+      setTime(`${kr}\n${date}`);
+    };
+    update();
+    const id = setInterval(update, 10000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
 
 const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDesktopProps) => {
   const [startMenuOpen, setStartMenuOpen] = useState(false);
@@ -97,6 +131,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   });
   const wrongClickCount = useRef(0);
 
+  // Long-press for mobile right-click
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressPos = useRef({ x: 0, y: 0 });
+
+  const koreanTime = useKoreanClock();
+
   // Auto-open app for continuation quests
   useEffect(() => {
     const neededApp = QUEST_APP_MAP[currentQuestType];
@@ -105,10 +145,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   }, [currentQuestType]);
 
-  // Show finger guide after delay - reset on quest change
+  // Show finger guide after delay
   useEffect(() => {
     setShowFingerGuide(false);
     wrongClickCount.current = 0;
+    // Don't show finger guide for app-internal quests
+    if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
     const fp = FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
@@ -152,7 +194,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
   const handleIconDoubleClick = (app: OpenApp, questTypes: QuestType[]) => {
     const now = Date.now();
-    if (now - lastClickTime < 500) {
+    if (now - lastClickTime < 600) {
       if (questTypes.includes(currentQuestType)) {
         if (currentQuestType === "double-click") {
           triggerSuccess();
@@ -167,14 +209,46 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setLastClickTime(now);
   };
 
-  const handleDesktopRightClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (currentQuestType === "right-click" || currentQuestType === "create-file") {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setContextMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  const openContextMenu = (x: number, y: number, fromDesktop: boolean) => {
+    if (fromDesktop && (currentQuestType === "right-click" || currentQuestType === "create-file")) {
+      setContextMenuPos({ x, y });
       setContextMenuOpen(true);
       setFileContextMenu(false);
       if (currentQuestType === "right-click") triggerSuccess();
+    }
+  };
+
+  const handleDesktopRightClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    openContextMenu(e.clientX - rect.left, e.clientY - rect.top, true);
+  };
+
+  // Long-press touch handlers for mobile right-click
+  const handleDesktopTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    longPressPos.current = { x: touch.clientX, y: touch.clientY };
+    longPressTimer.current = setTimeout(() => {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      openContextMenu(
+        touch.clientX - rect.left,
+        touch.clientY - rect.top,
+        true
+      );
+    }, 600);
+  };
+
+  const handleDesktopTouchMove = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleDesktopTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
     }
   };
 
@@ -188,6 +262,30 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       }
       setFileContextMenu(true);
       setContextMenuOpen(false);
+    }
+  };
+
+  // Long-press on file for mobile
+  const fileLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleFileTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    setSelectedFile(true);
+    const touch = e.touches[0];
+    fileLongPressTimer.current = setTimeout(() => {
+      if (currentQuestType === "delete-file" && selectedFile) {
+        const rect = (e.currentTarget.closest('.desktop-area') as HTMLElement)?.getBoundingClientRect();
+        if (rect) {
+          setContextMenuPos({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
+        }
+        setFileContextMenu(true);
+        setContextMenuOpen(false);
+      }
+    }, 600);
+  };
+  const handleFileTouchEnd = () => {
+    if (fileLongPressTimer.current) {
+      clearTimeout(fileLongPressTimer.current);
+      fileLongPressTimer.current = null;
     }
   };
 
@@ -269,6 +367,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setSelectedFile(false);
   };
 
+  const handleDesktopClick = (e: React.MouseEvent) => {
+    closeAll();
+    handleWrongClick(e);
+  };
+
   const isHighlighted = (target: string) => {
     const map: Record<string, QuestType[]> = {
       star: ["click"],
@@ -285,6 +388,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   };
 
   const fingerPos = FINGER_POSITIONS[currentQuestType];
+  const showFinger = showFingerGuide && !showSuccess && !APP_INTERNAL_QUESTS.includes(currentQuestType);
 
   return (
     <div
@@ -299,7 +403,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(125,185,232,0.3)_0%,_transparent_70%)]" />
       </div>
 
-      {/* Instruction banner - centered, prevent vertical text */}
+      {/* Instruction banner */}
       <motion.div
         key={instruction}
         initial={{ y: -60, opacity: 0 }}
@@ -317,7 +421,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       <div
         className="desktop-area flex-1 relative p-3 pt-14"
         onContextMenu={handleDesktopRightClick}
-        onClick={(e) => { closeAll(); handleWrongClick(e); }}
+        onTouchStart={handleDesktopTouchStart}
+        onTouchMove={handleDesktopTouchMove}
+        onTouchEnd={handleDesktopTouchEnd}
+        onClick={handleDesktopClick}
       >
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
@@ -359,6 +466,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 } ${isHighlighted("file") ? "animate-pulse-highlight" : ""}`}
                 onClick={(e) => { e.stopPropagation(); setSelectedFile(true); }}
                 onContextMenu={handleFileRightClick}
+                onTouchStart={handleFileTouchStart}
+                onTouchEnd={handleFileTouchEnd}
               >
                 <div className="w-10 h-10 flex items-center justify-center">
                   <FileText className="w-8 h-8 text-blue-300" />
@@ -436,17 +545,16 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           </motion.div>
         ))}
 
-        {/* Finger guide - only show when relevant and no app is blocking */}
+        {/* Finger guide */}
         {fingerPos && (
           <FingerGuide
-            visible={showFingerGuide && !showSuccess}
+            visible={showFinger}
             x={fingerPos.x}
             y={fingerPos.y}
             label={fingerPos.label}
           />
         )}
 
-        {/* Wrong click hint */}
         <WrongClickHint
           visible={wrongHint.visible}
           message={WRONG_CLICK_HINTS[currentQuestType] || ""}
@@ -468,7 +576,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               <CtxItem icon="↕️" label="정렬 기준" />
               <CtxItem icon="🔄" label="새로 고침" />
               <div className="border-t border-gray-100 my-0.5" />
-              <div className="relative" onMouseEnter={() => setSubMenuOpen(true)} onMouseLeave={() => setSubMenuOpen(false)}>
+              <div className="relative" onMouseEnter={() => setSubMenuOpen(true)} onMouseLeave={() => setSubMenuOpen(false)}
+                onClick={() => setSubMenuOpen(true)}>
                 <button className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-blue-50 ${
                   currentQuestType === "create-file" ? "bg-blue-50 text-blue-600 font-bold" : "text-gray-700"
                 }`}>
@@ -649,7 +758,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           <span>🔊</span>
           <span>🌐</span>
           <span>🔋</span>
-          <span className="ml-1 text-[10px]">오후 2:30</span>
+          <div className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight">
+            {koreanTime}
+          </div>
         </div>
       </div>
 

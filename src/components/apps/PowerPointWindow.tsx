@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { ChevronDown, Bold, Italic, Underline, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Undo, Redo } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import type { QuestType } from "@/types/quest";
@@ -28,6 +28,11 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
   const [fontFamily, setFontFamily] = useState("맑은 고딕");
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontDropdown, setShowFontDropdown] = useState(false);
+
+  // Text selection for title
+  const [titleSelected, setTitleSelected] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
   // Image state
   const [insertedImage, setInsertedImage] = useState<string | null>(null);
   const [imagePos, setImagePos] = useState({ x: 50, y: 60 });
@@ -42,6 +47,13 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
 
   const isQuest = (t: QuestType) => currentQuestType === t;
 
+  const checkTitleSelection = useCallback(() => {
+    if (titleInputRef.current) {
+      const { selectionStart, selectionEnd } = titleInputRef.current;
+      setTitleSelected((selectionStart ?? 0) !== (selectionEnd ?? 0));
+    }
+  }, []);
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
     if (isQuest("ppt-text") && e.target.value.includes("나의 발표")) {
@@ -53,7 +65,9 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
     setFontSize(size);
     setShowFontSizeDropdown(false);
     if (isQuest("ppt-font-size") && size === "28") {
-      onQuestComplete();
+      if (titleSelected || title.length === 0) {
+        onQuestComplete();
+      }
     }
   };
 
@@ -61,13 +75,14 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
     setFontFamily(f);
     setShowFontDropdown(false);
     if (isQuest("ppt-font-family") && f === "바탕") {
-      onQuestComplete();
+      if (titleSelected || title.length === 0) {
+        onQuestComplete();
+      }
     }
   };
 
   const handleImageInsert = () => {
     if (isQuest("ppt-image")) {
-      // Auto-insert sample image for quest
       setInsertedImage("data:image/svg+xml," + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="100" viewBox="0 0 150 100"><rect fill="#fff7ed" width="150" height="100" rx="8"/><text x="75" y="45" text-anchor="middle" fill="#ea580c" font-size="14" font-family="sans-serif">🖼️ 샘플 이미지</text><text x="75" y="70" text-anchor="middle" fill="#ea580c" font-size="10" font-family="sans-serif">그림이 삽입되었어요!</text></svg>'
       ));
@@ -90,20 +105,32 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
     }
   };
 
-  const handleImageMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedImage(true);
-    setIsDraggingImage(true);
-    dragStart.current = { x: e.clientX - imagePos.x, y: e.clientY - imagePos.y };
+  // Unified pointer handlers for mouse + touch
+  const getPointerPos = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      const t = e.touches[0] || (e as React.TouchEvent).changedTouches[0];
+      return { x: t.clientX, y: t.clientY };
+    }
+    return { x: (e as React.MouseEvent).clientX, y: (e as React.MouseEvent).clientY };
   };
 
-  const handleImageMove = (e: React.MouseEvent) => {
+  const handleImagePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    if ('touches' in e) e.preventDefault();
+    setSelectedImage(true);
+    setIsDraggingImage(true);
+    const pos = getPointerPos(e);
+    dragStart.current = { x: pos.x - imagePos.x, y: pos.y - imagePos.y };
+  };
+
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const pos = getPointerPos(e);
     if (isDraggingImage) {
-      setImagePos({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
+      setImagePos({ x: pos.x - dragStart.current.x, y: pos.y - dragStart.current.y });
     }
     if (isResizing) {
-      const dx = e.clientX - resizeStart.current.x;
-      const dy = e.clientY - resizeStart.current.y;
+      const dx = pos.x - resizeStart.current.x;
+      const dy = pos.y - resizeStart.current.y;
       const newW = Math.max(50, resizeStart.current.w + dx);
       const newH = Math.max(30, resizeStart.current.h + dy);
       setImageSize({ w: newW, h: newH });
@@ -114,16 +141,21 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
     }
   };
 
-  const handleImageUp = () => {
+  const handlePointerUp = () => {
     setIsDraggingImage(false);
     setIsResizing(false);
   };
 
-  const handleResizeStart = (e: React.MouseEvent) => {
+  const handleResizePointerDown = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    if ('touches' in e) e.preventDefault();
     setIsResizing(true);
-    resizeStart.current = { x: e.clientX, y: e.clientY, w: imageSize.w, h: imageSize.h };
+    const pos = getPointerPos(e);
+    resizeStart.current = { x: pos.x, y: pos.y, w: imageSize.w, h: imageSize.h };
   };
+
+  const needsSelection = (isQuest("ppt-font-size") || isQuest("ppt-font-family")) && title.length > 0;
+  const selectionHint = needsSelection && !titleSelected;
 
   const toolbar = (
     <div className="flex flex-col">
@@ -141,6 +173,11 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
       </div>
       {/* Ribbon */}
       <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 flex-wrap">
+        {selectionHint && (
+          <div className="w-full text-[10px] text-orange-500 font-bold mb-1 animate-pulse">
+            ⚠️ 먼저 제목 글자를 드래그해서 블록 지정하세요!
+          </div>
+        )}
         <button className="p-1 rounded hover:bg-gray-200"><Undo className="w-3.5 h-3.5 text-gray-500" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><Redo className="w-3.5 h-3.5 text-gray-500" /></button>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
@@ -220,8 +257,10 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
       toolbar={toolbar}
     >
       <div className="flex h-full min-h-[400px]"
-        onMouseMove={handleImageMove}
-        onMouseUp={handleImageUp}
+        onMouseMove={handlePointerMove}
+        onMouseUp={handlePointerUp}
+        onTouchMove={handlePointerMove}
+        onTouchEnd={handlePointerUp}
         onClick={() => { setShowFontDropdown(false); setShowFontSizeDropdown(false); }}
       >
         {/* Slide panel */}
@@ -251,8 +290,12 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
                     isQuest("ppt-text") ? "border-orange-400" : "border-blue-400"
                   }`}>
                     <input
+                      ref={titleInputRef}
                       value={title}
                       onChange={handleTitleChange}
+                      onSelect={checkTitleSelection}
+                      onMouseUp={checkTitleSelection}
+                      onTouchEnd={checkTitleSelection}
                       placeholder={isQuest("ppt-text") ? "'나의 발표'를 입력하세요!" : "제목을 추가하려면 클릭하십시오."}
                       className="w-full text-center outline-none text-gray-800 font-bold"
                       style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}
@@ -310,7 +353,8 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
                     isQuest("ppt-image-resize") && !imageResized ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
                   }`}
                   style={{ left: imagePos.x, top: imagePos.y, width: imageSize.w, height: imageSize.h }}
-                  onMouseDown={handleImageMouseDown}
+                  onMouseDown={handleImagePointerDown}
+                  onTouchStart={handleImagePointerDown}
                   onClick={(e) => { e.stopPropagation(); setSelectedImage(true); }}
                 >
                   <img src={insertedImage} alt="삽입된 이미지" className="w-full h-full object-contain" draggable={false} />
@@ -320,8 +364,9 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
                       <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-ne-resize" />
                       <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-sw-resize" />
                       <div
-                        className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-se-resize"
-                        onMouseDown={handleResizeStart}
+                        className="absolute -bottom-1 -right-1 w-3 h-3 bg-white border-2 border-blue-500 cursor-se-resize"
+                        onMouseDown={handleResizePointerDown}
+                        onTouchStart={handleResizePointerDown}
                       />
                       <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-w-resize" />
                       <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2.5 h-2.5 bg-white border-2 border-blue-500 cursor-e-resize" />
