@@ -224,6 +224,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   };
 
   const handleIconDoubleClick = (app: OpenApp, questTypes: QuestType[]) => {
+    if (isCompleting.current) return;
     const now = Date.now();
     if (now - lastClickTime < 600) {
       if (questTypes.includes(currentQuestType)) {
