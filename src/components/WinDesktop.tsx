@@ -53,7 +53,7 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
 ];
 
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
+  // "click" is handled dynamically based on unclicked star position
   "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
   "start-menu": { x: "50%", y: "calc(100% - 28px)", label: "시작 버튼!", delay: 2000 },
@@ -113,7 +113,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [shutdownStep, setShutdownStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
+   const [showSuccess, setShowSuccess] = useState(false);
+  const isCompleting = useRef(false);
 
   // Drag and drop
   const [dragFile, setDragFile] = useState(true);
@@ -137,11 +138,33 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
   const koreanTime = useKoreanClock();
 
-  // Auto-open app for continuation quests
+  // Auto-open app for continuation quests & reset state on quest change
   useEffect(() => {
     const neededApp = QUEST_APP_MAP[currentQuestType];
     if (neededApp && openApp !== neededApp) {
       setOpenApp(neededApp);
+    }
+    // Reset quest-specific states
+    isCompleting.current = false;
+    setShowSuccess(false);
+    if (currentQuestType === "click") {
+      setClickTargets([
+        { id: 1, x: 35, y: 25, clicked: false },
+        { id: 2, x: 55, y: 40, clicked: false },
+        { id: 3, x: 70, y: 20, clicked: false },
+      ]);
+    }
+    if (currentQuestType === "drag-drop") {
+      setDragFile(true);
+      setDragPos({ x: 0, y: 0 });
+      setDropSuccess(false);
+    }
+    if (currentQuestType === "delete-file") {
+      setFileToDelete(true);
+      setSelectedFile(false);
+    }
+    if (currentQuestType === "create-file") {
+      setNewFolderCreated(false);
     }
   }, [currentQuestType]);
 
@@ -151,6 +174,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     wrongClickCount.current = 0;
     // Don't show finger guide for app-internal quests
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
+    // "click" quest uses dynamic positioning
+    if (currentQuestType === "click") {
+      const timer = setTimeout(() => setShowFingerGuide(true), 3000);
+      return () => clearTimeout(timer);
+    }
     const fp = FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
@@ -159,10 +187,13 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   }, [currentQuestType]);
 
   const triggerSuccess = useCallback(() => {
+    if (isCompleting.current) return;
+    isCompleting.current = true;
     setShowSuccess(true);
     setShowFingerGuide(false);
     setTimeout(() => {
       setShowSuccess(false);
+      isCompleting.current = false;
       onQuestComplete();
     }, 1200);
   }, [onQuestComplete]);
@@ -193,6 +224,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   };
 
   const handleIconDoubleClick = (app: OpenApp, questTypes: QuestType[]) => {
+    if (isCompleting.current) return;
     const now = Date.now();
     if (now - lastClickTime < 600) {
       if (questTypes.includes(currentQuestType)) {
@@ -387,7 +419,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     return map[target]?.includes(currentQuestType) || false;
   };
 
-  const fingerPos = FINGER_POSITIONS[currentQuestType];
+  const fingerPos = currentQuestType === "click"
+    ? (() => {
+        const nextStar = clickTargets.find(t => !t.clicked);
+        return nextStar ? { x: `${nextStar.x}%`, y: `${nextStar.y}%`, label: "여기를 클릭!", delay: 3000 } : null;
+      })()
+    : FINGER_POSITIONS[currentQuestType] ?? null;
   const showFinger = showFingerGuide && !showSuccess && !APP_INTERNAL_QUESTS.includes(currentQuestType);
 
   return (
