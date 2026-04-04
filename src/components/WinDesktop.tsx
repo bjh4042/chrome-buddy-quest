@@ -427,6 +427,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         return nextStar ? { x: `${nextStar.x}%`, y: `${nextStar.y}%`, label: "여기를 클릭!", delay: 3000 } : null;
       })()
     : FINGER_POSITIONS[currentQuestType] ?? null;
+  const taskbarFingerPos = TASKBAR_FINGER_POSITIONS[currentQuestType] ?? null;
   const showFinger = showFingerGuide && !showSuccess && !APP_INTERNAL_QUESTS.includes(currentQuestType);
 
   return (
