@@ -160,10 +160,13 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   }, [currentQuestType]);
 
   const triggerSuccess = useCallback(() => {
+    if (isCompleting.current) return;
+    isCompleting.current = true;
     setShowSuccess(true);
     setShowFingerGuide(false);
     setTimeout(() => {
       setShowSuccess(false);
+      isCompleting.current = false;
       onQuestComplete();
     }, 1200);
   }, [onQuestComplete]);
