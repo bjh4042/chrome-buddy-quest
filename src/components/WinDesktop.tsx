@@ -138,11 +138,33 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
   const koreanTime = useKoreanClock();
 
-  // Auto-open app for continuation quests
+  // Auto-open app for continuation quests & reset state on quest change
   useEffect(() => {
     const neededApp = QUEST_APP_MAP[currentQuestType];
     if (neededApp && openApp !== neededApp) {
       setOpenApp(neededApp);
+    }
+    // Reset quest-specific states
+    isCompleting.current = false;
+    setShowSuccess(false);
+    if (currentQuestType === "click") {
+      setClickTargets([
+        { id: 1, x: 35, y: 25, clicked: false },
+        { id: 2, x: 55, y: 40, clicked: false },
+        { id: 3, x: 70, y: 20, clicked: false },
+      ]);
+    }
+    if (currentQuestType === "drag-drop") {
+      setDragFile(true);
+      setDragPos({ x: 0, y: 0 });
+      setDropSuccess(false);
+    }
+    if (currentQuestType === "delete-file") {
+      setFileToDelete(true);
+      setSelectedFile(false);
+    }
+    if (currentQuestType === "create-file") {
+      setNewFolderCreated(false);
     }
   }, [currentQuestType]);
 
@@ -152,6 +174,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     wrongClickCount.current = 0;
     // Don't show finger guide for app-internal quests
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
+    // "click" quest uses dynamic positioning
+    if (currentQuestType === "click") {
+      const timer = setTimeout(() => setShowFingerGuide(true), 3000);
+      return () => clearTimeout(timer);
+    }
     const fp = FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
