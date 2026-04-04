@@ -17,6 +17,165 @@ const EdgeIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
+const NaverPage = () => (
+  <div className="w-full h-full bg-white overflow-auto">
+    {/* Top bar */}
+    <div className="bg-white border-b border-gray-200 px-3 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-3 text-[10px] text-gray-500">
+        <span>☰</span>
+        <span className="font-bold text-green-600 text-xs">Pay</span>
+      </div>
+      <div className="flex items-center gap-2 text-[10px] text-gray-500">
+        <span>🔔</span>
+        <span>🛒</span>
+      </div>
+    </div>
+
+    {/* Logo + Search */}
+    <div className="flex flex-col items-center pt-3 pb-2 px-4">
+      <div className="text-2xl md:text-3xl font-black text-green-500 tracking-tight mb-3">NAVER</div>
+      <div className="w-full max-w-md bg-white rounded-full border-2 border-green-500 flex items-center px-3 py-2 mb-2">
+        <input
+          type="text"
+          placeholder="검색어를 입력해 주세요."
+          className="flex-1 bg-transparent text-xs outline-none text-gray-600 placeholder:text-gray-400"
+          readOnly
+        />
+        <Search className="w-4 h-4 text-green-500" />
+      </div>
+
+      {/* Category icons */}
+      <div className="flex items-center gap-3 md:gap-4 mt-1 flex-wrap justify-center">
+        {[
+          { emoji: "✉️", label: "메일", color: "#4CAF50" },
+          { emoji: "☕", label: "카페", color: "#8BC34A" },
+          { emoji: "📝", label: "블로그", color: "#2196F3" },
+          { emoji: "🛍️", label: "스토어", color: "#FF9800" },
+          { emoji: "📰", label: "뉴스", color: "#607D8B" },
+          { emoji: "📈", label: "증권", color: "#F44336" },
+          { emoji: "🏠", label: "부동산", color: "#009688" },
+          { emoji: "🗺️", label: "지도", color: "#3F51B5" },
+          { emoji: "📺", label: "웹툰", color: "#E91E63" },
+        ].map(item => (
+          <div key={item.label} className="flex flex-col items-center gap-0.5 cursor-pointer">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: item.color + "20" }}>
+              {item.emoji}
+            </div>
+            <span className="text-[9px] text-gray-600">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div className="flex gap-3 px-3 pb-3 max-w-2xl mx-auto">
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        {/* News tabs */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-2">
+          <div className="flex items-center gap-0 text-[10px] border-b border-gray-200">
+            <span className="px-2 py-1.5 font-bold text-gray-800 border-b-2 border-green-500">뉴스스탠드</span>
+            <span className="px-2 py-1.5 text-gray-500">언론사편집</span>
+            <span className="px-2 py-1.5 text-gray-500">엔터</span>
+            <span className="px-2 py-1.5 text-gray-500">스포츠</span>
+            <span className="px-2 py-1.5 text-gray-500">경제</span>
+          </div>
+          {/* News grid */}
+          <div className="grid grid-cols-3 gap-px bg-gray-200 p-px">
+            {["뉴시스", "일간스포츠", "디지털타임스", "한국일보", "세계일보", "SBS NEWS"].map((name, i) => (
+              <div key={i} className="bg-white p-2 text-[9px] text-gray-600 text-center hover:bg-gray-50 cursor-pointer">
+                {name}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Trending */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-2">
+          <div className="flex items-center gap-2 text-[10px] border-b border-gray-200 px-2 py-1.5">
+            <span className="font-bold text-gray-800">추천</span>
+            <span className="text-gray-500">카테크</span>
+            <span className="text-gray-500">웹툰</span>
+            <span className="text-gray-500">패션뷰티</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 p-2">
+            {[
+              { title: "차분한 외관에 힘 승차감...", source: "조선비즈", color: "#e8f5e9" },
+              { title: "단종되고 잊혀질 뻔했는데...", source: "오지다 OGDA", color: "#e3f2fd" },
+              { title: "대중차에 이런 하체 처음본다!", source: "신차정보", color: "#fff3e0" },
+              { title: "그랜저 살 이유 없어졌다...", source: "차가치", color: "#fce4ec" },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-1.5 cursor-pointer hover:bg-gray-50 rounded p-1">
+                <div className="w-14 h-10 rounded flex-shrink-0 flex items-center justify-center text-lg" style={{ backgroundColor: item.color }}>
+                  🚗
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] text-gray-800 line-clamp-2 leading-tight">{item.title}</p>
+                  <p className="text-[8px] text-gray-400 mt-0.5">{item.source}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right sidebar */}
+      <div className="w-36 md:w-44 flex-shrink-0 hidden md:block">
+        {/* Login */}
+        <div className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+          <p className="text-[10px] text-gray-600 text-center mb-2">네이버를 더 안전하고 편리하게 이용하세요</p>
+          <button className="w-full bg-green-500 text-white rounded-md py-1.5 text-[11px] font-bold hover:bg-green-600">
+            NAVER 로그인
+          </button>
+          <div className="flex justify-center gap-2 mt-2 text-[9px] text-gray-500">
+            <span>아이디 찾기</span>
+            <span>|</span>
+            <span>비밀번호 찾기</span>
+          </div>
+        </div>
+
+        {/* Weather */}
+        <div className="bg-white border border-gray-200 rounded-lg p-3 mb-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-gray-700">날씨</span>
+            <span className="text-[9px] text-gray-400">전국</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">☀️</span>
+            <div>
+              <span className="text-lg font-bold text-gray-800">13.9°</span>
+              <p className="text-[9px] text-gray-500">맑음</p>
+            </div>
+          </div>
+          <div className="flex gap-1 mt-1 text-[8px] text-gray-500">
+            <span className="text-blue-500">13°</span>
+            <span className="text-red-500">20°</span>
+            <span className="mx-1">미세 좋음</span>
+          </div>
+        </div>
+
+        {/* Stock */}
+        <div className="bg-white border border-gray-200 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-bold text-gray-700">증시</span>
+          </div>
+          <div className="text-[9px] text-gray-700">
+            <div className="flex justify-between">
+              <span>삼성전자</span>
+              <span className="text-red-500">▲4.37%</span>
+            </div>
+            <div className="flex justify-between mt-0.5">
+              <span>SK하이닉스</span>
+              <span className="text-red-500">▲5.54%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p className="text-center text-xs text-green-600 font-bold pb-4">🎉 네이버에 접속했어요!</p>
+  </div>
+);
+
 const EdgeWindow = ({ onClose, currentQuestType, onQuestComplete }: EdgeWindowProps) => {
   const [url, setUrl] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -74,25 +233,7 @@ const EdgeWindow = ({ onClose, currentQuestType, onQuestComplete }: EdgeWindowPr
       {/* Content */}
       <div className="flex-1 bg-white">
         {submitted ? (
-          <div className="p-6">
-            {/* Fake Naver page */}
-            <div className="max-w-md mx-auto text-center pt-8">
-              <div className="text-3xl font-bold text-green-500 mb-6">NAVER</div>
-              <div className="bg-gray-100 rounded-full px-4 py-2.5 flex items-center border border-green-400 mb-4">
-                <input
-                  type="text"
-                  placeholder="검색어를 입력해 주세요."
-                  className="flex-1 bg-transparent text-sm outline-none text-gray-600"
-                  readOnly
-                />
-                <Search className="w-4 h-4 text-green-500" />
-              </div>
-              <div className="flex justify-center gap-4 text-xs text-gray-500">
-                <span>뉴스</span><span>쇼핑</span><span>지도</span><span>웹툰</span>
-              </div>
-              <p className="mt-8 text-sm text-green-600 font-display">🎉 네이버에 접속했어요!</p>
-            </div>
-          </div>
+          <NaverPage />
         ) : (
           <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center text-gray-400">
             <EdgeIcon className="w-16 h-16 mb-4 opacity-30" />
