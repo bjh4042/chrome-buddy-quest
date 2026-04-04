@@ -176,14 +176,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   useEffect(() => {
     setShowFingerGuide(false);
     wrongClickCount.current = 0;
-    // Don't show finger guide for app-internal quests
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
-    // "click" quest uses dynamic positioning
     if (currentQuestType === "click") {
       const timer = setTimeout(() => setShowFingerGuide(true), 3000);
       return () => clearTimeout(timer);
     }
-    const fp = FINGER_POSITIONS[currentQuestType];
+    const fp = FINGER_POSITIONS[currentQuestType] || TASKBAR_FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
       return () => clearTimeout(timer);
