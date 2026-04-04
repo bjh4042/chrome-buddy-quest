@@ -52,19 +52,23 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
   "type-url",
 ];
 
+// Finger positions for quests inside the desktop area
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  // "click" is handled dynamically based on unclicked star position
   "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
-  "start-menu": { x: "50%", y: "calc(100% - 28px)", label: "시작 버튼!", delay: 2000 },
   "open-mypc": { x: "52px", y: "76px", label: "더블클릭!", delay: 2000 },
-  "close-mypc": { x: "calc(100% - 44px)", y: "68px", label: "X를 눌러 닫기!", delay: 2000 },
-  "open-browser": { x: "calc(50% + 80px)", y: "calc(100% - 28px)", label: "Edge!", delay: 2000 },
-  "close-edge": { x: "calc(100% - 44px)", y: "68px", label: "X를 눌러 닫기!", delay: 2000 },
+  "close-mypc": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
+  "close-edge": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
   "drag-drop": { x: "48px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
   "open-hangul": { x: "52px", y: "196px", label: "더블클릭!", delay: 2000 },
   "open-excel": { x: "52px", y: "256px", label: "더블클릭!", delay: 2000 },
   "open-ppt": { x: "52px", y: "316px", label: "더블클릭!", delay: 2000 },
+};
+
+// Finger positions for taskbar quests (rendered at main container level)
+const TASKBAR_FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
+  "start-menu": { x: "calc(50% - 52px)", y: "calc(100% - 30px)", label: "시작 버튼!", delay: 2000 },
+  "open-browser": { x: "calc(50% + 56px)", y: "calc(100% - 30px)", label: "Edge!", delay: 2000 },
 };
 
 // Real-time Korean clock
@@ -172,14 +176,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   useEffect(() => {
     setShowFingerGuide(false);
     wrongClickCount.current = 0;
-    // Don't show finger guide for app-internal quests
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
-    // "click" quest uses dynamic positioning
     if (currentQuestType === "click") {
       const timer = setTimeout(() => setShowFingerGuide(true), 3000);
       return () => clearTimeout(timer);
     }
-    const fp = FINGER_POSITIONS[currentQuestType];
+    const fp = FINGER_POSITIONS[currentQuestType] || TASKBAR_FINGER_POSITIONS[currentQuestType];
     if (fp) {
       const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
       return () => clearTimeout(timer);
@@ -425,6 +427,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         return nextStar ? { x: `${nextStar.x}%`, y: `${nextStar.y}%`, label: "여기를 클릭!", delay: 3000 } : null;
       })()
     : FINGER_POSITIONS[currentQuestType] ?? null;
+  const taskbarFingerPos = TASKBAR_FINGER_POSITIONS[currentQuestType] ?? null;
   const showFinger = showFingerGuide && !showSuccess && !APP_INTERNAL_QUESTS.includes(currentQuestType);
 
   return (
@@ -763,6 +766,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Taskbar finger guide (for start-menu, open-browser) */}
+      {taskbarFingerPos && (
+        <div className="absolute inset-0 pointer-events-none z-[90]">
+          <FingerGuide
+            visible={showFinger}
+            x={taskbarFingerPos.x}
+            y={taskbarFingerPos.y}
+            label={taskbarFingerPos.label}
+          />
+        </div>
+      )}
 
       {/* Taskbar */}
       <div className="h-12 bg-gray-900/80 backdrop-blur-xl flex items-center justify-center px-3 z-50 border-t border-white/10">

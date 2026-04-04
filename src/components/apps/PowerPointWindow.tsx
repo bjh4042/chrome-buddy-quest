@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { ChevronDown, Bold, Italic, Underline, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Undo, Redo } from "lucide-react";
 import WindowFrame from "./WindowFrame";
+import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
 
 interface PowerPointWindowProps {
@@ -28,10 +29,12 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
   const [fontFamily, setFontFamily] = useState("맑은 고딕");
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontDropdown, setShowFontDropdown] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   // Text selection for title
   const [titleSelected, setTitleSelected] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const titleSelectionRange = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   // Image state
   const [insertedImage, setInsertedImage] = useState<string | null>(null);
@@ -43,14 +46,28 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
   const [imageResized, setImageResized] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isQuest = (t: QuestType) => currentQuestType === t;
 
   const checkTitleSelection = useCallback(() => {
     if (titleInputRef.current) {
       const { selectionStart, selectionEnd } = titleInputRef.current;
-      setTitleSelected((selectionStart ?? 0) !== (selectionEnd ?? 0));
+      const hasSelection = (selectionStart ?? 0) !== (selectionEnd ?? 0);
+      setTitleSelected(hasSelection);
+      if (hasSelection) {
+        titleSelectionRange.current = { start: selectionStart ?? 0, end: selectionEnd ?? 0 };
+      }
+    }
+  }, []);
+
+  const restoreTitleSelection = useCallback(() => {
+    const { start, end } = titleSelectionRange.current;
+    if (start !== end && titleInputRef.current) {
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+        titleInputRef.current?.setSelectionRange(start, end);
+        setTitleSelected(true);
+      }, 0);
     }
   }, []);
 
@@ -69,6 +86,7 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         onQuestComplete();
       }
     }
+    restoreTitleSelection();
   };
 
   const handleFontFamilyChange = (f: string) => {
@@ -79,33 +97,21 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         onQuestComplete();
       }
     }
+    restoreTitleSelection();
   };
 
-  const handleImageInsert = () => {
-    if (isQuest("ppt-image")) {
-      setInsertedImage("data:image/svg+xml," + encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="150" height="100" viewBox="0 0 150 100"><rect fill="#fff7ed" width="150" height="100" rx="8"/><text x="75" y="45" text-anchor="middle" fill="#ea580c" font-size="14" font-family="sans-serif">🖼️ 샘플 이미지</text><text x="75" y="70" text-anchor="middle" fill="#ea580c" font-size="10" font-family="sans-serif">그림이 삽입되었어요!</text></svg>'
-      ));
-      setSelectedImage(true);
-      onQuestComplete();
-    } else {
-      fileInputRef.current?.click();
-    }
+  const handleImageButtonClick = () => {
+    setShowImagePicker(true);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setInsertedImage(ev.target?.result as string);
-        setSelectedImage(true);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleImageSelect = (imageSrc: string) => {
+    setInsertedImage(imageSrc);
+    setSelectedImage(true);
+    setShowImagePicker(false);
+    if (isQuest("ppt-image")) onQuestComplete();
   };
 
-  // Unified pointer handlers for mouse + touch
+  // Pointer handlers
   const getPointerPos = (e: React.MouseEvent | React.TouchEvent) => {
     if ('touches' in e) {
       const t = e.touches[0] || (e as React.TouchEvent).changedTouches[0];
@@ -238,13 +244,12 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
         <button className="p-1 rounded hover:bg-gray-200"><AlignCenter className="w-3.5 h-3.5 text-gray-600" /></button>
         <button className="p-1 rounded hover:bg-gray-200"><AlignRight className="w-3.5 h-3.5 text-gray-600" /></button>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
-        <button onClick={handleImageInsert}
+        <button onClick={handleImageButtonClick}
           className={`p-1 rounded hover:bg-gray-200 transition-colors ${
             isQuest("ppt-image") ? "bg-yellow-100 ring-2 ring-yellow-400 animate-pulse-highlight" : ""
           }`} title="그림 삽입">
           <ImageIcon className="w-4 h-4 text-gray-600" />
         </button>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
       </div>
     </div>
   );
@@ -395,6 +400,14 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
           <span>스메모</span>
         </div>
       </div>
+
+      {showImagePicker && (
+        <ImagePickerDialog
+          onSelect={handleImageSelect}
+          onClose={() => setShowImagePicker(false)}
+          isQuest={isQuest("ppt-image")}
+        />
+      )}
     </WindowFrame>
   );
 };
