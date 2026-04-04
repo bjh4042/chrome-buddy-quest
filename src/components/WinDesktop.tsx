@@ -53,7 +53,7 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
 ];
 
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "click": { x: "35%", y: "25%", label: "여기를 클릭!", delay: 3000 },
+  // "click" is handled dynamically based on unclicked star position
   "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
   "start-menu": { x: "50%", y: "calc(100% - 28px)", label: "시작 버튼!", delay: 2000 },
