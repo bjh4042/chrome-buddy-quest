@@ -767,6 +767,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         )}
       </AnimatePresence>
 
+      {/* Taskbar finger guide (for start-menu, open-browser) */}
+      {taskbarFingerPos && (
+        <div className="absolute inset-0 pointer-events-none z-[90]">
+          <FingerGuide
+            visible={showFinger}
+            x={taskbarFingerPos.x}
+            y={taskbarFingerPos.y}
+            label={taskbarFingerPos.label}
+          />
+        </div>
+      )}
+
       {/* Taskbar */}
       <div className="h-12 bg-gray-900/80 backdrop-blur-xl flex items-center justify-center px-3 z-50 border-t border-white/10">
         <div className="flex items-center gap-1">
