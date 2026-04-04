@@ -113,7 +113,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [shutdownStep, setShutdownStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
+   const [showSuccess, setShowSuccess] = useState(false);
+  const isCompleting = useRef(false);
 
   // Drag and drop
   const [dragFile, setDragFile] = useState(true);
