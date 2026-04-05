@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Undo, Redo } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import type { QuestType } from "@/types/quest";
+import excelIconImg from "@/assets/excel-icon.png";
 
 interface ExcelWindowProps {
   onClose: () => void;
@@ -10,10 +11,7 @@ interface ExcelWindowProps {
 }
 
 const ExcelIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <div className={`${className} bg-green-600 rounded-sm flex items-center justify-center text-white font-bold`}
-    style={{ fontSize: "65%" }}>
-    X
-  </div>
+  <img src={excelIconImg} alt="Excel" className={`${className} object-contain`} />
 );
 
 const allCols = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];

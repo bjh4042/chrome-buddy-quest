@@ -4,6 +4,7 @@ import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
 import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
+import hangulIconImg from "@/assets/hangul-icon.png";
 
 interface HangulWindowProps {
   onClose: () => void;
@@ -12,10 +13,7 @@ interface HangulWindowProps {
 }
 
 const HangulIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <div className={`${className} bg-blue-600 rounded-sm flex items-center justify-center text-white font-bold`}
-    style={{ fontSize: "65%" }}>
-    한
-  </div>
+  <img src={hangulIconImg} alt="한글" className={`${className} object-contain`} />
 );
 
 const fontSizes = ["8", "9", "10", "11", "12", "14", "16", "18", "20", "24", "28", "36"];
