@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Monitor, FolderOpen, Trash2, Star as StarIcon,
+  FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Square, ChevronDown
+  FileText, Folder, Square, ChevronDown, Monitor
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -53,22 +53,23 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
 ];
 
 // Finger positions for quests inside the desktop area
+// x/y are relative to the desktop-area div. Icons are ~52px center, spaced ~60px apart starting at ~70px top
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
+  "double-click": { x: "52px", y: "80px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
-  "open-mypc": { x: "52px", y: "76px", label: "더블클릭!", delay: 2000 },
-  "close-mypc": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
-  "close-edge": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
-  "drag-drop": { x: "48px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
-  "open-hangul": { x: "52px", y: "196px", label: "더블클릭!", delay: 2000 },
-  "open-excel": { x: "52px", y: "256px", label: "더블클릭!", delay: 2000 },
-  "open-ppt": { x: "52px", y: "316px", label: "더블클릭!", delay: 2000 },
+  "open-mypc": { x: "52px", y: "80px", label: "더블클릭!", delay: 2000 },
+  "close-mypc": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
+  "close-edge": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
+  "drag-drop": { x: "52px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
+  "open-hangul": { x: "52px", y: "200px", label: "더블클릭!", delay: 2000 },
+  "open-excel": { x: "52px", y: "260px", label: "더블클릭!", delay: 2000 },
+  "open-ppt": { x: "52px", y: "320px", label: "더블클릭!", delay: 2000 },
 };
 
 // Finger positions for taskbar quests (rendered at main container level)
 const TASKBAR_FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "start-menu": { x: "calc(50% - 52px)", y: "calc(100% - 30px)", label: "시작 버튼!", delay: 2000 },
-  "open-browser": { x: "calc(50% + 56px)", y: "calc(100% - 30px)", label: "Edge!", delay: 2000 },
+  "start-menu": { x: "calc(50% - 48px)", y: "calc(100% - 38px)", label: "시작 버튼!", delay: 2000 },
+  "open-browser": { x: "calc(50% + 48px)", y: "calc(100% - 38px)", label: "Edge!", delay: 2000 },
 };
 
 // Real-time Korean clock
@@ -469,30 +470,43 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
           <DesktopIcon
-            icon={<Monitor className="w-7 h-7 text-blue-400" />}
+            icon={
+              <svg viewBox="0 0 48 48" className="w-9 h-9">
+                <rect x="8" y="6" width="32" height="24" rx="2" fill="#1E88E5" />
+                <rect x="10" y="8" width="28" height="20" rx="1" fill="#90CAF9" />
+                <rect x="18" y="30" width="12" height="3" fill="#90A4AE" />
+                <rect x="14" y="33" width="20" height="2" rx="1" fill="#78909C" />
+              </svg>
+            }
             label="내 PC"
             highlight={isHighlighted("mypc")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("mypc", ["double-click", "open-mypc"]); }}
           />
           <DesktopIcon
-            icon={<Trash2 className="w-7 h-7 text-gray-300" />}
+            icon={
+              <svg viewBox="0 0 48 48" className="w-9 h-9">
+                <path d="M14 10h20l4 6v20a2 2 0 01-2 2H12a2 2 0 01-2-2V16l4-6z" fill="#78909C" />
+                <path d="M14 10h20l4 6H10l4-6z" fill="#B0BEC5" />
+                <path d="M18 16h12v4H18z" fill="#546E7A" opacity="0.5" />
+              </svg>
+            }
             label="휴지통"
             onClick={(e) => e.stopPropagation()}
           />
           <DesktopIcon
-            icon={<HangulIcon className="w-8 h-8" />}
+            icon={<HangulIcon className="w-9 h-9" />}
             label="한글"
             highlight={isHighlighted("hangul")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("hangul", ["open-hangul"]); }}
           />
           <DesktopIcon
-            icon={<ExcelIcon className="w-8 h-8" />}
+            icon={<ExcelIcon className="w-9 h-9" />}
             label="Excel"
             highlight={isHighlighted("excel")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("excel", ["open-excel"]); }}
           />
           <DesktopIcon
-            icon={<PptIcon className="w-8 h-8" />}
+            icon={<PptIcon className="w-9 h-9" />}
             label="PowerPoint"
             highlight={isHighlighted("ppt")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("ppt", ["open-ppt"]); }}
