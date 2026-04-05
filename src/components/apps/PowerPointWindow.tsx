@@ -3,6 +3,7 @@ import { ChevronDown, Bold, Italic, Underline, Image as ImageIcon, AlignLeft, Al
 import WindowFrame from "./WindowFrame";
 import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
+import pptIconImg from "@/assets/ppt-icon.png";
 
 interface PowerPointWindowProps {
   onClose: () => void;
@@ -11,7 +12,7 @@ interface PowerPointWindowProps {
 }
 
 const PptIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <img src="/src/assets/ppt-icon.png" alt="PowerPoint" className={`${className} object-contain`} />
+  <img src={pptIconImg} alt="PowerPoint" className={`${className} object-contain`} />
 );
 
 const fontSizes = ["10", "12", "14", "16", "18", "20", "24", "28", "32", "36", "44", "54"];
