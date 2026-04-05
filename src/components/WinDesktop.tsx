@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Monitor, FolderOpen, Trash2, Star as StarIcon,
+  FolderOpen, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Square, ChevronDown
+  FileText, Folder, Square, ChevronDown, Monitor
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
