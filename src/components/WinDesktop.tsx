@@ -53,22 +53,23 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
 ];
 
 // Finger positions for quests inside the desktop area
+// x/y are relative to the desktop-area div. Icons are ~52px center, spaced ~60px apart starting at ~70px top
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "double-click": { x: "52px", y: "76px", label: "더블클릭!", delay: 3000 },
+  "double-click": { x: "52px", y: "80px", label: "더블클릭!", delay: 3000 },
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
-  "open-mypc": { x: "52px", y: "76px", label: "더블클릭!", delay: 2000 },
-  "close-mypc": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
-  "close-edge": { x: "calc(100% - 38px)", y: "78px", label: "X를 눌러 닫기!", delay: 2000 },
-  "drag-drop": { x: "48px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
-  "open-hangul": { x: "52px", y: "196px", label: "더블클릭!", delay: 2000 },
-  "open-excel": { x: "52px", y: "256px", label: "더블클릭!", delay: 2000 },
-  "open-ppt": { x: "52px", y: "316px", label: "더블클릭!", delay: 2000 },
+  "open-mypc": { x: "52px", y: "80px", label: "더블클릭!", delay: 2000 },
+  "close-mypc": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
+  "close-edge": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
+  "drag-drop": { x: "52px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
+  "open-hangul": { x: "52px", y: "200px", label: "더블클릭!", delay: 2000 },
+  "open-excel": { x: "52px", y: "260px", label: "더블클릭!", delay: 2000 },
+  "open-ppt": { x: "52px", y: "320px", label: "더블클릭!", delay: 2000 },
 };
 
 // Finger positions for taskbar quests (rendered at main container level)
 const TASKBAR_FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "start-menu": { x: "calc(50% - 52px)", y: "calc(100% - 30px)", label: "시작 버튼!", delay: 2000 },
-  "open-browser": { x: "calc(50% + 56px)", y: "calc(100% - 30px)", label: "Edge!", delay: 2000 },
+  "start-menu": { x: "calc(50% - 48px)", y: "calc(100% - 38px)", label: "시작 버튼!", delay: 2000 },
+  "open-browser": { x: "calc(50% + 48px)", y: "calc(100% - 38px)", label: "Edge!", delay: 2000 },
 };
 
 // Real-time Korean clock
