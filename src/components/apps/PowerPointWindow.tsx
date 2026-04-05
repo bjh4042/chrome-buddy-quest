@@ -11,10 +11,7 @@ interface PowerPointWindowProps {
 }
 
 const PptIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <div className={`${className} bg-orange-500 rounded-sm flex items-center justify-center text-white font-bold`}
-    style={{ fontSize: "65%" }}>
-    P
-  </div>
+  <img src="/src/assets/ppt-icon.png" alt="PowerPoint" className={`${className} object-contain`} />
 );
 
 const fontSizes = ["10", "12", "14", "16", "18", "20", "24", "28", "32", "36", "44", "54"];

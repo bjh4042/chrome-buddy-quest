@@ -10,10 +10,7 @@ interface ExcelWindowProps {
 }
 
 const ExcelIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <div className={`${className} bg-green-600 rounded-sm flex items-center justify-center text-white font-bold`}
-    style={{ fontSize: "65%" }}>
-    X
-  </div>
+  <img src="/src/assets/excel-icon.png" alt="Excel" className={`${className} object-contain`} />
 );
 
 const allCols = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
