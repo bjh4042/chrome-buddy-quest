@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FolderOpen, Star as StarIcon,
+  FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
   FileText, Folder, Square, ChevronDown, Monitor
 } from "lucide-react";
