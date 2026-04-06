@@ -57,24 +57,37 @@ const APP_INTERNAL_QUESTS: QuestType[] = [
   "type-url",
 ];
 
-// Finger positions for quests inside the desktop area
-// x/y are relative to the desktop-area div. Icons are ~52px center, spaced ~60px apart starting at ~70px top
+// Finger positions are anchored to the actual clickable center of each target.
+const DESKTOP_ICON_X = "52px";
+const DESKTOP_ICON_START_Y = 84;
+const DESKTOP_ICON_STEP = 74;
+const WINDOW_CLOSE_POS = { x: "calc(100% - 44px)", y: "80px" };
+const TASKBAR_CENTER_Y = "calc(100% - 24px)";
+const TASKBAR_START_X = "calc(50% - 60px)";
+const TASKBAR_EDGE_X = "calc(50% + 60px)";
+
+const desktopIconFinger = (row: number, label = "더블클릭!", delay = 2000) => ({
+  x: DESKTOP_ICON_X,
+  y: `${DESKTOP_ICON_START_Y + row * DESKTOP_ICON_STEP}px`,
+  label,
+  delay,
+});
+
 const FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "double-click": { x: "52px", y: "80px", label: "더블클릭!", delay: 3000 },
+  "double-click": desktopIconFinger(0, "더블클릭!", 3000),
   "right-click": { x: "50%", y: "50%", label: "오른쪽 버튼!", delay: 3000 },
-  "open-mypc": { x: "52px", y: "80px", label: "더블클릭!", delay: 2000 },
-  "close-mypc": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
-  "close-edge": { x: "calc(100% - 28px)", y: "66px", label: "X를 눌러 닫기!", delay: 2000 },
-  "drag-drop": { x: "52px", y: "320px", label: "이 파일을 끌어요!", delay: 3000 },
-  "open-hangul": { x: "52px", y: "200px", label: "더블클릭!", delay: 2000 },
-  "open-excel": { x: "52px", y: "260px", label: "더블클릭!", delay: 2000 },
-  "open-ppt": { x: "52px", y: "320px", label: "더블클릭!", delay: 2000 },
+  "open-mypc": desktopIconFinger(0),
+  "close-mypc": { ...WINDOW_CLOSE_POS, label: "X를 눌러 닫기!", delay: 2000 },
+  "close-edge": { ...WINDOW_CLOSE_POS, label: "X를 눌러 닫기!", delay: 2000 },
+  "drag-drop": { x: "88px", y: "344px", label: "이 파일을 끌어요!", delay: 3000 },
+  "open-hangul": desktopIconFinger(2),
+  "open-excel": desktopIconFinger(3),
+  "open-ppt": desktopIconFinger(4),
 };
 
-// Finger positions for taskbar quests (rendered at main container level)
 const TASKBAR_FINGER_POSITIONS: Partial<Record<QuestType, { x: string; y: string; label: string; delay: number }>> = {
-  "start-menu": { x: "calc(50% - 48px)", y: "calc(100% - 38px)", label: "시작 버튼!", delay: 2000 },
-  "open-browser": { x: "calc(50% + 48px)", y: "calc(100% - 38px)", label: "Edge!", delay: 2000 },
+  "start-menu": { x: TASKBAR_START_X, y: TASKBAR_CENTER_Y, label: "시작 버튼!", delay: 2000 },
+  "open-browser": { x: TASKBAR_EDGE_X, y: TASKBAR_CENTER_Y, label: "Edge!", delay: 2000 },
 };
 
 // Real-time Korean clock
