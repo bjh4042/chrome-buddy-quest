@@ -475,43 +475,30 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
           <DesktopIcon
-            icon={
-              <svg viewBox="0 0 48 48" className="w-9 h-9">
-                <rect x="8" y="6" width="32" height="24" rx="2" fill="#1E88E5" />
-                <rect x="10" y="8" width="28" height="20" rx="1" fill="#90CAF9" />
-                <rect x="18" y="30" width="12" height="3" fill="#90A4AE" />
-                <rect x="14" y="33" width="20" height="2" rx="1" fill="#78909C" />
-              </svg>
-            }
+            icon={<img src={desktopMypcImg} alt="내 PC" className="w-10 h-10 object-contain" />}
             label="내 PC"
             highlight={isHighlighted("mypc")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("mypc", ["double-click", "open-mypc"]); }}
           />
           <DesktopIcon
-            icon={
-              <svg viewBox="0 0 48 48" className="w-9 h-9">
-                <path d="M14 10h20l4 6v20a2 2 0 01-2 2H12a2 2 0 01-2-2V16l4-6z" fill="#78909C" />
-                <path d="M14 10h20l4 6H10l4-6z" fill="#B0BEC5" />
-                <path d="M18 16h12v4H18z" fill="#546E7A" opacity="0.5" />
-              </svg>
-            }
+            icon={<img src={desktopTrashImg} alt="휴지통" className="w-10 h-10 object-contain" />}
             label="휴지통"
             onClick={(e) => e.stopPropagation()}
           />
           <DesktopIcon
-            icon={<HangulIcon className="w-9 h-9" />}
-            label="한글"
+            icon={<img src={desktopHangulImg} alt="한글" className="w-10 h-10 object-contain" />}
+            label="한글 2024"
             highlight={isHighlighted("hangul")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("hangul", ["open-hangul"]); }}
           />
           <DesktopIcon
-            icon={<ExcelIcon className="w-9 h-9" />}
+            icon={<img src={desktopExcelImg} alt="Excel" className="w-10 h-10 object-contain" />}
             label="Excel"
             highlight={isHighlighted("excel")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("excel", ["open-excel"]); }}
           />
           <DesktopIcon
-            icon={<PptIcon className="w-9 h-9" />}
+            icon={<img src={desktopPptImg} alt="PowerPoint" className="w-10 h-10 object-contain" />}
             label="PowerPoint"
             highlight={isHighlighted("ppt")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("ppt", ["open-ppt"]); }}
