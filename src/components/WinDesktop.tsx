@@ -772,6 +772,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               )}
             </AnimatePresence>
           </motion.div>
+          </>
         )}
       </AnimatePresence>
 
