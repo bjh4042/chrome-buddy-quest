@@ -705,6 +705,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       {/* Start Menu */}
       <AnimatePresence>
         {startMenuOpen && (
+          <>
+          <div className="absolute inset-0 z-[39]" onClick={() => setStartMenuOpen(false)} />
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
