@@ -14,6 +14,11 @@ import ExcelWindow, { ExcelIcon } from "./apps/ExcelWindow";
 import PowerPointWindow, { PptIcon } from "./apps/PowerPointWindow";
 import FingerGuide from "./FingerGuide";
 import WrongClickHint from "./WrongClickHint";
+import desktopMypcImg from "@/assets/desktop-mypc.png";
+import desktopTrashImg from "@/assets/desktop-trash.png";
+import desktopExcelImg from "@/assets/desktop-excel.png";
+import desktopPptImg from "@/assets/desktop-ppt.png";
+import desktopHangulImg from "@/assets/desktop-hangul.png";
 
 interface WinDesktopProps {
   currentQuestType: QuestType;
