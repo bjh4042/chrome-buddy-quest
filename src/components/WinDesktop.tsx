@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Square, ChevronDown, Monitor, Calendar as CalendarIcon
+  FileText, Folder, Monitor
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
