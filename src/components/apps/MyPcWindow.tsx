@@ -4,6 +4,7 @@ import WindowFrame from "./WindowFrame";
 
 interface MyPcWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
 }
 
 const sidebarItems = [
@@ -31,7 +32,7 @@ const networkFolders = [
   { label: "백업(Watermelon)", icon: "📁" },
 ];
 
-const MyPcWindow = ({ onClose }: MyPcWindowProps) => {
+const MyPcWindow = ({ onClose, onMinimize }: MyPcWindowProps) => {
   const [expandedSections, setExpandedSections] = useState({ drives: true, network: true });
 
   const toggleSection = (s: "drives" | "network") => {
@@ -43,6 +44,7 @@ const MyPcWindow = ({ onClose }: MyPcWindowProps) => {
       title="내 PC"
       icon={<Monitor className="w-4 h-4 text-blue-500" />}
       onClose={onClose}
+      onMinimize={onMinimize}
       toolbar={
         <div className="flex items-center gap-1 px-3 py-1 text-xs text-gray-500">
           <button className="px-2 py-1 hover:bg-gray-100 rounded text-gray-400">📋 새로 만들기</button>

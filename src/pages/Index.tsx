@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
+import { useEffect } from "react";
 import StartScreen from "@/components/StartScreen";
 import QuestPanel from "@/components/QuestPanel";
 import WinDesktop from "@/components/WinDesktop";
@@ -9,16 +10,56 @@ import { QUESTS, QUEST_CATEGORIES, type Quest } from "@/types/quest";
 
 type Screen = "start" | "tutorial" | "complete";
 
+const STORAGE_KEY = "win-explorer-progress-v1";
+
+type SavedProgress = {
+  screen: Screen;
+  questsState: { id: string; completed: boolean; starsEarned: number }[];
+  currentQuest: number;
+  score: number;
+};
+
+const loadProgress = (): SavedProgress | null => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as SavedProgress;
+  } catch {
+    return null;
+  }
+};
+
 const Index = () => {
-  const [screen, setScreen] = useState<Screen>("start");
-  const [quests, setQuests] = useState<Quest[]>(
-    QUESTS.map(q => ({ ...q, completed: false, starsEarned: 0 }))
-  );
-  const [currentQuest, setCurrentQuest] = useState(0);
-  const [score, setScore] = useState(0);
+  const saved = loadProgress();
+  const [screen, setScreen] = useState<Screen>(saved?.screen ?? "start");
+  const [quests, setQuests] = useState<Quest[]>(() => {
+    const base = QUESTS.map(q => ({ ...q, completed: false, starsEarned: 0 }));
+    if (saved?.questsState) {
+      for (const s of saved.questsState) {
+        const i = base.findIndex(b => b.id === s.id);
+        if (i >= 0) {
+          base[i] = { ...base[i], completed: s.completed, starsEarned: s.starsEarned };
+        }
+      }
+    }
+    return base;
+  });
+  const [currentQuest, setCurrentQuest] = useState(saved?.currentQuest ?? 0);
+  const [score, setScore] = useState(saved?.score ?? 0);
   const [showPraise, setShowPraise] = useState(false);
   // Persistent key — don't remount WinDesktop on quest change
   const [desktopKey] = useState(() => Math.random());
+
+  // Persist progress
+  useEffect(() => {
+    const data: SavedProgress = {
+      screen,
+      questsState: quests.map(q => ({ id: q.id, completed: q.completed, starsEarned: q.starsEarned })),
+      currentQuest,
+      score,
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }, [screen, quests, currentQuest, score]);
 
   const totalScore = QUESTS.reduce((sum, q) => sum + q.points, 0);
 
@@ -69,6 +110,7 @@ const Index = () => {
     setCurrentQuest(0);
     setScore(0);
     setScreen("start");
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
   };
 
   const handleSelectQuest = (index: number) => {

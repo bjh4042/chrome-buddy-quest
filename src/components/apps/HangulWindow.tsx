@@ -8,6 +8,7 @@ import hangulIconImg from "@/assets/hangul-icon.png";
 
 interface HangulWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }
@@ -19,7 +20,7 @@ const HangulIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 const fontSizes = ["8", "9", "10", "11", "12", "14", "16", "18", "20", "24", "28", "36"];
 const fonts = ["함초롬바탕", "맑은 고딕", "바탕", "돋움", "굴림", "궁서"];
 
-const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWindowProps) => {
+const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: HangulWindowProps) => {
   const [text, setText] = useState("");
   const [fontSize, setFontSize] = useState("10.0");
   const [fontFamily, setFontFamily] = useState("함초롬바탕");
@@ -344,6 +345,7 @@ const HangulWindow = ({ onClose, currentQuestType, onQuestComplete }: HangulWind
       title={saved ? "문서1.hwp - 한글" : "빈 문서 1 - 한글"}
       icon={<HangulIcon className="w-4 h-4" />}
       onClose={onClose}
+      onMinimize={onMinimize}
       toolbar={toolbar}
     >
       <div className="flex h-full"

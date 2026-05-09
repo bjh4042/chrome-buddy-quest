@@ -5,6 +5,7 @@ import type { QuestType } from "@/types/quest";
 
 interface EdgeWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }
@@ -176,7 +177,7 @@ const NaverPage = () => (
   </div>
 );
 
-const EdgeWindow = ({ onClose, currentQuestType, onQuestComplete }: EdgeWindowProps) => {
+const EdgeWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: EdgeWindowProps) => {
   const [url, setUrl] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const isUrlQuest = currentQuestType === "type-url";
@@ -196,6 +197,7 @@ const EdgeWindow = ({ onClose, currentQuestType, onQuestComplete }: EdgeWindowPr
       title={submitted ? "NAVER - Microsoft Edge" : "새 탭 - Microsoft Edge"}
       icon={<EdgeIcon className="w-4 h-4" />}
       onClose={onClose}
+      onMinimize={onMinimize}
     >
       {/* Tab bar */}
       <div className="flex items-center bg-gray-100 px-2 pt-0.5">

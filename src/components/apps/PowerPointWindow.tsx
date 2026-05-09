@@ -7,6 +7,7 @@ import pptIconImg from "@/assets/ppt-icon.png";
 
 interface PowerPointWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }
@@ -18,7 +19,7 @@ const PptIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 const fontSizes = ["10", "12", "14", "16", "18", "20", "24", "28", "32", "36", "44", "54"];
 const fonts = ["맑은 고딕", "바탕", "돋움", "굴림", "궁서", "나눔고딕"];
 
-const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerPointWindowProps) => {
+const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: PowerPointWindowProps) => {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -257,6 +258,7 @@ const PowerPointWindow = ({ onClose, currentQuestType, onQuestComplete }: PowerP
       title="프레젠테이션1 - PowerPoint"
       icon={<PptIcon className="w-4 h-4" />}
       onClose={onClose}
+      onMinimize={onMinimize}
       toolbar={toolbar}
     >
       <div className="flex h-full min-h-[400px]"

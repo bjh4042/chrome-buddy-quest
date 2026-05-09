@@ -108,8 +108,34 @@
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
+@keyframes target-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(45 100% 55% / 0.85), 0 0 18px 6px hsl(45 100% 55% / 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 16px hsl(45 100% 55% / 0), 0 0 28px 12px hsl(45 100% 55% / 0.4);
+    transform: scale(1.08);
+  }
+}
+
+@keyframes star-pop {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  60% { transform: scale(1.4) rotate(20deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
 .animate-pulse-highlight {
   animation: pulse-highlight 1.5s ease-in-out infinite;
+}
+
+.animate-target-glow {
+  animation: target-glow 0.9s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.animate-star-pop {
+  animation: star-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .animate-bounce-gentle {

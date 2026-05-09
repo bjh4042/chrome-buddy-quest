@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Square, ChevronDown, Monitor
+  FileText, Folder, Monitor
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -124,6 +124,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [openApp, setOpenApp] = useState<OpenApp>(
     QUEST_APP_MAP[currentQuestType] ?? null
   );
+  const [minimizedApp, setMinimizedApp] = useState<OpenApp>(null);
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [clickTargets, setClickTargets] = useState([
     { id: 1, x: 35, y: 25, clicked: false },
     { id: 2, x: 55, y: 40, clicked: false },
@@ -154,6 +157,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     visible: false, pos: { x: 0, y: 0 },
   });
   const wrongClickCount = useRef(0);
+  const [intensifyHighlight, setIntensifyHighlight] = useState(false);
 
   // Long-press for mobile right-click
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +238,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         pos: { x: e.clientX - rect.left, y: e.clientY - rect.top },
       });
       setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3000);
+      setIntensifyHighlight(true);
+      setTimeout(() => setIntensifyHighlight(false), 4000);
     }
   };
 
@@ -418,11 +424,23 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setStartMenuOpen(false);
     setSubMenuOpen(false);
     setSelectedFile(false);
+    setSelectedIcon(null);
+    setCalendarOpen(false);
   };
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     closeAll();
     handleWrongClick(e);
+  };
+
+  const handleMinimize = (app: OpenApp) => {
+    setMinimizedApp(app);
+    setOpenApp(null);
+  };
+
+  const handleRestore = (app: OpenApp) => {
+    setOpenApp(app);
+    setMinimizedApp(null);
   };
 
   const isHighlighted = (target: string) => {
@@ -490,32 +508,51 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
           <DesktopIcon
+            id="mypc"
+            selected={selectedIcon === "mypc"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopMypcImg} alt="내 PC" className="w-10 h-10 object-contain" />}
             label="내 PC"
             highlight={isHighlighted("mypc")}
+            intense={intensifyHighlight && isHighlighted("mypc")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("mypc", ["double-click", "open-mypc"]); }}
           />
           <DesktopIcon
+            id="trash"
+            selected={selectedIcon === "trash"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopTrashImg} alt="휴지통" className="w-10 h-10 object-contain" />}
             label="휴지통"
             onClick={(e) => e.stopPropagation()}
           />
           <DesktopIcon
+            id="hangul"
+            selected={selectedIcon === "hangul"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopHangulImg} alt="한글" className="w-10 h-10 object-contain" />}
             label="한글 2024"
             highlight={isHighlighted("hangul")}
+            intense={intensifyHighlight && isHighlighted("hangul")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("hangul", ["open-hangul"]); }}
           />
           <DesktopIcon
+            id="excel"
+            selected={selectedIcon === "excel"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopExcelImg} alt="Excel" className="w-10 h-10 object-contain" />}
             label="Excel"
             highlight={isHighlighted("excel")}
+            intense={intensifyHighlight && isHighlighted("excel")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("excel", ["open-excel"]); }}
           />
           <DesktopIcon
+            id="ppt"
+            selected={selectedIcon === "ppt"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopPptImg} alt="PowerPoint" className="w-10 h-10 object-contain" />}
             label="PowerPoint"
             highlight={isHighlighted("ppt")}
+            intense={intensifyHighlight && isHighlighted("ppt")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("ppt", ["open-ppt"]); }}
           />
 
@@ -599,7 +636,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             onClick={(e) => { e.stopPropagation(); handleStarClick(target.id); }}
           >
             <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-              target.clicked ? "bg-green-400" : "bg-yellow-400/90 animate-pulse-highlight"
+              target.clicked
+                ? "bg-green-400"
+                : intensifyHighlight
+                ? "bg-yellow-400 animate-target-glow"
+                : "bg-yellow-400/90 animate-pulse-highlight"
             }`}>
               <StarIcon className="w-8 h-8 text-white fill-current" />
             </div>
@@ -701,18 +742,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
         {/* App windows */}
         <AnimatePresence>
-          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} />}
+          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} onMinimize={() => handleMinimize("mypc")} />}
           {openApp === "edge" && (
-            <EdgeWindow onClose={() => handleCloseApp("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <EdgeWindow onClose={() => handleCloseApp("edge")} onMinimize={() => handleMinimize("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "hangul" && (
-            <HangulWindow onClose={() => handleCloseApp("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <HangulWindow onClose={() => handleCloseApp("hangul")} onMinimize={() => handleMinimize("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "excel" && (
-            <ExcelWindow onClose={() => handleCloseApp("excel")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <ExcelWindow onClose={() => handleCloseApp("excel")} onMinimize={() => handleMinimize("excel")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "ppt" && (
-            <PowerPointWindow onClose={() => handleCloseApp("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <PowerPointWindow onClose={() => handleCloseApp("ppt")} onMinimize={() => handleMinimize("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
         </AnimatePresence>
       </div>
@@ -829,15 +870,50 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           >
             <EdgeIcon className="w-5 h-5" />
           </button>
+          {/* Minimized app chip */}
+          {minimizedApp && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleRestore(minimizedApp); }}
+              className="ml-2 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/90 text-[11px] font-display border-b-2 border-blue-400 transition-colors"
+              title="창 복원"
+            >
+              {minimizedApp === "mypc" && "🖥️ 내 PC"}
+              {minimizedApp === "edge" && "🌐 Edge"}
+              {minimizedApp === "hangul" && "📝 한글"}
+              {minimizedApp === "excel" && "📊 Excel"}
+              {minimizedApp === "ppt" && "📽️ PPT"}
+            </button>
+          )}
         </div>
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
           <span>🔊</span>
           <span>🌐</span>
           <span>🔋</span>
-          <div className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight">
+          <button
+            onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
+            className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors text-white/80"
+          >
             {koreanTime}
-          </div>
+          </button>
         </div>
+
+        {/* Calendar popup */}
+        <AnimatePresence>
+          {calendarOpen && (
+            <>
+              <div className="fixed inset-0 z-[55]" onClick={() => setCalendarOpen(false)} />
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 10, opacity: 0 }}
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CalendarPopup />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Success overlay */}
@@ -873,15 +949,20 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 };
 
 const DesktopIcon = ({
-  icon, label, highlight, onClick,
+  icon, label, highlight, intense, onClick, id, selected, onSelect,
 }: {
-  icon: React.ReactNode; label: string; highlight?: boolean; onClick: (e: React.MouseEvent) => void;
+  icon: React.ReactNode; label: string; highlight?: boolean; intense?: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  id?: string; selected?: boolean; onSelect?: (id: string | null) => void;
 }) => (
   <div
-    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 hover:bg-white/10 transition-colors ${
-      highlight ? "animate-pulse-highlight" : ""
-    }`}
-    onClick={onClick}
+    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+      selected ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10"
+    } ${intense ? "animate-target-glow" : highlight ? "animate-pulse-highlight" : ""}`}
+    onClick={(e) => {
+      if (id && onSelect) onSelect(id);
+      onClick(e);
+    }}
   >
     <div className="w-10 h-10 flex items-center justify-center">{icon}</div>
     <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">{label}</span>
@@ -893,5 +974,51 @@ const CtxItem = ({ icon, label }: { icon: string; label: string }) => (
     <span>{icon}</span> {label}
   </button>
 );
+
+const CalendarPopup = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const todayDate = today.getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+
+  return (
+    <div>
+      <div className="text-center mb-3">
+        <p className="text-[11px] text-gray-500">{year}년</p>
+        <p className="font-display text-base text-gray-800">
+          {today.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" })}
+        </p>
+      </div>
+      <div className="text-xs font-display text-gray-700 mb-2 flex items-center justify-between">
+        <span>{year}년 {month + 1}월</span>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-[10px] text-center">
+        {weekdays.map((w, i) => (
+          <div key={w} className={`py-1 font-bold ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}>{w}</div>
+        ))}
+        {cells.map((d, i) => (
+          <div
+            key={i}
+            className={`py-1.5 rounded ${
+              d === todayDate
+                ? "bg-blue-500 text-white font-bold"
+                : d == null
+                ? ""
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {d ?? ""}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default WinDesktop;

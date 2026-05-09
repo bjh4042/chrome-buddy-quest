@@ -1,10 +1,16 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { PRAISE_MESSAGES } from "@/types/quest";
 import { useMemo } from "react";
+import { Star } from "lucide-react";
 
 interface CharacterPraiseProps {
   visible: boolean;
 }
+
+const CONFETTI_COLORS = [
+  "hsl(45 100% 55%)", "hsl(213 90% 60%)", "hsl(145 65% 50%)",
+  "hsl(0 75% 60%)", "hsl(280 70% 60%)", "hsl(30 100% 60%)",
+];
 
 const CharacterPraise = ({ visible }: CharacterPraiseProps) => {
   const msg = useMemo(
@@ -12,10 +18,43 @@ const CharacterPraise = ({ visible }: CharacterPraiseProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visible]
   );
+  const confetti = useMemo(
+    () => Array.from({ length: 28 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      delay: Math.random() * 0.4,
+      duration: 1.4 + Math.random() * 1.2,
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      size: 6 + Math.random() * 8,
+      rotate: Math.random() * 360,
+    })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [visible]
+  );
 
   return (
     <AnimatePresence>
       {visible && (
+        <>
+        {/* Confetti */}
+        <div className="fixed inset-0 z-[105] pointer-events-none overflow-hidden">
+          {confetti.map(c => (
+            <span
+              key={c.id}
+              style={{
+                position: "absolute",
+                left: `${c.left}%`,
+                top: "-20px",
+                width: c.size,
+                height: c.size * 1.4,
+                background: c.color,
+                transform: `rotate(${c.rotate}deg)`,
+                animation: `confetti-fall ${c.duration}s ${c.delay}s ease-in forwards`,
+                borderRadius: "2px",
+              }}
+            />
+          ))}
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.8 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -39,8 +78,19 @@ const CharacterPraise = ({ visible }: CharacterPraiseProps) => {
           >
             <div className="absolute -left-2 bottom-3 w-4 h-4 bg-card border-l border-b border-border rotate-45" />
             <p className="font-display text-base text-foreground relative z-10">{msg.text}</p>
+            {/* Sequential star fill */}
+            <div className="flex items-center justify-center gap-1 mt-2">
+              {[0, 1, 2].map(i => (
+                <Star
+                  key={i}
+                  className="w-5 h-5 text-[hsl(var(--star-fill))] fill-[hsl(var(--star-fill))] animate-star-pop"
+                  style={{ animationDelay: `${0.4 + i * 0.18}s` }}
+                />
+              ))}
+            </div>
           </motion.div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   );
