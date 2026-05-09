@@ -18,7 +18,7 @@ const ExcelIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 const allCols = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 const rows = Array.from({ length: 40 }, (_, i) => i + 1);
 
-const ExcelWindow = ({ onClose, currentQuestType, onQuestComplete }: ExcelWindowProps) => {
+const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: ExcelWindowProps) => {
   const [cells, setCells] = useState<Record<string, string>>({});
   const [activeCell, setActiveCell] = useState<string>("A1");
   const [editValue, setEditValue] = useState("");
@@ -107,6 +107,7 @@ const ExcelWindow = ({ onClose, currentQuestType, onQuestComplete }: ExcelWindow
       title="통합 문서1 - Excel"
       icon={<ExcelIcon className="w-4 h-4" />}
       onClose={onClose}
+      onMinimize={onMinimize}
       toolbar={toolbar}
     >
       <div className="flex-1 overflow-auto">
