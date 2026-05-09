@@ -636,7 +636,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             onClick={(e) => { e.stopPropagation(); handleStarClick(target.id); }}
           >
             <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
-              target.clicked ? "bg-green-400" : "bg-yellow-400/90 animate-pulse-highlight"
+              target.clicked
+                ? "bg-green-400"
+                : intensifyHighlight
+                ? "bg-yellow-400 animate-target-glow"
+                : "bg-yellow-400/90 animate-pulse-highlight"
             }`}>
               <StarIcon className="w-8 h-8 text-white fill-current" />
             </div>
@@ -970,5 +974,51 @@ const CtxItem = ({ icon, label }: { icon: string; label: string }) => (
     <span>{icon}</span> {label}
   </button>
 );
+
+const CalendarPopup = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const todayDate = today.getDate();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+
+  return (
+    <div>
+      <div className="text-center mb-3">
+        <p className="text-[11px] text-gray-500">{year}년</p>
+        <p className="font-display text-base text-gray-800">
+          {today.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "long" })}
+        </p>
+      </div>
+      <div className="text-xs font-display text-gray-700 mb-2 flex items-center justify-between">
+        <span>{year}년 {month + 1}월</span>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-[10px] text-center">
+        {weekdays.map((w, i) => (
+          <div key={w} className={`py-1 font-bold ${i === 0 ? "text-red-500" : i === 6 ? "text-blue-500" : "text-gray-500"}`}>{w}</div>
+        ))}
+        {cells.map((d, i) => (
+          <div
+            key={i}
+            className={`py-1.5 rounded ${
+              d === todayDate
+                ? "bg-blue-500 text-white font-bold"
+                : d == null
+                ? ""
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {d ?? ""}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default WinDesktop;
