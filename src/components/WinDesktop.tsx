@@ -738,18 +738,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
         {/* App windows */}
         <AnimatePresence>
-          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} />}
+          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} onMinimize={() => handleMinimize("mypc")} />}
           {openApp === "edge" && (
-            <EdgeWindow onClose={() => handleCloseApp("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <EdgeWindow onClose={() => handleCloseApp("edge")} onMinimize={() => handleMinimize("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "hangul" && (
-            <HangulWindow onClose={() => handleCloseApp("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <HangulWindow onClose={() => handleCloseApp("hangul")} onMinimize={() => handleMinimize("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "excel" && (
-            <ExcelWindow onClose={() => handleCloseApp("excel")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <ExcelWindow onClose={() => handleCloseApp("excel")} onMinimize={() => handleMinimize("excel")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
           {openApp === "ppt" && (
-            <PowerPointWindow onClose={() => handleCloseApp("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <PowerPointWindow onClose={() => handleCloseApp("ppt")} onMinimize={() => handleMinimize("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
           )}
         </AnimatePresence>
       </div>
@@ -866,15 +866,50 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           >
             <EdgeIcon className="w-5 h-5" />
           </button>
+          {/* Minimized app chip */}
+          {minimizedApp && (
+            <button
+              onClick={(e) => { e.stopPropagation(); handleRestore(minimizedApp); }}
+              className="ml-2 px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 text-white/90 text-[11px] font-display border-b-2 border-blue-400 transition-colors"
+              title="창 복원"
+            >
+              {minimizedApp === "mypc" && "🖥️ 내 PC"}
+              {minimizedApp === "edge" && "🌐 Edge"}
+              {minimizedApp === "hangul" && "📝 한글"}
+              {minimizedApp === "excel" && "📊 Excel"}
+              {minimizedApp === "ppt" && "📽️ PPT"}
+            </button>
+          )}
         </div>
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
           <span>🔊</span>
           <span>🌐</span>
           <span>🔋</span>
-          <div className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight">
+          <button
+            onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
+            className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors text-white/80"
+          >
             {koreanTime}
-          </div>
+          </button>
         </div>
+
+        {/* Calendar popup */}
+        <AnimatePresence>
+          {calendarOpen && (
+            <>
+              <div className="fixed inset-0 z-[55]" onClick={() => setCalendarOpen(false)} />
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 10, opacity: 0 }}
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <CalendarPopup />
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Success overlay */}
