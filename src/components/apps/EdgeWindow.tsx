@@ -5,6 +5,7 @@ import type { QuestType } from "@/types/quest";
 
 interface EdgeWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }

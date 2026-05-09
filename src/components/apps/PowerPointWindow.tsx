@@ -7,6 +7,7 @@ import pptIconImg from "@/assets/ppt-icon.png";
 
 interface PowerPointWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }

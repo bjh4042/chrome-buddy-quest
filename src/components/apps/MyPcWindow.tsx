@@ -4,6 +4,7 @@ import WindowFrame from "./WindowFrame";
 
 interface MyPcWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
 }
 
 const sidebarItems = [

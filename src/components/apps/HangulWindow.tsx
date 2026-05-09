@@ -8,6 +8,7 @@ import hangulIconImg from "@/assets/hangul-icon.png";
 
 interface HangulWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }

@@ -6,6 +6,7 @@ import excelIconImg from "@/assets/excel-icon.png";
 
 interface ExcelWindowProps {
   onClose: () => void;
+  onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
 }
