@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Square, ChevronDown, Monitor
+  FileText, Folder, Square, ChevronDown, Monitor, Calendar as CalendarIcon
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -124,6 +124,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [openApp, setOpenApp] = useState<OpenApp>(
     QUEST_APP_MAP[currentQuestType] ?? null
   );
+  const [minimizedApp, setMinimizedApp] = useState<OpenApp>(null);
+  const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [clickTargets, setClickTargets] = useState([
     { id: 1, x: 35, y: 25, clicked: false },
     { id: 2, x: 55, y: 40, clicked: false },
@@ -154,6 +157,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     visible: false, pos: { x: 0, y: 0 },
   });
   const wrongClickCount = useRef(0);
+  const [intensifyHighlight, setIntensifyHighlight] = useState(false);
 
   // Long-press for mobile right-click
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +238,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         pos: { x: e.clientX - rect.left, y: e.clientY - rect.top },
       });
       setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3000);
+      setIntensifyHighlight(true);
+      setTimeout(() => setIntensifyHighlight(false), 4000);
     }
   };
 
@@ -418,11 +424,23 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setStartMenuOpen(false);
     setSubMenuOpen(false);
     setSelectedFile(false);
+    setSelectedIcon(null);
+    setCalendarOpen(false);
   };
 
   const handleDesktopClick = (e: React.MouseEvent) => {
     closeAll();
     handleWrongClick(e);
+  };
+
+  const handleMinimize = (app: OpenApp) => {
+    setMinimizedApp(app);
+    setOpenApp(null);
+  };
+
+  const handleRestore = (app: OpenApp) => {
+    setOpenApp(app);
+    setMinimizedApp(null);
   };
 
   const isHighlighted = (target: string) => {
