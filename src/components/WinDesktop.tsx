@@ -508,32 +508,51 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         {/* Desktop icons grid */}
         <div className="flex flex-col gap-1 items-start">
           <DesktopIcon
+            id="mypc"
+            selected={selectedIcon === "mypc"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopMypcImg} alt="내 PC" className="w-10 h-10 object-contain" />}
             label="내 PC"
             highlight={isHighlighted("mypc")}
+            intense={intensifyHighlight && isHighlighted("mypc")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("mypc", ["double-click", "open-mypc"]); }}
           />
           <DesktopIcon
+            id="trash"
+            selected={selectedIcon === "trash"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopTrashImg} alt="휴지통" className="w-10 h-10 object-contain" />}
             label="휴지통"
             onClick={(e) => e.stopPropagation()}
           />
           <DesktopIcon
+            id="hangul"
+            selected={selectedIcon === "hangul"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopHangulImg} alt="한글" className="w-10 h-10 object-contain" />}
             label="한글 2024"
             highlight={isHighlighted("hangul")}
+            intense={intensifyHighlight && isHighlighted("hangul")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("hangul", ["open-hangul"]); }}
           />
           <DesktopIcon
+            id="excel"
+            selected={selectedIcon === "excel"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopExcelImg} alt="Excel" className="w-10 h-10 object-contain" />}
             label="Excel"
             highlight={isHighlighted("excel")}
+            intense={intensifyHighlight && isHighlighted("excel")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("excel", ["open-excel"]); }}
           />
           <DesktopIcon
+            id="ppt"
+            selected={selectedIcon === "ppt"}
+            onSelect={setSelectedIcon}
             icon={<img src={desktopPptImg} alt="PowerPoint" className="w-10 h-10 object-contain" />}
             label="PowerPoint"
             highlight={isHighlighted("ppt")}
+            intense={intensifyHighlight && isHighlighted("ppt")}
             onClick={(e) => { e.stopPropagation(); handleIconDoubleClick("ppt", ["open-ppt"]); }}
           />
 
@@ -891,15 +910,20 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 };
 
 const DesktopIcon = ({
-  icon, label, highlight, onClick,
+  icon, label, highlight, intense, onClick, id, selected, onSelect,
 }: {
-  icon: React.ReactNode; label: string; highlight?: boolean; onClick: (e: React.MouseEvent) => void;
+  icon: React.ReactNode; label: string; highlight?: boolean; intense?: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  id?: string; selected?: boolean; onSelect?: (id: string | null) => void;
 }) => (
   <div
-    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 hover:bg-white/10 transition-colors ${
-      highlight ? "animate-pulse-highlight" : ""
-    }`}
-    onClick={onClick}
+    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+      selected ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10"
+    } ${intense ? "animate-target-glow" : highlight ? "animate-pulse-highlight" : ""}`}
+    onClick={(e) => {
+      if (id && onSelect) onSelect(id);
+      onClick(e);
+    }}
   >
     <div className="w-10 h-10 flex items-center justify-center">{icon}</div>
     <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">{label}</span>
