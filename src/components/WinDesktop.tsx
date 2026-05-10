@@ -273,7 +273,11 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       setContextMenuPos({ x, y });
       setContextMenuOpen(true);
       setFileContextMenu(false);
-      if (currentQuestType === "right-click") triggerSuccess();
+      if (currentQuestType === "right-click") {
+        // Close the context menu when the mission ends
+        setTimeout(() => setContextMenuOpen(false), 600);
+        triggerSuccess();
+      }
     }
   };
 
@@ -611,7 +615,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 className={`absolute cursor-grab active:cursor-grabbing z-30 ${
                   isDragging ? "opacity-80 scale-110" : "animate-pulse-highlight"
                 }`}
-                style={{ left: 48 + dragPos.x, top: 320 + dragPos.y }}
+                style={{ left: 48 + dragPos.x, top: 460 + dragPos.y }}
                 onMouseDown={handleDragStart}
                 onTouchStart={handleDragStart}
                 onClick={e => e.stopPropagation()}
