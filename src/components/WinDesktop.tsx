@@ -201,12 +201,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     wrongClickCount.current = 0;
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
     if (currentQuestType === "click") {
-      const timer = setTimeout(() => setShowFingerGuide(true), 3000);
+      const timer = setTimeout(() => setShowFingerGuide(true), 10000);
       return () => clearTimeout(timer);
     }
     const fp = FINGER_POSITIONS[currentQuestType] || TASKBAR_FINGER_POSITIONS[currentQuestType];
     if (fp) {
-      const timer = setTimeout(() => setShowFingerGuide(true), fp.delay);
+      const timer = setTimeout(() => setShowFingerGuide(true), 10000);
       return () => clearTimeout(timer);
     }
   }, [currentQuestType]);
