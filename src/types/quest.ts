@@ -12,7 +12,7 @@ export interface Quest {
   termKey?: string;
 }
 
-export type QuestCategory = "mouse" | "windows" | "internet" | "hangul" | "excel" | "powerpoint" | "finish";
+export type QuestCategory = "mouse" | "windows" | "internet" | "settings" | "keyboard" | "hangul" | "excel" | "powerpoint" | "finish";
 
 export type QuestType =
   | "click"
@@ -27,6 +27,12 @@ export type QuestType =
   | "open-browser"
   | "type-url"
   | "close-edge"
+  | "volume-control"
+  | "wifi-connect"
+  | "shortcut-copy"
+  | "shortcut-paste"
+  | "shortcut-save"
+  | "shortcut-alt-tab"
   | "open-hangul"
   | "hangul-typing"
   | "hangul-font-size"
@@ -50,6 +56,8 @@ export const QUEST_CATEGORIES: { id: QuestCategory; label: string; emoji: string
   { id: "mouse", label: "마우스 연습", emoji: "🖱️" },
   { id: "windows", label: "윈도우 기본", emoji: "🪟" },
   { id: "internet", label: "인터넷", emoji: "🌐" },
+  { id: "settings", label: "설정", emoji: "⚙️" },
+  { id: "keyboard", label: "단축키", emoji: "⌨️" },
   { id: "hangul", label: "한글 문서", emoji: "📝" },
   { id: "excel", label: "엑셀", emoji: "📊" },
   { id: "powerpoint", label: "파워포인트", emoji: "📽️" },
@@ -67,6 +75,9 @@ export const TERMS: Record<string, { term: string; meaning: string; emoji: strin
   url: { term: "URL(주소)", meaning: "인터넷에서 웹사이트를 찾아가는 주소예요. 예: naver.com", emoji: "🔗" },
   save: { term: "저장", meaning: "작업한 내용을 컴퓨터에 보관하는 것이에요. 저장하지 않으면 날아갈 수 있어요!", emoji: "💾" },
   shutdown: { term: "시스템 종료", meaning: "컴퓨터를 안전하게 끄는 방법이에요. 시작 → 전원 → 시스템 종료 순서로 해요!", emoji: "🔴" },
+  volume: { term: "볼륨(소리 크기)", meaning: "스피커에서 나오는 소리의 크기예요. 작업 표시줄의 🔊 아이콘에서 조절할 수 있어요!", emoji: "🔊" },
+  wifi: { term: "와이파이(Wi-Fi)", meaning: "선 없이 인터넷에 연결하는 방법이에요. 네트워크를 선택하고 비밀번호를 입력하면 연결돼요!", emoji: "📶" },
+  shortcut: { term: "단축키", meaning: "키보드 두 개 이상을 동시에 눌러서 빠르게 명령하는 방법이에요. 예: Ctrl+C는 복사!", emoji: "⌨️" },
 };
 
 export const PRAISE_MESSAGES = [
@@ -93,6 +104,12 @@ export const WRONG_CLICK_HINTS: Record<QuestType, string> = {
   "open-browser": "💡 작업 표시줄에서 Edge 아이콘을 찾아보세요!",
   "type-url": "💡 주소창에 naver.com을 입력하고 Enter를 누르세요!",
   "close-edge": "💡 Edge 창의 오른쪽 위 X 버튼을 눌러보세요!",
+  "volume-control": "💡 작업 표시줄 오른쪽의 🔊 아이콘을 클릭한 후, 슬라이더를 50까지 옮기세요!",
+  "wifi-connect": "💡 작업 표시줄의 🌐 아이콘 클릭 → '우리집 WiFi' 선택 → 비밀번호 12345678 입력!",
+  "shortcut-copy": "💡 키보드의 Ctrl 키와 C 키를 동시에 눌러보세요!",
+  "shortcut-paste": "💡 키보드의 Ctrl 키와 V 키를 동시에 눌러보세요!",
+  "shortcut-save": "💡 키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
+  "shortcut-alt-tab": "💡 키보드의 Alt 키와 Tab 키를 동시에 눌러보세요!",
   "open-hangul": "💡 바탕화면의 '한글' 아이콘을 더블클릭하세요!",
   "hangul-typing": "💡 문서 영역을 클릭하고 '안녕하세요'를 입력하세요!",
   "hangul-font-size": "💡 글자 크기 버튼을 클릭해서 '20'을 선택하세요!",
@@ -188,6 +205,44 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     instruction: "Edge 창의 오른쪽 위 X 버튼을 눌러 닫으세요!",
     points: 10, type: "close-edge", category: "internet",
     hint: "창의 오른쪽 위 모서리에 있는 X 버튼을 클릭해요!",
+  },
+  // Settings (volume, wifi)
+  {
+    id: "volume-control", title: "볼륨 조절하기", description: "스피커 소리 크기를 바꿔보세요!",
+    instruction: "작업 표시줄의 🔊 아이콘을 클릭하고, 볼륨을 50으로 조절하세요!",
+    points: 15, type: "volume-control", category: "settings",
+    hint: "작업 표시줄 오른쪽의 🔊 아이콘을 클릭하면 슬라이더가 나와요!", termKey: "volume",
+  },
+  {
+    id: "wifi-connect", title: "와이파이 연결하기", description: "무선 네트워크에 접속해보세요!",
+    instruction: "🌐 아이콘 클릭 → '우리집 WiFi' 선택 → 비밀번호 '12345678' 입력 → 연결!",
+    points: 25, type: "wifi-connect", category: "settings",
+    hint: "작업 표시줄의 🌐 아이콘을 클릭하면 와이파이 목록이 나와요!", termKey: "wifi",
+  },
+  // Keyboard shortcuts
+  {
+    id: "shortcut-copy", title: "복사 단축키 (Ctrl+C)", description: "키보드로 복사하기!",
+    instruction: "키보드의 Ctrl 키와 C 키를 동시에 눌러보세요!",
+    points: 15, type: "shortcut-copy", category: "keyboard",
+    hint: "왼손으로 Ctrl 키를 누른 채, 오른손으로 C 키를 눌러요!", termKey: "shortcut",
+  },
+  {
+    id: "shortcut-paste", title: "붙여넣기 단축키 (Ctrl+V)", description: "키보드로 붙여넣기!",
+    instruction: "키보드의 Ctrl 키와 V 키를 동시에 눌러보세요!",
+    points: 15, type: "shortcut-paste", category: "keyboard",
+    hint: "복사(Ctrl+C)한 내용을 다른 곳에 넣을 때 써요!", termKey: "shortcut",
+  },
+  {
+    id: "shortcut-save", title: "저장 단축키 (Ctrl+S)", description: "키보드로 저장하기!",
+    instruction: "키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
+    points: 15, type: "shortcut-save", category: "keyboard",
+    hint: "문서를 저장할 때 가장 많이 쓰는 단축키예요!", termKey: "shortcut",
+  },
+  {
+    id: "shortcut-alt-tab", title: "창 전환 (Alt+Tab)", description: "창 사이를 빠르게 이동!",
+    instruction: "키보드의 Alt 키와 Tab 키를 동시에 눌러보세요!",
+    points: 15, type: "shortcut-alt-tab", category: "keyboard",
+    hint: "여러 창이 열려있을 때 빠르게 전환하는 방법이에요!", termKey: "shortcut",
   },
   // 한글
   {
