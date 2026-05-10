@@ -9,31 +9,17 @@ interface FingerGuideProps {
 
 const FingerGuide = ({ visible, x, y, label }: FingerGuideProps) => (
   <AnimatePresence>
-    {visible && (
+    {visible && label && (
       <motion.div
         className="absolute z-[90] pointer-events-none flex flex-col items-center"
-        style={{ left: x, top: y, transform: "translate(-20%, -95%)" }}
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.5 }}
+        style={{ left: x, top: y, transform: "translate(-50%, -120%)" }}
+        initial={{ opacity: 0, y: 5, scale: 0.8 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
       >
-        {label && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-0.5 bg-foreground/90 text-background text-[11px] font-display px-2.5 py-1 rounded-full whitespace-nowrap shadow-lg"
-          >
-            {label}
-          </motion.div>
-        )}
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-          className="text-3xl drop-shadow-lg"
-        >
-          👇
-        </motion.div>
+        <div className="bg-foreground/90 text-background text-xs font-display px-3 py-1.5 rounded-full whitespace-nowrap shadow-lg animate-bounce-gentle">
+          {label}
+        </div>
       </motion.div>
     )}
   </AnimatePresence>
