@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Monitor
+  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -127,6 +127,13 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [minimizedApp, setMinimizedApp] = useState<OpenApp>(null);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [volumeOpen, setVolumeOpen] = useState(false);
+  const [volume, setVolume] = useState(30);
+  const [wifiOpen, setWifiOpen] = useState(false);
+  const [wifiSelected, setWifiSelected] = useState<string | null>(null);
+  const [wifiPassword, setWifiPassword] = useState("");
+  const [wifiConnected, setWifiConnected] = useState(false);
+  const [wifiError, setWifiError] = useState("");
   const [clickTargets, setClickTargets] = useState([
     { id: 1, x: 35, y: 25, clicked: false },
     { id: 2, x: 55, y: 40, clicked: false },
@@ -430,6 +437,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setSelectedFile(false);
     setSelectedIcon(null);
     setCalendarOpen(false);
+    setVolumeOpen(false);
+    setWifiOpen(false);
   };
 
   const handleDesktopClick = (e: React.MouseEvent) => {
@@ -458,8 +467,53 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       hangul: ["open-hangul"],
       excel: ["open-excel"],
       ppt: ["open-ppt"],
+      volume: ["volume-control"],
+      wifi: ["wifi-connect"],
     };
     return map[target]?.includes(currentQuestType) || false;
+  };
+
+  // Keyboard shortcut missions
+  const SHORTCUT_KEYS: Partial<Record<QuestType, { ctrl?: boolean; alt?: boolean; key: string; label: string }>> = {
+    "shortcut-copy": { ctrl: true, key: "c", label: "Ctrl + C" },
+    "shortcut-paste": { ctrl: true, key: "v", label: "Ctrl + V" },
+    "shortcut-save": { ctrl: true, key: "s", label: "Ctrl + S" },
+    "shortcut-alt-tab": { alt: true, key: "tab", label: "Alt + Tab" },
+  };
+
+  useEffect(() => {
+    const combo = SHORTCUT_KEYS[currentQuestType];
+    if (!combo) return;
+    const handler = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const ctrlOk = combo.ctrl ? (e.ctrlKey || e.metaKey) : true;
+      const altOk = combo.alt ? e.altKey : true;
+      if (ctrlOk && altOk && key === combo.key) {
+        e.preventDefault();
+        triggerSuccess();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [currentQuestType, triggerSuccess]);
+
+  // Volume slider — success when reaches 50 (±2)
+  useEffect(() => {
+    if (currentQuestType === "volume-control" && Math.abs(volume - 50) <= 2) {
+      triggerSuccess();
+    }
+  }, [volume, currentQuestType, triggerSuccess]);
+
+  const handleWifiConnect = () => {
+    if (wifiPassword === "12345678") {
+      setWifiConnected(true);
+      setWifiError("");
+      if (currentQuestType === "wifi-connect") {
+        setTimeout(() => { setWifiOpen(false); triggerSuccess(); }, 700);
+      }
+    } else {
+      setWifiError("비밀번호가 틀렸어요. 12345678 을 입력하세요!");
+    }
   };
 
   const fingerPos = currentQuestType === "click"
@@ -890,8 +944,20 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </div>
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
-          <span>🔊</span>
-          <span>🌐</span>
+          <button
+            onClick={(e) => { e.stopPropagation(); setVolumeOpen(o => !o); setWifiOpen(false); setCalendarOpen(false); }}
+            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("volume") ? "animate-pulse-highlight" : ""}`}
+            title="볼륨"
+          >
+            {volume === 0 ? <VolumeX className="w-4 h-4" /> : volume < 50 ? <Volume1 className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setWifiOpen(o => !o); setVolumeOpen(false); setCalendarOpen(false); }}
+            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("wifi") ? "animate-pulse-highlight" : ""} ${wifiConnected ? "text-green-300" : ""}`}
+            title="와이파이"
+          >
+            <Wifi className="w-4 h-4" />
+          </button>
           <span>🔋</span>
           <button
             onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
@@ -900,6 +966,122 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             {koreanTime}
           </button>
         </div>
+
+        {/* Volume popup */}
+        <AnimatePresence>
+          {volumeOpen && (
+            <>
+              <div className="fixed inset-0 z-[55]" onClick={() => setVolumeOpen(false)} />
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 10, opacity: 0 }}
+                className="absolute right-20 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}
+                  <span className="font-display text-sm text-gray-800">스피커</span>
+                  <span className="ml-auto text-xs text-gray-500">{volume}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={volume}
+                  onChange={(e) => setVolume(Number(e.target.value))}
+                  className={`w-full accent-blue-500 ${currentQuestType === "volume-control" ? "animate-pulse-highlight rounded" : ""}`}
+                />
+                {currentQuestType === "volume-control" && (
+                  <p className="mt-2 text-[11px] text-blue-600">🎯 볼륨을 50까지 옮겨주세요!</p>
+                )}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Wi-Fi popup */}
+        <AnimatePresence>
+          {wifiOpen && (
+            <>
+              <div className="fixed inset-0 z-[55]" onClick={() => setWifiOpen(false)} />
+              <motion.div
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 10, opacity: 0 }}
+                className="absolute right-12 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-80"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Wifi className="w-4 h-4 text-blue-500" />
+                  <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
+                </div>
+                {!wifiSelected && (
+                  <div className="space-y-1">
+                    {[
+                      { name: "우리집 WiFi", strength: 4, secure: true, target: true },
+                      { name: "iptime_5G", strength: 3, secure: true },
+                      { name: "SK_Guest", strength: 2, secure: false },
+                      { name: "KT_WiFi_2A8F", strength: 2, secure: true },
+                    ].map(net => (
+                      <button
+                        key={net.name}
+                        onClick={() => { setWifiSelected(net.name); setWifiPassword(""); setWifiError(""); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors ${
+                          net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
+                        }`}
+                      >
+                        <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
+                        <span className="text-xs text-gray-800 flex-1">{net.name}</span>
+                        {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {wifiSelected && !wifiConnected && (
+                  <div>
+                    <p className="text-xs text-gray-700 mb-2">
+                      <span className="font-bold">{wifiSelected}</span> 에 연결
+                    </p>
+                    <p className="text-[11px] text-gray-500 mb-2">네트워크 보안 키를 입력하세요</p>
+                    <input
+                      type="password"
+                      value={wifiPassword}
+                      onChange={(e) => { setWifiPassword(e.target.value); setWifiError(""); }}
+                      placeholder="비밀번호"
+                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                      autoFocus
+                    />
+                    {wifiError && <p className="text-[10px] text-red-500 mt-1">{wifiError}</p>}
+                    {currentQuestType === "wifi-connect" && (
+                      <p className="text-[10px] text-blue-600 mt-1">힌트: 12345678</p>
+                    )}
+                    <div className="flex gap-2 mt-3 justify-end">
+                      <button
+                        onClick={() => { setWifiSelected(null); setWifiPassword(""); setWifiError(""); }}
+                        className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={handleWifiConnect}
+                        className="px-3 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded animate-pulse-highlight"
+                      >
+                        연결
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {wifiConnected && (
+                  <div className="text-center py-2">
+                    <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
+                    <p className="text-xs text-green-600 font-bold">연결됨: {wifiSelected}</p>
+                  </div>
+                )}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Calendar popup */}
         <AnimatePresence>
@@ -919,6 +1101,33 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </AnimatePresence>
       </div>
+
+      {/* Keyboard shortcut overlay */}
+      <AnimatePresence>
+        {SHORTCUT_KEYS[currentQuestType] && !showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] pointer-events-none"
+          >
+            <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-8 py-6 text-center">
+              <p className="font-display text-sm text-gray-600 mb-3">⌨️ 키보드를 눌러주세요!</p>
+              <div className="flex items-center justify-center gap-2">
+                {SHORTCUT_KEYS[currentQuestType]!.label.split(" + ").map((k, i, arr) => (
+                  <span key={i} className="flex items-center gap-2">
+                    <kbd className="px-3 py-2 bg-gray-100 border-b-4 border-gray-300 rounded-lg font-display text-base text-gray-800 animate-bounce-gentle">
+                      {k}
+                    </kbd>
+                    {i < arr.length - 1 && <span className="text-gray-400 font-bold">+</span>}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-500 mt-3">동시에 눌러야 해요</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Success overlay */}
       <AnimatePresence>
