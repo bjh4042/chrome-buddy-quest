@@ -455,13 +455,15 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const closeAll = () => {
     setContextMenuOpen(false);
     setFileContextMenu(false);
+    setFolderContextMenu(false);
     setStartMenuOpen(false);
     setSubMenuOpen(false);
     setSelectedFile(false);
+    setSelectedFolder(false);
     setSelectedIcon(null);
     setCalendarOpen(false);
-    setVolumeOpen(false);
-    setWifiOpen(false);
+    setQuickSettingsOpen(false);
+    setWifiSubOpen(false);
   };
 
   const handleDesktopClick = (e: React.MouseEvent) => {
@@ -486,12 +488,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       desktop: ["right-click", "create-file"],
       start: ["start-menu", "shutdown"],
       file: ["delete-file"],
+      folder: ["rename-folder"],
       edge: ["open-browser", "type-url"],
       hangul: ["open-hangul"],
       excel: ["open-excel"],
       ppt: ["open-ppt"],
       volume: ["volume-control"],
       wifi: ["wifi-connect"],
+      quickSettings: ["volume-control", "wifi-connect"],
     };
     return map[target]?.includes(currentQuestType) || false;
   };
