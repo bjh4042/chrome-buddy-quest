@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check
+  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check,
+  Bluetooth, Plane, Moon, Accessibility, Cast, Settings as SettingsIcon, ChevronLeft
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -127,9 +128,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [minimizedApp, setMinimizedApp] = useState<OpenApp>(null);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [volumeOpen, setVolumeOpen] = useState(false);
+  const [quickSettingsOpen, setQuickSettingsOpen] = useState(false);
+  const [wifiSubOpen, setWifiSubOpen] = useState(false);
   const [volume, setVolume] = useState(30);
-  const [wifiOpen, setWifiOpen] = useState(false);
   const [wifiSelected, setWifiSelected] = useState<string | null>(null);
   const [wifiPassword, setWifiPassword] = useState("");
   const [wifiConnected, setWifiConnected] = useState(false);
@@ -140,6 +141,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     { id: 3, x: 70, y: 20, clicked: false },
   ]);
   const [newFolderCreated, setNewFolderCreated] = useState(false);
+  const [folderName, setFolderName] = useState("새 폴더");
+  const [selectedFolder, setSelectedFolder] = useState(false);
+  const [folderContextMenu, setFolderContextMenu] = useState(false);
+  const [renamingFolder, setRenamingFolder] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(true);
   const [selectedFile, setSelectedFile] = useState(false);
   const [fileContextMenu, setFileContextMenu] = useState(false);
@@ -199,6 +204,24 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
     if (currentQuestType === "create-file") {
       setNewFolderCreated(false);
+      setFolderName("새 폴더");
+      setSelectedFolder(false);
+    }
+    if (currentQuestType === "rename-folder") {
+      // Need a folder to rename — auto-create one
+      setNewFolderCreated(true);
+      setFolderName("새 폴더");
+      setRenamingFolder(false);
+    }
+    if (currentQuestType === "wifi-connect") {
+      setWifiSelected(null);
+      setWifiPassword("");
+      setWifiConnected(false);
+      setWifiError("");
+      setWifiSubOpen(false);
+    }
+    if (currentQuestType === "volume-control") {
+      setVolume(30);
     }
   }, [currentQuestType]);
 
@@ -478,7 +501,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     "shortcut-copy": { ctrl: true, key: "c", label: "Ctrl + C" },
     "shortcut-paste": { ctrl: true, key: "v", label: "Ctrl + V" },
     "shortcut-save": { ctrl: true, key: "s", label: "Ctrl + S" },
-    "shortcut-alt-tab": { alt: true, key: "tab", label: "Alt + Tab" },
   };
 
   useEffect(() => {
@@ -497,6 +519,26 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     return () => window.removeEventListener("keydown", handler);
   }, [currentQuestType, triggerSuccess]);
 
+  // Del key for delete-file, F2 for rename-folder
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (currentQuestType === "delete-file" && (e.key === "Delete" || e.key === "Del") && selectedFile) {
+        e.preventDefault();
+        handleDeleteFile();
+      }
+      if (currentQuestType === "rename-folder" && e.key === "F2") {
+        e.preventDefault();
+        setRenamingFolder(true);
+        setFolderContextMenu(false);
+        triggerSuccess();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [currentQuestType, selectedFile, triggerSuccess]);
+
   // Volume slider — success when reaches 50 (±2)
   useEffect(() => {
     if (currentQuestType === "volume-control" && Math.abs(volume - 50) <= 2) {
@@ -509,7 +551,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       setWifiConnected(true);
       setWifiError("");
       if (currentQuestType === "wifi-connect") {
-        setTimeout(() => { setWifiOpen(false); triggerSuccess(); }, 700);
+        setTimeout(() => { setQuickSettingsOpen(false); triggerSuccess(); }, 700);
       }
     } else {
       setWifiError("비밀번호가 틀렸어요. 12345678 을 입력하세요!");
