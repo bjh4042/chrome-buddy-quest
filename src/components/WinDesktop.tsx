@@ -681,11 +681,41 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
           {newFolderCreated && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-              <DesktopIcon
-                icon={<Folder className="w-7 h-7 text-yellow-400" />}
-                label="새 폴더"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div
+                className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+                  selectedFolder ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10"
+                } ${isHighlighted("folder") ? "animate-pulse-highlight" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setSelectedFolder(true); }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (currentQuestType === "rename-folder") {
+                    setSelectedFolder(true);
+                    const rect = (e.currentTarget.closest('.desktop-area') as HTMLElement)?.getBoundingClientRect();
+                    if (rect) setContextMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                    setFolderContextMenu(true);
+                    setFileContextMenu(false);
+                    setContextMenuOpen(false);
+                  }
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <Folder className="w-7 h-7 text-yellow-400" />
+                </div>
+                {renamingFolder ? (
+                  <input
+                    autoFocus
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                    onBlur={() => setRenamingFolder(false)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setRenamingFolder(false); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] text-center w-full px-1 rounded bg-white text-gray-800 border border-blue-400"
+                  />
+                ) : (
+                  <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">{folderName}</span>
+                )}
+              </div>
             </motion.div>
           )}
         </div>
@@ -846,9 +876,21 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
         {/* App windows */}
         <AnimatePresence>
-          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} onMinimize={() => handleMinimize("mypc")} />}
+          {openApp === "mypc" && (
+            <MyPcWindow
+              onClose={() => handleCloseApp("mypc")}
+              onMinimize={() => handleMinimize("mypc")}
+              highlightClose={currentQuestType === "close-mypc"}
+            />
+          )}
           {openApp === "edge" && (
-            <EdgeWindow onClose={() => handleCloseApp("edge")} onMinimize={() => handleMinimize("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <EdgeWindow
+              onClose={() => handleCloseApp("edge")}
+              onMinimize={() => handleMinimize("edge")}
+              currentQuestType={currentQuestType}
+              onQuestComplete={triggerSuccess}
+              highlightClose={currentQuestType === "close-edge"}
+            />
           )}
           {openApp === "hangul" && (
             <HangulWindow onClose={() => handleCloseApp("hangul")} onMinimize={() => handleMinimize("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
