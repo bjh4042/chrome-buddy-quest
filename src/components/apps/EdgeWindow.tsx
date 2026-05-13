@@ -8,6 +8,7 @@ interface EdgeWindowProps {
   onMinimize?: () => void;
   currentQuestType: QuestType;
   onQuestComplete: () => void;
+  highlightClose?: boolean;
 }
 
 const EdgeIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -177,7 +178,7 @@ const NaverPage = () => (
   </div>
 );
 
-const EdgeWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: EdgeWindowProps) => {
+const EdgeWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete, highlightClose }: EdgeWindowProps) => {
   const [url, setUrl] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const isUrlQuest = currentQuestType === "type-url";
@@ -198,6 +199,7 @@ const EdgeWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }: 
       icon={<EdgeIcon className="w-4 h-4" />}
       onClose={onClose}
       onMinimize={onMinimize}
+      highlightClose={highlightClose}
     >
       {/* Tab bar */}
       <div className="flex items-center bg-gray-100 px-2 pt-0.5">
