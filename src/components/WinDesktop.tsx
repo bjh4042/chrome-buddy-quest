@@ -403,6 +403,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "create-file") triggerSuccess();
   };
 
+  const handleRenameFolder = () => {
+    setRenamingFolder(true);
+    setFolderContextMenu(false);
+    if (currentQuestType === "rename-folder") triggerSuccess();
+  };
+
   const handleBrowserClick = () => {
     setOpenApp("edge");
     if (currentQuestType === "open-browser") triggerSuccess();
