@@ -991,20 +991,21 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         </div>
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
           <button
-            onClick={(e) => { e.stopPropagation(); setVolumeOpen(o => !o); setWifiOpen(false); setCalendarOpen(false); }}
-            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("volume") ? "animate-pulse-highlight" : ""}`}
-            title="볼륨"
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuickSettingsOpen(o => !o);
+              setCalendarOpen(false);
+              setWifiSubOpen(false);
+            }}
+            className={`flex items-center gap-1 p-1 rounded hover:bg-white/10 transition-colors ${
+              isHighlighted("quickSettings") ? "animate-pulse-highlight" : ""
+            }`}
+            title="빠른 설정"
           >
+            <Wifi className={`w-4 h-4 ${wifiConnected ? "text-green-300" : ""}`} />
             {volume === 0 ? <VolumeX className="w-4 h-4" /> : volume < 50 ? <Volume1 className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            <span>🔋</span>
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setWifiOpen(o => !o); setVolumeOpen(false); setCalendarOpen(false); }}
-            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("wifi") ? "animate-pulse-highlight" : ""} ${wifiConnected ? "text-green-300" : ""}`}
-            title="와이파이"
-          >
-            <Wifi className="w-4 h-4" />
-          </button>
-          <span>🔋</span>
           <button
             onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
             className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors text-white/80"
@@ -1013,116 +1014,132 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           </button>
         </div>
 
-        {/* Volume popup */}
+        {/* Quick Settings panel (Windows 11 style) */}
         <AnimatePresence>
-          {volumeOpen && (
+          {quickSettingsOpen && (
             <>
-              <div className="fixed inset-0 z-[55]" onClick={() => setVolumeOpen(false)} />
+              <div className="fixed inset-0 z-[55]" onClick={() => { setQuickSettingsOpen(false); setWifiSubOpen(false); }} />
               <motion.div
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-20 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-4 w-[360px]"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}
-                  <span className="font-display text-sm text-gray-800">스피커</span>
-                  <span className="ml-auto text-xs text-gray-500">{volume}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  className={`w-full accent-blue-500 ${currentQuestType === "volume-control" ? "animate-pulse-highlight rounded" : ""}`}
-                />
-                {currentQuestType === "volume-control" && (
-                  <p className="mt-2 text-[11px] text-blue-600">🎯 볼륨을 50까지 옮겨주세요!</p>
-                )}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Wi-Fi popup */}
-        <AnimatePresence>
-          {wifiOpen && (
-            <>
-              <div className="fixed inset-0 z-[55]" onClick={() => setWifiOpen(false)} />
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 10, opacity: 0 }}
-                className="absolute right-12 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-80"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Wifi className="w-4 h-4 text-blue-500" />
-                  <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
-                </div>
-                {!wifiSelected && (
-                  <div className="space-y-1">
-                    {[
-                      { name: "우리집 WiFi", strength: 4, secure: true, target: true },
-                      { name: "iptime_5G", strength: 3, secure: true },
-                      { name: "SK_Guest", strength: 2, secure: false },
-                      { name: "KT_WiFi_2A8F", strength: 2, secure: true },
-                    ].map(net => (
-                      <button
-                        key={net.name}
-                        onClick={() => { setWifiSelected(net.name); setWifiPassword(""); setWifiError(""); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors ${
-                          net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
-                        }`}
-                      >
-                        <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
-                        <span className="text-xs text-gray-800 flex-1">{net.name}</span>
-                        {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {wifiSelected && !wifiConnected && (
-                  <div>
-                    <p className="text-xs text-gray-700 mb-2">
-                      <span className="font-bold">{wifiSelected}</span> 에 연결
-                    </p>
-                    <p className="text-[11px] text-gray-500 mb-2">네트워크 보안 키를 입력하세요</p>
-                    <input
-                      type="password"
-                      value={wifiPassword}
-                      onChange={(e) => { setWifiPassword(e.target.value); setWifiError(""); }}
-                      placeholder="비밀번호"
-                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      autoFocus
-                    />
-                    {wifiError && <p className="text-[10px] text-red-500 mt-1">{wifiError}</p>}
-                    {currentQuestType === "wifi-connect" && (
-                      <p className="text-[10px] text-blue-600 mt-1">힌트: 12345678</p>
-                    )}
-                    <div className="flex gap-2 mt-3 justify-end">
-                      <button
-                        onClick={() => { setWifiSelected(null); setWifiPassword(""); setWifiError(""); }}
-                        className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        취소
-                      </button>
-                      <button
-                        onClick={handleWifiConnect}
-                        className="px-3 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded animate-pulse-highlight"
-                      >
-                        연결
+                {!wifiSubOpen ? (
+                  <>
+                    {/* Tile grid */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <QSTile
+                        icon={<Wifi className="w-5 h-5" />}
+                        label={wifiConnected ? wifiSelected || "Wi-Fi" : "Wi-Fi"}
+                        active={wifiConnected}
+                        chevron
+                        highlight={isHighlighted("wifi")}
+                        onClick={() => setWifiSubOpen(true)}
+                      />
+                      <QSTile icon={<Bluetooth className="w-5 h-5" />} label="연결 안 됨" active chevron />
+                      <QSTile icon={<Plane className="w-5 h-5" />} label="비행기 모드" />
+                      <QSTile icon={<Moon className="w-5 h-5" />} label="야간 모드" active />
+                      <QSTile icon={<Accessibility className="w-5 h-5" />} label="접근성" chevron />
+                      <QSTile icon={<Cast className="w-5 h-5" />} label="유선 디스플레이" active chevron />
+                    </div>
+                    {/* Volume slider */}
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center gap-3">
+                        {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={volume}
+                          onChange={(e) => setVolume(Number(e.target.value))}
+                          className={`flex-1 accent-blue-500 ${currentQuestType === "volume-control" ? "animate-pulse-highlight rounded" : ""}`}
+                        />
+                        <span className="text-xs text-gray-500 w-8 text-right">{volume}</span>
+                      </div>
+                      {currentQuestType === "volume-control" && (
+                        <p className="mt-2 text-[11px] text-blue-600 text-center">🎯 슬라이더를 50까지 옮겨주세요!</p>
+                      )}
+                    </div>
+                    <div className="flex justify-end pt-3">
+                      <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
+                        <SettingsIcon className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>
-                  </div>
-                )}
-                {wifiConnected && (
-                  <div className="text-center py-2">
-                    <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
-                    <p className="text-xs text-green-600 font-bold">연결됨: {wifiSelected}</p>
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <button onClick={() => { setWifiSubOpen(false); setWifiSelected(null); setWifiPassword(""); setWifiError(""); }} className="p-1 hover:bg-gray-100 rounded">
+                        <ChevronLeft className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <Wifi className="w-4 h-4 text-blue-500" />
+                      <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
+                    </div>
+                    {!wifiSelected && !wifiConnected && (
+                      <div className="space-y-1">
+                        {[
+                          { name: "우리집 WiFi", strength: 4, secure: true, target: true },
+                          { name: "iptime_5G", strength: 3, secure: true },
+                          { name: "SK_Guest", strength: 2, secure: false },
+                          { name: "KT_WiFi_2A8F", strength: 2, secure: true },
+                        ].map(net => (
+                          <button
+                            key={net.name}
+                            onClick={() => { setWifiSelected(net.name); setWifiPassword(""); setWifiError(""); }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors ${
+                              net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
+                            }`}
+                          >
+                            <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
+                            <span className="text-xs text-gray-800 flex-1">{net.name}</span>
+                            {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {wifiSelected && !wifiConnected && (
+                      <div>
+                        <p className="text-xs text-gray-700 mb-2">
+                          <span className="font-bold">{wifiSelected}</span> 에 연결
+                        </p>
+                        <p className="text-[11px] text-gray-500 mb-2">네트워크 보안 키를 입력하세요</p>
+                        <input
+                          type="password"
+                          value={wifiPassword}
+                          onChange={(e) => { setWifiPassword(e.target.value); setWifiError(""); }}
+                          placeholder="비밀번호"
+                          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                          autoFocus
+                        />
+                        {wifiError && <p className="text-[10px] text-red-500 mt-1">{wifiError}</p>}
+                        {currentQuestType === "wifi-connect" && (
+                          <p className="text-[10px] text-blue-600 mt-1">힌트: 12345678</p>
+                        )}
+                        <div className="flex gap-2 mt-3 justify-end">
+                          <button
+                            onClick={() => { setWifiSelected(null); setWifiPassword(""); setWifiError(""); }}
+                            className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={handleWifiConnect}
+                            className="px-3 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded animate-pulse-highlight"
+                          >
+                            연결
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {wifiConnected && (
+                      <div className="text-center py-2">
+                        <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
+                        <p className="text-xs text-green-600 font-bold">연결됨: {wifiSelected}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </motion.div>
             </>
