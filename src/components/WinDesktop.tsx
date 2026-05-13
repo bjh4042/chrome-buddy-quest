@@ -1251,6 +1251,32 @@ const CtxItem = ({ icon, label }: { icon: string; label: string }) => (
   </button>
 );
 
+const QSTile = ({
+  icon, label, active, chevron, highlight, onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  chevron?: boolean;
+  highlight?: boolean;
+  onClick?: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 border transition-all ${
+      active
+        ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+    } ${highlight ? "animate-pulse-highlight ring-2 ring-yellow-400" : ""}`}
+  >
+    <div className="flex items-center gap-1">
+      {icon}
+      {chevron && <ChevronRight className="w-3 h-3 opacity-70" />}
+    </div>
+    <span className="text-[10px] leading-tight text-center">{label}</span>
+  </button>
+);
+
 const CalendarPopup = () => {
   const today = new Date();
   const year = today.getFullYear();
