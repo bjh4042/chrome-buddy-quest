@@ -23,6 +23,7 @@ export type QuestType =
   | "open-mypc"
   | "close-mypc"
   | "create-file"
+  | "rename-folder"
   | "delete-file"
   | "open-browser"
   | "type-url"
@@ -100,7 +101,8 @@ export const WRONG_CLICK_HINTS: Record<QuestType, string> = {
   "open-mypc": "💡 '내 PC' 아이콘을 빠르게 두 번 클릭하세요!",
   "close-mypc": "💡 내 PC 창의 오른쪽 위 X 버튼을 눌러보세요!",
   "create-file": "💡 바탕화면 빈 곳에서 마우스 오른쪽 버튼을 눌러보세요!",
-  "delete-file": "💡 먼저 파일을 클릭해서 선택한 후, 마우스 오른쪽 버튼을 눌러보세요!",
+  "rename-folder": "💡 폴더를 우클릭 → '이름 바꾸기'를 누르거나, 폴더 선택 후 F2 키를 누르세요!",
+  "delete-file": "💡 파일을 선택한 후, 마우스 오른쪽 버튼 → 삭제 또는 Del 키를 누르세요!",
   "open-browser": "💡 작업 표시줄에서 Edge 아이콘을 찾아보세요!",
   "type-url": "💡 주소창에 naver.com을 입력하고 Enter를 누르세요!",
   "close-edge": "💡 Edge 창의 오른쪽 위 X 버튼을 눌러보세요!",
@@ -182,10 +184,16 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     hint: "바탕화면 빈 곳에서 마우스 오른쪽 버튼 → 새로 만들기 → 폴더!", termKey: "folder",
   },
   {
+    id: "rename-folder", title: "폴더 이름 바꾸기", description: "폴더 이름을 변경해보세요!",
+    instruction: "방법 1: 폴더 우클릭 → '이름 바꾸기'  /  방법 2: 폴더 선택 후 F2 키!",
+    points: 15, type: "rename-folder", category: "windows",
+    hint: "둘 중 편한 방법으로 해보세요. 단축키 F2가 더 빨라요!", termKey: "folder",
+  },
+  {
     id: "delete-file", title: "파일 삭제하기", description: "필요 없는 파일을 삭제해보세요!",
-    instruction: "삭제할 파일을 클릭한 후 마우스 오른쪽 버튼 클릭 → '삭제'를 누르세요!",
+    instruction: "파일을 선택한 후, 마우스 오른쪽 → '삭제' 또는 키보드 Del 키!",
     points: 15, type: "delete-file", category: "windows",
-    hint: "먼저 파일을 클릭해서 선택! 그 다음 마우스 오른쪽 버튼 → 삭제!",
+    hint: "먼저 파일을 클릭해서 선택! 그 다음 우클릭 → 삭제 또는 Del 키!",
   },
   // Internet
   {
@@ -237,12 +245,6 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     instruction: "키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
     points: 15, type: "shortcut-save", category: "keyboard",
     hint: "문서를 저장할 때 가장 많이 쓰는 단축키예요!", termKey: "shortcut",
-  },
-  {
-    id: "shortcut-alt-tab", title: "창 전환 (Alt+Tab)", description: "창 사이를 빠르게 이동!",
-    instruction: "키보드의 Alt 키와 Tab 키를 동시에 눌러보세요!",
-    points: 15, type: "shortcut-alt-tab", category: "keyboard",
-    hint: "여러 창이 열려있을 때 빠르게 전환하는 방법이에요!", termKey: "shortcut",
   },
   // 한글
   {
