@@ -880,6 +880,37 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </AnimatePresence>
 
+        {/* Folder context menu (rename) */}
+        <AnimatePresence>
+          {folderContextMenu && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute bg-white/95 backdrop-blur-md rounded-lg border border-gray-200 shadow-xl py-1 min-w-[200px] z-40"
+              style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CtxItem icon="📂" label="열기" />
+              <CtxItem icon="📋" label="복사" />
+              <CtxItem icon="✂️" label="잘라내기" />
+              <div className="border-t border-gray-100 my-0.5" />
+              <button
+                onClick={handleRenameFolder}
+                className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-blue-50 ${
+                  currentQuestType === "rename-folder" ? "bg-yellow-50 text-blue-600 font-bold animate-pulse-highlight" : "text-gray-700"
+                }`}
+              >
+                <span>✏️</span> 이름 바꾸기
+                <span className="ml-auto text-[10px] text-gray-400">F2</span>
+              </button>
+              <div className="border-t border-gray-100 my-0.5" />
+              <CtxItem icon="🗑️" label="삭제" />
+              <CtxItem icon="📋" label="속성" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* App windows */}
         <AnimatePresence>
           {openApp === "mypc" && (
