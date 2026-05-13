@@ -9,9 +9,10 @@ interface WindowFrameProps {
   onMinimize?: () => void;
   children: React.ReactNode;
   toolbar?: React.ReactNode;
+  highlightClose?: boolean;
 }
 
-const WindowFrame = ({ title, icon, onClose, onMinimize, children, toolbar }: WindowFrameProps) => {
+const WindowFrame = ({ title, icon, onClose, onMinimize, children, toolbar, highlightClose }: WindowFrameProps) => {
   const [maximized, setMaximized] = useState(false);
   return (
     <motion.div
@@ -50,7 +51,12 @@ const WindowFrame = ({ title, icon, onClose, onMinimize, children, toolbar }: Wi
               ? <Copy className="w-3 h-3 text-gray-600" />
               : <Square className="w-3 h-3 text-gray-600" />}
           </button>
-          <button onClick={onClose} className="p-1.5 hover:bg-red-500 hover:text-white rounded-sm transition-colors">
+          <button
+            onClick={onClose}
+            className={`p-1.5 hover:bg-red-500 hover:text-white rounded-sm transition-colors ${
+              highlightClose ? "bg-red-500 text-white animate-pulse-highlight ring-2 ring-red-400" : ""
+            }`}
+          >
             <X className="w-3 h-3" />
           </button>
         </div>
