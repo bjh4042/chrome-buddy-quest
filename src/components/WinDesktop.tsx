@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FolderOpen, Trash2, Star as StarIcon,
   ChevronRight, Power, Search,
-  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check
+  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check,
+  Bluetooth, Plane, Moon, Accessibility, Cast, Settings as SettingsIcon, ChevronLeft
 } from "lucide-react";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
@@ -127,9 +128,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [minimizedApp, setMinimizedApp] = useState<OpenApp>(null);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [volumeOpen, setVolumeOpen] = useState(false);
+  const [quickSettingsOpen, setQuickSettingsOpen] = useState(false);
+  const [wifiSubOpen, setWifiSubOpen] = useState(false);
   const [volume, setVolume] = useState(30);
-  const [wifiOpen, setWifiOpen] = useState(false);
   const [wifiSelected, setWifiSelected] = useState<string | null>(null);
   const [wifiPassword, setWifiPassword] = useState("");
   const [wifiConnected, setWifiConnected] = useState(false);
@@ -140,6 +141,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     { id: 3, x: 70, y: 20, clicked: false },
   ]);
   const [newFolderCreated, setNewFolderCreated] = useState(false);
+  const [folderName, setFolderName] = useState("새 폴더");
+  const [selectedFolder, setSelectedFolder] = useState(false);
+  const [folderContextMenu, setFolderContextMenu] = useState(false);
+  const [renamingFolder, setRenamingFolder] = useState(false);
   const [fileToDelete, setFileToDelete] = useState(true);
   const [selectedFile, setSelectedFile] = useState(false);
   const [fileContextMenu, setFileContextMenu] = useState(false);
@@ -199,6 +204,24 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
     if (currentQuestType === "create-file") {
       setNewFolderCreated(false);
+      setFolderName("새 폴더");
+      setSelectedFolder(false);
+    }
+    if (currentQuestType === "rename-folder") {
+      // Need a folder to rename — auto-create one
+      setNewFolderCreated(true);
+      setFolderName("새 폴더");
+      setRenamingFolder(false);
+    }
+    if (currentQuestType === "wifi-connect") {
+      setWifiSelected(null);
+      setWifiPassword("");
+      setWifiConnected(false);
+      setWifiError("");
+      setWifiSubOpen(false);
+    }
+    if (currentQuestType === "volume-control") {
+      setVolume(30);
     }
   }, [currentQuestType]);
 
@@ -380,6 +403,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "create-file") triggerSuccess();
   };
 
+  const handleRenameFolder = () => {
+    setRenamingFolder(true);
+    setFolderContextMenu(false);
+    if (currentQuestType === "rename-folder") triggerSuccess();
+  };
+
   const handleBrowserClick = () => {
     setOpenApp("edge");
     if (currentQuestType === "open-browser") triggerSuccess();
@@ -432,13 +461,15 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const closeAll = () => {
     setContextMenuOpen(false);
     setFileContextMenu(false);
+    setFolderContextMenu(false);
     setStartMenuOpen(false);
     setSubMenuOpen(false);
     setSelectedFile(false);
+    setSelectedFolder(false);
     setSelectedIcon(null);
     setCalendarOpen(false);
-    setVolumeOpen(false);
-    setWifiOpen(false);
+    setQuickSettingsOpen(false);
+    setWifiSubOpen(false);
   };
 
   const handleDesktopClick = (e: React.MouseEvent) => {
@@ -463,12 +494,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       desktop: ["right-click", "create-file"],
       start: ["start-menu", "shutdown"],
       file: ["delete-file"],
+      folder: ["rename-folder"],
       edge: ["open-browser", "type-url"],
       hangul: ["open-hangul"],
       excel: ["open-excel"],
       ppt: ["open-ppt"],
       volume: ["volume-control"],
       wifi: ["wifi-connect"],
+      quickSettings: ["volume-control", "wifi-connect"],
     };
     return map[target]?.includes(currentQuestType) || false;
   };
@@ -478,7 +511,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     "shortcut-copy": { ctrl: true, key: "c", label: "Ctrl + C" },
     "shortcut-paste": { ctrl: true, key: "v", label: "Ctrl + V" },
     "shortcut-save": { ctrl: true, key: "s", label: "Ctrl + S" },
-    "shortcut-alt-tab": { alt: true, key: "tab", label: "Alt + Tab" },
   };
 
   useEffect(() => {
@@ -497,6 +529,26 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     return () => window.removeEventListener("keydown", handler);
   }, [currentQuestType, triggerSuccess]);
 
+  // Del key for delete-file, F2 for rename-folder
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (currentQuestType === "delete-file" && (e.key === "Delete" || e.key === "Del") && selectedFile) {
+        e.preventDefault();
+        handleDeleteFile();
+      }
+      if (currentQuestType === "rename-folder" && e.key === "F2") {
+        e.preventDefault();
+        setRenamingFolder(true);
+        setFolderContextMenu(false);
+        triggerSuccess();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [currentQuestType, selectedFile, triggerSuccess]);
+
   // Volume slider — success when reaches 50 (±2)
   useEffect(() => {
     if (currentQuestType === "volume-control" && Math.abs(volume - 50) <= 2) {
@@ -509,7 +561,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       setWifiConnected(true);
       setWifiError("");
       if (currentQuestType === "wifi-connect") {
-        setTimeout(() => { setWifiOpen(false); triggerSuccess(); }, 700);
+        setTimeout(() => { setQuickSettingsOpen(false); triggerSuccess(); }, 700);
       }
     } else {
       setWifiError("비밀번호가 틀렸어요. 12345678 을 입력하세요!");
@@ -635,11 +687,41 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
           {newFolderCreated && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-              <DesktopIcon
-                icon={<Folder className="w-7 h-7 text-yellow-400" />}
-                label="새 폴더"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div
+                className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+                  selectedFolder ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10"
+                } ${isHighlighted("folder") ? "animate-pulse-highlight" : ""}`}
+                onClick={(e) => { e.stopPropagation(); setSelectedFolder(true); }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (currentQuestType === "rename-folder") {
+                    setSelectedFolder(true);
+                    const rect = (e.currentTarget.closest('.desktop-area') as HTMLElement)?.getBoundingClientRect();
+                    if (rect) setContextMenuPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                    setFolderContextMenu(true);
+                    setFileContextMenu(false);
+                    setContextMenuOpen(false);
+                  }
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <Folder className="w-7 h-7 text-yellow-400" />
+                </div>
+                {renamingFolder ? (
+                  <input
+                    autoFocus
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                    onBlur={() => setRenamingFolder(false)}
+                    onKeyDown={(e) => { if (e.key === "Enter") setRenamingFolder(false); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] text-center w-full px-1 rounded bg-white text-gray-800 border border-blue-400"
+                  />
+                ) : (
+                  <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">{folderName}</span>
+                )}
+              </div>
             </motion.div>
           )}
         </div>
@@ -798,11 +880,54 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </AnimatePresence>
 
+        {/* Folder context menu (rename) */}
+        <AnimatePresence>
+          {folderContextMenu && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute bg-white/95 backdrop-blur-md rounded-lg border border-gray-200 shadow-xl py-1 min-w-[200px] z-40"
+              style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CtxItem icon="📂" label="열기" />
+              <CtxItem icon="📋" label="복사" />
+              <CtxItem icon="✂️" label="잘라내기" />
+              <div className="border-t border-gray-100 my-0.5" />
+              <button
+                onClick={handleRenameFolder}
+                className={`w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-blue-50 ${
+                  currentQuestType === "rename-folder" ? "bg-yellow-50 text-blue-600 font-bold animate-pulse-highlight" : "text-gray-700"
+                }`}
+              >
+                <span>✏️</span> 이름 바꾸기
+                <span className="ml-auto text-[10px] text-gray-400">F2</span>
+              </button>
+              <div className="border-t border-gray-100 my-0.5" />
+              <CtxItem icon="🗑️" label="삭제" />
+              <CtxItem icon="📋" label="속성" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* App windows */}
         <AnimatePresence>
-          {openApp === "mypc" && <MyPcWindow onClose={() => handleCloseApp("mypc")} onMinimize={() => handleMinimize("mypc")} />}
+          {openApp === "mypc" && (
+            <MyPcWindow
+              onClose={() => handleCloseApp("mypc")}
+              onMinimize={() => handleMinimize("mypc")}
+              highlightClose={currentQuestType === "close-mypc"}
+            />
+          )}
           {openApp === "edge" && (
-            <EdgeWindow onClose={() => handleCloseApp("edge")} onMinimize={() => handleMinimize("edge")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
+            <EdgeWindow
+              onClose={() => handleCloseApp("edge")}
+              onMinimize={() => handleMinimize("edge")}
+              currentQuestType={currentQuestType}
+              onQuestComplete={triggerSuccess}
+              highlightClose={currentQuestType === "close-edge"}
+            />
           )}
           {openApp === "hangul" && (
             <HangulWindow onClose={() => handleCloseApp("hangul")} onMinimize={() => handleMinimize("hangul")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} />
@@ -945,20 +1070,21 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         </div>
         <div className="absolute right-3 flex items-center gap-2 text-white/60 text-xs">
           <button
-            onClick={(e) => { e.stopPropagation(); setVolumeOpen(o => !o); setWifiOpen(false); setCalendarOpen(false); }}
-            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("volume") ? "animate-pulse-highlight" : ""}`}
-            title="볼륨"
+            onClick={(e) => {
+              e.stopPropagation();
+              setQuickSettingsOpen(o => !o);
+              setCalendarOpen(false);
+              setWifiSubOpen(false);
+            }}
+            className={`flex items-center gap-1 p-1 rounded hover:bg-white/10 transition-colors ${
+              isHighlighted("quickSettings") ? "animate-pulse-highlight" : ""
+            }`}
+            title="빠른 설정"
           >
+            <Wifi className={`w-4 h-4 ${wifiConnected ? "text-green-300" : ""}`} />
             {volume === 0 ? <VolumeX className="w-4 h-4" /> : volume < 50 ? <Volume1 className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            <span>🔋</span>
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setWifiOpen(o => !o); setVolumeOpen(false); setCalendarOpen(false); }}
-            className={`p-1 rounded hover:bg-white/10 transition-colors ${isHighlighted("wifi") ? "animate-pulse-highlight" : ""} ${wifiConnected ? "text-green-300" : ""}`}
-            title="와이파이"
-          >
-            <Wifi className="w-4 h-4" />
-          </button>
-          <span>🔋</span>
           <button
             onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
             className="ml-1 text-[10px] text-right whitespace-pre-line leading-tight hover:bg-white/10 rounded px-1.5 py-0.5 transition-colors text-white/80"
@@ -967,116 +1093,132 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           </button>
         </div>
 
-        {/* Volume popup */}
+        {/* Quick Settings panel (Windows 11 style) */}
         <AnimatePresence>
-          {volumeOpen && (
+          {quickSettingsOpen && (
             <>
-              <div className="fixed inset-0 z-[55]" onClick={() => setVolumeOpen(false)} />
+              <div className="fixed inset-0 z-[55]" onClick={() => { setQuickSettingsOpen(false); setWifiSubOpen(false); }} />
               <motion.div
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-20 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-4 w-[360px]"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}
-                  <span className="font-display text-sm text-gray-800">스피커</span>
-                  <span className="ml-auto text-xs text-gray-500">{volume}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={volume}
-                  onChange={(e) => setVolume(Number(e.target.value))}
-                  className={`w-full accent-blue-500 ${currentQuestType === "volume-control" ? "animate-pulse-highlight rounded" : ""}`}
-                />
-                {currentQuestType === "volume-control" && (
-                  <p className="mt-2 text-[11px] text-blue-600">🎯 볼륨을 50까지 옮겨주세요!</p>
-                )}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Wi-Fi popup */}
-        <AnimatePresence>
-          {wifiOpen && (
-            <>
-              <div className="fixed inset-0 z-[55]" onClick={() => setWifiOpen(false)} />
-              <motion.div
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: 10, opacity: 0 }}
-                className="absolute right-12 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-80"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Wifi className="w-4 h-4 text-blue-500" />
-                  <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
-                </div>
-                {!wifiSelected && (
-                  <div className="space-y-1">
-                    {[
-                      { name: "우리집 WiFi", strength: 4, secure: true, target: true },
-                      { name: "iptime_5G", strength: 3, secure: true },
-                      { name: "SK_Guest", strength: 2, secure: false },
-                      { name: "KT_WiFi_2A8F", strength: 2, secure: true },
-                    ].map(net => (
-                      <button
-                        key={net.name}
-                        onClick={() => { setWifiSelected(net.name); setWifiPassword(""); setWifiError(""); }}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors ${
-                          net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
-                        }`}
-                      >
-                        <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
-                        <span className="text-xs text-gray-800 flex-1">{net.name}</span>
-                        {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {wifiSelected && !wifiConnected && (
-                  <div>
-                    <p className="text-xs text-gray-700 mb-2">
-                      <span className="font-bold">{wifiSelected}</span> 에 연결
-                    </p>
-                    <p className="text-[11px] text-gray-500 mb-2">네트워크 보안 키를 입력하세요</p>
-                    <input
-                      type="password"
-                      value={wifiPassword}
-                      onChange={(e) => { setWifiPassword(e.target.value); setWifiError(""); }}
-                      placeholder="비밀번호"
-                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                      autoFocus
-                    />
-                    {wifiError && <p className="text-[10px] text-red-500 mt-1">{wifiError}</p>}
-                    {currentQuestType === "wifi-connect" && (
-                      <p className="text-[10px] text-blue-600 mt-1">힌트: 12345678</p>
-                    )}
-                    <div className="flex gap-2 mt-3 justify-end">
-                      <button
-                        onClick={() => { setWifiSelected(null); setWifiPassword(""); setWifiError(""); }}
-                        className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
-                      >
-                        취소
-                      </button>
-                      <button
-                        onClick={handleWifiConnect}
-                        className="px-3 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded animate-pulse-highlight"
-                      >
-                        연결
+                {!wifiSubOpen ? (
+                  <>
+                    {/* Tile grid */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      <QSTile
+                        icon={<Wifi className="w-5 h-5" />}
+                        label={wifiConnected ? wifiSelected || "Wi-Fi" : "Wi-Fi"}
+                        active={wifiConnected}
+                        chevron
+                        highlight={isHighlighted("wifi")}
+                        onClick={() => setWifiSubOpen(true)}
+                      />
+                      <QSTile icon={<Bluetooth className="w-5 h-5" />} label="연결 안 됨" active chevron />
+                      <QSTile icon={<Plane className="w-5 h-5" />} label="비행기 모드" />
+                      <QSTile icon={<Moon className="w-5 h-5" />} label="야간 모드" active />
+                      <QSTile icon={<Accessibility className="w-5 h-5" />} label="접근성" chevron />
+                      <QSTile icon={<Cast className="w-5 h-5" />} label="유선 디스플레이" active chevron />
+                    </div>
+                    {/* Volume slider */}
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex items-center gap-3">
+                        {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={volume}
+                          onChange={(e) => setVolume(Number(e.target.value))}
+                          className={`flex-1 accent-blue-500 ${currentQuestType === "volume-control" ? "animate-pulse-highlight rounded" : ""}`}
+                        />
+                        <span className="text-xs text-gray-500 w-8 text-right">{volume}</span>
+                      </div>
+                      {currentQuestType === "volume-control" && (
+                        <p className="mt-2 text-[11px] text-blue-600 text-center">🎯 슬라이더를 50까지 옮겨주세요!</p>
+                      )}
+                    </div>
+                    <div className="flex justify-end pt-3">
+                      <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
+                        <SettingsIcon className="w-4 h-4 text-gray-500" />
                       </button>
                     </div>
-                  </div>
-                )}
-                {wifiConnected && (
-                  <div className="text-center py-2">
-                    <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
-                    <p className="text-xs text-green-600 font-bold">연결됨: {wifiSelected}</p>
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <button onClick={() => { setWifiSubOpen(false); setWifiSelected(null); setWifiPassword(""); setWifiError(""); }} className="p-1 hover:bg-gray-100 rounded">
+                        <ChevronLeft className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <Wifi className="w-4 h-4 text-blue-500" />
+                      <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
+                    </div>
+                    {!wifiSelected && !wifiConnected && (
+                      <div className="space-y-1">
+                        {[
+                          { name: "우리집 WiFi", strength: 4, secure: true, target: true },
+                          { name: "iptime_5G", strength: 3, secure: true },
+                          { name: "SK_Guest", strength: 2, secure: false },
+                          { name: "KT_WiFi_2A8F", strength: 2, secure: true },
+                        ].map(net => (
+                          <button
+                            key={net.name}
+                            onClick={() => { setWifiSelected(net.name); setWifiPassword(""); setWifiError(""); }}
+                            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 text-left transition-colors ${
+                              net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
+                            }`}
+                          >
+                            <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
+                            <span className="text-xs text-gray-800 flex-1">{net.name}</span>
+                            {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {wifiSelected && !wifiConnected && (
+                      <div>
+                        <p className="text-xs text-gray-700 mb-2">
+                          <span className="font-bold">{wifiSelected}</span> 에 연결
+                        </p>
+                        <p className="text-[11px] text-gray-500 mb-2">네트워크 보안 키를 입력하세요</p>
+                        <input
+                          type="password"
+                          value={wifiPassword}
+                          onChange={(e) => { setWifiPassword(e.target.value); setWifiError(""); }}
+                          placeholder="비밀번호"
+                          className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                          autoFocus
+                        />
+                        {wifiError && <p className="text-[10px] text-red-500 mt-1">{wifiError}</p>}
+                        {currentQuestType === "wifi-connect" && (
+                          <p className="text-[10px] text-blue-600 mt-1">힌트: 12345678</p>
+                        )}
+                        <div className="flex gap-2 mt-3 justify-end">
+                          <button
+                            onClick={() => { setWifiSelected(null); setWifiPassword(""); setWifiError(""); }}
+                            className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded"
+                          >
+                            취소
+                          </button>
+                          <button
+                            onClick={handleWifiConnect}
+                            className="px-3 py-1 text-xs bg-blue-500 text-white hover:bg-blue-600 rounded animate-pulse-highlight"
+                          >
+                            연결
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    {wifiConnected && (
+                      <div className="text-center py-2">
+                        <Check className="w-8 h-8 text-green-500 mx-auto mb-1" />
+                        <p className="text-xs text-green-600 font-bold">연결됨: {wifiSelected}</p>
+                      </div>
+                    )}
+                  </>
                 )}
               </motion.div>
             </>
@@ -1185,6 +1327,32 @@ const DesktopIcon = ({
 const CtxItem = ({ icon, label }: { icon: string; label: string }) => (
   <button className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 text-gray-700 hover:bg-blue-50 transition-colors">
     <span>{icon}</span> {label}
+  </button>
+);
+
+const QSTile = ({
+  icon, label, active, chevron, highlight, onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  chevron?: boolean;
+  highlight?: boolean;
+  onClick?: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-3 border transition-all ${
+      active
+        ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+        : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+    } ${highlight ? "animate-pulse-highlight ring-2 ring-yellow-400" : ""}`}
+  >
+    <div className="flex items-center gap-1">
+      {icon}
+      {chevron && <ChevronRight className="w-3 h-3 opacity-70" />}
+    </div>
+    <span className="text-[10px] leading-tight text-center">{label}</span>
   </button>
 );
 
