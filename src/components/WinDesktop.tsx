@@ -406,7 +406,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const handleRenameFolder = () => {
     setRenamingFolder(true);
     setFolderContextMenu(false);
-    if (currentQuestType === "rename-folder") triggerSuccess();
   };
 
   const handleBrowserClick = () => {
@@ -542,7 +541,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         e.preventDefault();
         setRenamingFolder(true);
         setFolderContextMenu(false);
-        triggerSuccess();
       }
     };
     window.addEventListener("keydown", handler);
