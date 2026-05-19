@@ -223,6 +223,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "volume-control") {
       setVolume(30);
     }
+    // Always close popups/panels on quest change so they don't bleed into the next mission
+    setQuickSettingsOpen(false);
+    setWifiSubOpen(false);
+    setCalendarOpen(false);
   }, [currentQuestType]);
 
   // Show finger guide after delay
