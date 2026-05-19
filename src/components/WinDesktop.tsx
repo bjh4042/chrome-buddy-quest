@@ -712,7 +712,15 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                     value={folderName}
                     onChange={(e) => setFolderName(e.target.value)}
                     onBlur={() => setRenamingFolder(false)}
-                    onKeyDown={(e) => { if (e.key === "Enter") setRenamingFolder(false); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        setRenamingFolder(false);
+                        if (currentQuestType === "rename-folder" && folderName.trim() && folderName.trim() !== "새 폴더") {
+                          triggerSuccess();
+                        }
+                      }
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     className="text-[10px] text-center w-full px-1 rounded bg-white text-gray-800 border border-blue-400"
                   />
