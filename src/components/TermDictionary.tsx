@@ -18,7 +18,7 @@ const TermDictionary = ({ termKey }: TermDictionaryProps) => {
       {/* Floating button */}
       <motion.button
         onClick={() => setOpen(true)}
-        className="fixed bottom-16 right-3 z-[60] bg-primary text-primary-foreground rounded-full p-2.5 shadow-game hover:scale-110 transition-transform"
+        className="fixed bottom-16 left-3 z-[60] bg-primary text-primary-foreground rounded-full p-2.5 shadow-game hover:scale-110 transition-transform"
         whileTap={{ scale: 0.9 }}
         title="용어 사전"
       >
@@ -34,7 +34,7 @@ const TermDictionary = ({ termKey }: TermDictionaryProps) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ delay: 0.5 }}
-            className="fixed bottom-28 right-3 z-[60] bg-card border border-border rounded-xl shadow-card p-3 max-w-[260px]"
+            className="fixed bottom-28 left-3 z-[60] bg-card border border-border rounded-xl shadow-card p-3 max-w-[260px]"
           >
             <div className="flex items-start gap-2">
               <span className="text-2xl">{currentTerm.emoji}</span>
