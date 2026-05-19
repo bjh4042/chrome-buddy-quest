@@ -223,6 +223,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (currentQuestType === "volume-control") {
       setVolume(30);
     }
+    // Always close popups/panels on quest change so they don't bleed into the next mission
+    setQuickSettingsOpen(false);
+    setWifiSubOpen(false);
+    setCalendarOpen(false);
   }, [currentQuestType]);
 
   // Show finger guide after delay
@@ -406,7 +410,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const handleRenameFolder = () => {
     setRenamingFolder(true);
     setFolderContextMenu(false);
-    if (currentQuestType === "rename-folder") triggerSuccess();
   };
 
   const handleBrowserClick = () => {
@@ -542,7 +545,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         e.preventDefault();
         setRenamingFolder(true);
         setFolderContextMenu(false);
-        triggerSuccess();
       }
     };
     window.addEventListener("keydown", handler);
@@ -714,7 +716,15 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                     value={folderName}
                     onChange={(e) => setFolderName(e.target.value)}
                     onBlur={() => setRenamingFolder(false)}
-                    onKeyDown={(e) => { if (e.key === "Enter") setRenamingFolder(false); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        setRenamingFolder(false);
+                        if (currentQuestType === "rename-folder" && folderName.trim() && folderName.trim() !== "새 폴더") {
+                          triggerSuccess();
+                        }
+                      }
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     className="text-[10px] text-center w-full px-1 rounded bg-white text-gray-800 border border-blue-400"
                   />
