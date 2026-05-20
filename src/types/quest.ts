@@ -240,6 +240,18 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     hint: "하얀 종이 부분을 클릭하고 키보드로 '안녕하세요'를 입력해요!",
   },
   {
+    id: "shortcut-copy", title: "복사 단축키 (Ctrl+C)", description: "글자를 선택하고 복사해보세요!",
+    instruction: "한글 문서의 글자를 드래그해서 선택한 후, Ctrl + C를 누르세요!",
+    points: 15, type: "shortcut-copy", category: "hangul",
+    hint: "먼저 글자를 드래그로 선택! 그리고 Ctrl+C를 누르면 복사돼요.", termKey: "shortcut",
+  },
+  {
+    id: "shortcut-paste", title: "붙여넣기 단축키 (Ctrl+V)", description: "복사한 글자를 붙여넣어 보세요!",
+    instruction: "한글 문서를 클릭한 후, Ctrl + V를 눌러 붙여넣으세요!",
+    points: 15, type: "shortcut-paste", category: "hangul",
+    hint: "방금 복사(Ctrl+C)한 내용을 Ctrl+V로 붙여넣어요!", termKey: "shortcut",
+  },
+  {
     id: "hangul-font-size", title: "글자 크기 바꾸기", description: "글자 크기를 변경해보세요!",
     instruction: "글자를 드래그해서 블록 지정 후, 글자 크기를 '20'으로 변경하세요!",
     points: 15, type: "hangul-font-size", category: "hangul",
@@ -268,6 +280,12 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     instruction: "도구 모음에서 '표 삽입' 버튼을 클릭하세요!",
     points: 20, type: "hangul-table", category: "hangul",
     hint: "도구 모음에서 표 모양 아이콘을 찾아보세요!",
+  },
+  {
+    id: "shortcut-save", title: "저장 단축키 (Ctrl+S)", description: "단축키로 문서를 저장해보세요!",
+    instruction: "한글 문서에서 Ctrl + S를 눌러 저장하세요!",
+    points: 15, type: "shortcut-save", category: "hangul",
+    hint: "문서를 저장할 때 가장 많이 쓰는 단축키예요!", termKey: "shortcut",
   },
   {
     id: "hangul-save", title: "파일 저장하기", description: "작성한 문서를 저장해보세요!",
