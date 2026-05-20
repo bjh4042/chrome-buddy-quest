@@ -32,7 +32,6 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
   const [clipboard, setClipboard] = useState<string>("");
-  const [pasted, setPasted] = useState(false);
 
   // Text selection state
   const [textSelected, setTextSelected] = useState(false);
@@ -91,7 +90,6 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         } else {
           setText(text + insert);
         }
-        setPasted(true);
         onQuestComplete();
       }
       if (key === "s" && isQuest("shortcut-save")) {
