@@ -40,6 +40,9 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "hangul-table": "hangul",
   "hangul-save": "hangul",
   "hangul-open-file": "hangul",
+  "shortcut-copy": "hangul",
+  "shortcut-paste": "hangul",
+  "shortcut-save": "hangul",
   "excel-input": "excel",
   "type-url": "edge",
   "ppt-text": "ppt",
@@ -53,6 +56,7 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
 const APP_INTERNAL_QUESTS: QuestType[] = [
   "hangul-typing", "hangul-font-size", "hangul-font-family", "hangul-image", "hangul-image-resize",
   "hangul-table", "hangul-save", "hangul-open-file",
+  "shortcut-copy", "shortcut-paste", "shortcut-save",
   "excel-input",
   "ppt-text", "ppt-font-size", "ppt-font-family", "ppt-image", "ppt-image-resize",
   "type-url",
@@ -508,29 +512,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     };
     return map[target]?.includes(currentQuestType) || false;
   };
-
-  // Keyboard shortcut missions
-  const SHORTCUT_KEYS: Partial<Record<QuestType, { ctrl?: boolean; alt?: boolean; key: string; label: string }>> = {
-    "shortcut-copy": { ctrl: true, key: "c", label: "Ctrl + C" },
-    "shortcut-paste": { ctrl: true, key: "v", label: "Ctrl + V" },
-    "shortcut-save": { ctrl: true, key: "s", label: "Ctrl + S" },
-  };
-
-  useEffect(() => {
-    const combo = SHORTCUT_KEYS[currentQuestType];
-    if (!combo) return;
-    const handler = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      const ctrlOk = combo.ctrl ? (e.ctrlKey || e.metaKey) : true;
-      const altOk = combo.alt ? e.altKey : true;
-      if (ctrlOk && altOk && key === combo.key) {
-        e.preventDefault();
-        triggerSuccess();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [currentQuestType, triggerSuccess]);
 
   // Del key for delete-file, F2 for rename-folder
   useEffect(() => {
