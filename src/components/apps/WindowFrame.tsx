@@ -62,7 +62,7 @@ const WindowFrame = ({ title, icon, onClose, onMinimize, children, toolbar, high
         </div>
       </div>
       {toolbar && (
-        <div className="border-b border-gray-200 bg-gray-50/50">
+        <div className="border-b border-gray-200 bg-gray-50/50 overflow-x-auto">
           {toolbar}
         </div>
       )}
