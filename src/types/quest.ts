@@ -12,7 +12,7 @@ export interface Quest {
   termKey?: string;
 }
 
-export type QuestCategory = "mouse" | "windows" | "internet" | "settings" | "keyboard" | "hangul" | "excel" | "powerpoint" | "finish";
+export type QuestCategory = "mouse" | "windows" | "internet" | "settings" | "hangul" | "excel" | "powerpoint" | "finish";
 
 export type QuestType =
   | "click"
@@ -58,7 +58,6 @@ export const QUEST_CATEGORIES: { id: QuestCategory; label: string; emoji: string
   { id: "windows", label: "윈도우 기본", emoji: "🪟" },
   { id: "internet", label: "인터넷", emoji: "🌐" },
   { id: "settings", label: "설정", emoji: "⚙️" },
-  { id: "keyboard", label: "단축키", emoji: "⌨️" },
   { id: "hangul", label: "한글 문서", emoji: "📝" },
   { id: "excel", label: "엑셀", emoji: "📊" },
   { id: "powerpoint", label: "파워포인트", emoji: "📽️" },
