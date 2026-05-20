@@ -601,8 +601,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         animate={{ y: 0, opacity: 1 }}
         className="absolute top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-6 py-3 shadow-lg pointer-events-auto max-w-[90%]">
-          <p className="font-display text-sm md:text-base text-white text-center whitespace-nowrap">
+        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-3 py-1.5 md:px-6 md:py-3 shadow-lg pointer-events-auto max-w-[95%]">
+          <p className="font-display text-[11px] sm:text-sm md:text-base text-white text-center leading-tight">
             💡 {instruction}
           </p>
         </div>
