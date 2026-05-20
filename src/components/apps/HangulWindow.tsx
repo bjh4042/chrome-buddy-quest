@@ -405,6 +405,24 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         onTouchMove={handlePointerMove}
         onTouchEnd={handlePointerUp}
       >
+        {/* Contextual shortcut hint */}
+        {(isQuest("shortcut-copy") || isQuest("shortcut-paste") || isQuest("shortcut-save")) && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-sm border border-orange-300 rounded-full px-4 py-1.5 shadow-md flex items-center gap-2 pointer-events-none">
+            <span className="text-[11px] text-gray-700">
+              {isQuest("shortcut-copy") && "글자를 드래그해 선택한 뒤"}
+              {isQuest("shortcut-paste") && "방금 복사한 글자를"}
+              {isQuest("shortcut-save") && "한글 문서에서"}
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">Ctrl</kbd>
+              <span className="text-gray-400 text-[10px]">+</span>
+              <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">
+                {isQuest("shortcut-copy") ? "C" : isQuest("shortcut-paste") ? "V" : "S"}
+              </kbd>
+            </span>
+          </div>
+        )}
+
         {/* Left page navigation panel */}
         <div className="w-6 bg-gray-100 border-r border-gray-200 flex flex-col items-center pt-2">
           {[1,2,3,4,5,6,7,8,9,10].map(n => (
