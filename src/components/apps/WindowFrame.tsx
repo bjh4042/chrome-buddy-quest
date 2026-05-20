@@ -21,8 +21,8 @@ const WindowFrame = ({ title, icon, onClose, onMinimize, children, toolbar, high
       exit={{ scale: 0.9, opacity: 0 }}
       className={`absolute bg-white border border-gray-200 shadow-xl flex flex-col overflow-hidden z-30 ${
         maximized
-          ? "inset-0 top-12 rounded-none"
-          : "inset-4 top-14 md:inset-8 md:top-16 rounded-lg"
+          ? "inset-0 top-10 sm:top-12 rounded-none"
+          : "inset-1 top-12 sm:inset-4 sm:top-14 md:inset-8 md:top-16 rounded-md sm:rounded-lg"
       }`}
     >
       {/* Title bar - Windows 11 style */}
