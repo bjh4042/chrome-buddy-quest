@@ -399,7 +399,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
       onMinimize={onMinimize}
       toolbar={toolbar}
     >
-      <div className="flex h-full"
+      <div className="flex h-full relative"
         onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
         onTouchMove={handlePointerMove}
