@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Save, Table, Image as ImageIcon, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough, FolderOpen, Copy, Scissors, FileText, Columns, BarChart3, Search as SearchIcon, Shield, PenTool, Layout, Type } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
@@ -31,6 +31,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
+  const [clipboard, setClipboard] = useState<string>("");
 
   // Text selection state
   const [textSelected, setTextSelected] = useState(false);
@@ -49,6 +50,58 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
 
   const isQuest = (t: QuestType) => currentQuestType === t;
+
+  // Pre-fill sample text for selection-based quests so users have something to drag-select
+  useEffect(() => {
+    if (
+      (isQuest("hangul-font-size") ||
+        isQuest("hangul-font-family") ||
+        isQuest("shortcut-copy")) &&
+      text.length === 0
+    ) {
+      setText("안녕하세요");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestType]);
+
+  // Keyboard shortcuts inside Hangul document
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
+      const key = e.key.toLowerCase();
+
+      if (key === "c" && isQuest("shortcut-copy")) {
+        const ta = textAreaRef.current;
+        const { start, end } = selectionRange.current;
+        if (ta && start !== end) {
+          setClipboard(ta.value.slice(start, end));
+          e.preventDefault();
+          onQuestComplete();
+        }
+      }
+      if (key === "v" && isQuest("shortcut-paste")) {
+        e.preventDefault();
+        const insert = clipboard || "안녕하세요";
+        const ta = textAreaRef.current;
+        if (ta) {
+          const pos = ta.selectionStart ?? text.length;
+          setText(text.slice(0, pos) + insert + text.slice(pos));
+        } else {
+          setText(text + insert);
+        }
+        onQuestComplete();
+      }
+      if (key === "s" && isQuest("shortcut-save")) {
+        e.preventDefault();
+        setSaved(true);
+        onQuestComplete();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestType, text, clipboard]);
 
   const checkTextSelection = useCallback(() => {
     if (textAreaRef.current) {
@@ -83,10 +136,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
-    if (isQuest("hangul-font-size") && size === "20") {
-      if (textSelected || text.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("hangul-font-size") && size === "20" && textSelected) {
+      onQuestComplete();
     }
     restoreSelection();
   };
@@ -94,10 +145,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
-    if (isQuest("hangul-font-family") && f === "돋움") {
-      if (textSelected || text.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("hangul-font-family") && f === "돋움" && textSelected) {
+      onQuestComplete();
     }
     restoreSelection();
   };
@@ -348,12 +397,30 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
       onMinimize={onMinimize}
       toolbar={toolbar}
     >
-      <div className="flex h-full"
+      <div className="flex h-full relative"
         onMouseMove={handlePointerMove}
         onMouseUp={handlePointerUp}
         onTouchMove={handlePointerMove}
         onTouchEnd={handlePointerUp}
       >
+        {/* Contextual shortcut hint */}
+        {(isQuest("shortcut-copy") || isQuest("shortcut-paste") || isQuest("shortcut-save")) && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-sm border border-orange-300 rounded-full px-4 py-1.5 shadow-md flex items-center gap-2 pointer-events-none">
+            <span className="text-[11px] text-gray-700">
+              {isQuest("shortcut-copy") && "글자를 드래그해 선택한 뒤"}
+              {isQuest("shortcut-paste") && "방금 복사한 글자를"}
+              {isQuest("shortcut-save") && "한글 문서에서"}
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">Ctrl</kbd>
+              <span className="text-gray-400 text-[10px]">+</span>
+              <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">
+                {isQuest("shortcut-copy") ? "C" : isQuest("shortcut-paste") ? "V" : "S"}
+              </kbd>
+            </span>
+          </div>
+        )}
+
         {/* Left page navigation panel */}
         <div className="w-6 bg-gray-100 border-r border-gray-200 flex flex-col items-center pt-2">
           {[1,2,3,4,5,6,7,8,9,10].map(n => (

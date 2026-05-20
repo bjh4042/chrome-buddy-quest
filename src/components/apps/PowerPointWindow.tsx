@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown, Bold, Italic, Underline, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Undo, Redo } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import ImagePickerDialog from "./ImagePickerDialog";
@@ -48,6 +48,15 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
 
   const isQuest = (t: QuestType) => currentQuestType === t;
 
+  // Pre-fill title for selection-based PPT quests
+  useEffect(() => {
+    if ((isQuest("ppt-font-size") || isQuest("ppt-font-family")) && title.length === 0) {
+      setTitle("나의 발표");
+      setIsEditingTitle(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestType]);
+
   const checkTitleSelection = useCallback(() => {
     if (titleInputRef.current) {
       const { selectionStart, selectionEnd } = titleInputRef.current;
@@ -80,10 +89,8 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
-    if (isQuest("ppt-font-size") && size === "28") {
-      if (titleSelected || title.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("ppt-font-size") && size === "28" && titleSelected) {
+      onQuestComplete();
     }
     restoreTitleSelection();
   };
@@ -91,10 +98,8 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
-    if (isQuest("ppt-font-family") && f === "바탕") {
-      if (titleSelected || title.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("ppt-font-family") && f === "바탕" && titleSelected) {
+      onQuestComplete();
     }
     restoreTitleSelection();
   };

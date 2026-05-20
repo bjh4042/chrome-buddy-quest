@@ -40,6 +40,9 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "hangul-table": "hangul",
   "hangul-save": "hangul",
   "hangul-open-file": "hangul",
+  "shortcut-copy": "hangul",
+  "shortcut-paste": "hangul",
+  "shortcut-save": "hangul",
   "excel-input": "excel",
   "type-url": "edge",
   "ppt-text": "ppt",
@@ -53,6 +56,7 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
 const APP_INTERNAL_QUESTS: QuestType[] = [
   "hangul-typing", "hangul-font-size", "hangul-font-family", "hangul-image", "hangul-image-resize",
   "hangul-table", "hangul-save", "hangul-open-file",
+  "shortcut-copy", "shortcut-paste", "shortcut-save",
   "excel-input",
   "ppt-text", "ppt-font-size", "ppt-font-family", "ppt-image", "ppt-image-resize",
   "type-url",
@@ -508,29 +512,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     };
     return map[target]?.includes(currentQuestType) || false;
   };
-
-  // Keyboard shortcut missions
-  const SHORTCUT_KEYS: Partial<Record<QuestType, { ctrl?: boolean; alt?: boolean; key: string; label: string }>> = {
-    "shortcut-copy": { ctrl: true, key: "c", label: "Ctrl + C" },
-    "shortcut-paste": { ctrl: true, key: "v", label: "Ctrl + V" },
-    "shortcut-save": { ctrl: true, key: "s", label: "Ctrl + S" },
-  };
-
-  useEffect(() => {
-    const combo = SHORTCUT_KEYS[currentQuestType];
-    if (!combo) return;
-    const handler = (e: KeyboardEvent) => {
-      const key = e.key.toLowerCase();
-      const ctrlOk = combo.ctrl ? (e.ctrlKey || e.metaKey) : true;
-      const altOk = combo.alt ? e.altKey : true;
-      if (ctrlOk && altOk && key === combo.key) {
-        e.preventDefault();
-        triggerSuccess();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [currentQuestType, triggerSuccess]);
 
   // Del key for delete-file, F2 for rename-folder
   useEffect(() => {
@@ -1253,33 +1234,6 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
           )}
         </AnimatePresence>
       </div>
-
-      {/* Keyboard shortcut overlay */}
-      <AnimatePresence>
-        {SHORTCUT_KEYS[currentQuestType] && !showSuccess && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] pointer-events-none"
-          >
-            <div className="bg-white/95 backdrop-blur-xl border border-gray-200 rounded-2xl shadow-2xl px-8 py-6 text-center">
-              <p className="font-display text-sm text-gray-600 mb-3">⌨️ 키보드를 눌러주세요!</p>
-              <div className="flex items-center justify-center gap-2">
-                {SHORTCUT_KEYS[currentQuestType]!.label.split(" + ").map((k, i, arr) => (
-                  <span key={i} className="flex items-center gap-2">
-                    <kbd className="px-3 py-2 bg-gray-100 border-b-4 border-gray-300 rounded-lg font-display text-base text-gray-800 animate-bounce-gentle">
-                      {k}
-                    </kbd>
-                    {i < arr.length - 1 && <span className="text-gray-400 font-bold">+</span>}
-                  </span>
-                ))}
-              </div>
-              <p className="text-[11px] text-gray-500 mt-3">동시에 눌러야 해요</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Success overlay */}
       <AnimatePresence>
