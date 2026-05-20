@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Save, Table, Image as ImageIcon, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough, FolderOpen, Copy, Scissors, FileText, Columns, BarChart3, Search as SearchIcon, Shield, PenTool, Layout, Type } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
@@ -31,6 +31,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
+  const [clipboard, setClipboard] = useState<string>("");
+  const [pasted, setPasted] = useState(false);
 
   // Text selection state
   const [textSelected, setTextSelected] = useState(false);
@@ -49,6 +51,59 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
 
   const isQuest = (t: QuestType) => currentQuestType === t;
+
+  // Pre-fill sample text for selection-based quests so users have something to drag-select
+  useEffect(() => {
+    if (
+      (isQuest("hangul-font-size") ||
+        isQuest("hangul-font-family") ||
+        isQuest("shortcut-copy")) &&
+      text.length === 0
+    ) {
+      setText("안녕하세요");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestType]);
+
+  // Keyboard shortcuts inside Hangul document
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (!ctrl) return;
+      const key = e.key.toLowerCase();
+
+      if (key === "c" && isQuest("shortcut-copy")) {
+        const ta = textAreaRef.current;
+        const { start, end } = selectionRange.current;
+        if (ta && start !== end) {
+          setClipboard(ta.value.slice(start, end));
+          e.preventDefault();
+          onQuestComplete();
+        }
+      }
+      if (key === "v" && isQuest("shortcut-paste")) {
+        e.preventDefault();
+        const insert = clipboard || "안녕하세요";
+        const ta = textAreaRef.current;
+        if (ta) {
+          const pos = ta.selectionStart ?? text.length;
+          setText(text.slice(0, pos) + insert + text.slice(pos));
+        } else {
+          setText(text + insert);
+        }
+        setPasted(true);
+        onQuestComplete();
+      }
+      if (key === "s" && isQuest("shortcut-save")) {
+        e.preventDefault();
+        setSaved(true);
+        onQuestComplete();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQuestType, text, clipboard]);
 
   const checkTextSelection = useCallback(() => {
     if (textAreaRef.current) {
@@ -83,10 +138,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
-    if (isQuest("hangul-font-size") && size === "20") {
-      if (textSelected || text.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("hangul-font-size") && size === "20" && textSelected) {
+      onQuestComplete();
     }
     restoreSelection();
   };
@@ -94,10 +147,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
-    if (isQuest("hangul-font-family") && f === "돋움") {
-      if (textSelected || text.length === 0) {
-        onQuestComplete();
-      }
+    if (isQuest("hangul-font-family") && f === "돋움" && textSelected) {
+      onQuestComplete();
     }
     restoreSelection();
   };
