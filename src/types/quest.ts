@@ -226,25 +226,6 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     points: 25, type: "wifi-connect", category: "settings",
     hint: "작업 표시줄의 🌐 아이콘을 클릭하면 와이파이 목록이 나와요!", termKey: "wifi",
   },
-  // Keyboard shortcuts
-  {
-    id: "shortcut-copy", title: "복사 단축키 (Ctrl+C)", description: "키보드로 복사하기!",
-    instruction: "키보드의 Ctrl 키와 C 키를 동시에 눌러보세요!",
-    points: 15, type: "shortcut-copy", category: "keyboard",
-    hint: "왼손으로 Ctrl 키를 누른 채, 오른손으로 C 키를 눌러요!", termKey: "shortcut",
-  },
-  {
-    id: "shortcut-paste", title: "붙여넣기 단축키 (Ctrl+V)", description: "키보드로 붙여넣기!",
-    instruction: "키보드의 Ctrl 키와 V 키를 동시에 눌러보세요!",
-    points: 15, type: "shortcut-paste", category: "keyboard",
-    hint: "복사(Ctrl+C)한 내용을 다른 곳에 넣을 때 써요!", termKey: "shortcut",
-  },
-  {
-    id: "shortcut-save", title: "저장 단축키 (Ctrl+S)", description: "키보드로 저장하기!",
-    instruction: "키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
-    points: 15, type: "shortcut-save", category: "keyboard",
-    hint: "문서를 저장할 때 가장 많이 쓰는 단축키예요!", termKey: "shortcut",
-  },
   // 한글
   {
     id: "open-hangul", title: "한글 실행하기", description: "한글 프로그램을 열어보세요!",
