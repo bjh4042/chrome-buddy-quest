@@ -601,8 +601,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         animate={{ y: 0, opacity: 1 }}
         className="absolute top-0 left-0 right-0 z-50 flex justify-center pointer-events-none"
       >
-        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-6 py-3 shadow-lg pointer-events-auto max-w-[90%]">
-          <p className="font-display text-sm md:text-base text-white text-center whitespace-nowrap">
+        <div className="bg-[hsl(213,50%,30%)]/95 backdrop-blur-sm rounded-b-2xl px-3 py-1.5 md:px-6 md:py-3 shadow-lg pointer-events-auto max-w-[95%]">
+          <p className="font-display text-[11px] sm:text-sm md:text-base text-white text-center leading-tight">
             💡 {instruction}
           </p>
         </div>
@@ -960,7 +960,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
-            className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-80 md:w-96 p-5 z-40"
+            className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-[min(384px,calc(100vw-1rem))] p-3 sm:p-5 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4">
@@ -1112,7 +1112,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-4 w-[360px]"
+                className="absolute right-2 left-2 sm:left-auto bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-3 sm:p-4 w-auto sm:w-[360px] max-w-[calc(100vw-1rem)] max-h-[calc(100vh-4rem)] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 {!wifiSubOpen ? (
@@ -1244,7 +1244,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72 max-w-[calc(100vw-1rem)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <CalendarPopup />

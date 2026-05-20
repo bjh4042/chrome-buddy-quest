@@ -143,7 +143,7 @@ const Index = () => {
 
   return (
     <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      <div className="md:h-full h-auto max-h-[30vh] md:max-h-full overflow-auto">
+      <div className="md:h-full h-auto max-h-[35vh] md:max-h-full overflow-auto shrink-0">
         <QuestPanel
           quests={quests}
           currentQuest={currentQuest}
