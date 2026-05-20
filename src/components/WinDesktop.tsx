@@ -1112,7 +1112,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-4 w-[360px]"
+                className="absolute right-2 left-2 sm:left-auto bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-2xl p-3 sm:p-4 w-auto sm:w-[360px] max-w-[calc(100vw-1rem)] max-h-[calc(100vh-4rem)] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 {!wifiSubOpen ? (
@@ -1244,7 +1244,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 10, opacity: 0 }}
-                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72"
+                className="absolute right-2 bottom-14 z-[56] bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl p-4 w-72 max-w-[calc(100vw-1rem)]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <CalendarPopup />
