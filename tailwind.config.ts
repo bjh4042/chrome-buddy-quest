@@ -13,6 +13,28 @@ export default {
       },
     },
     extend: {
+      screens: {
+        xs: "420px",
+        "3xl": "1700px",
+      },
+      fontSize: {
+        "fluid-2xs": ["var(--fs-2xs)", { lineHeight: "1.3" }],
+        "fluid-xs":  ["var(--fs-xs)",  { lineHeight: "1.35" }],
+        "fluid-sm":  ["var(--fs-sm)",  { lineHeight: "1.4" }],
+        "fluid-base":["var(--fs-base)",{ lineHeight: "1.5" }],
+        "fluid-lg":  ["var(--fs-lg)",  { lineHeight: "1.45" }],
+        "fluid-xl":  ["var(--fs-xl)",  { lineHeight: "1.3" }],
+        "fluid-2xl": ["var(--fs-2xl)", { lineHeight: "1.2" }],
+        "fluid-3xl": ["var(--fs-3xl)", { lineHeight: "1.15" }],
+      },
+      spacing: {
+        "fluid-1": "var(--space-1)",
+        "fluid-2": "var(--space-2)",
+        "fluid-3": "var(--space-3)",
+        "fluid-4": "var(--space-4)",
+        "fluid-5": "var(--space-5)",
+        "fluid-6": "var(--space-6)",
+      },
       fontFamily: {
         display: ['Jua', 'sans-serif'],
         body: ['Noto Sans KR', 'sans-serif'],
