@@ -977,6 +977,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               onClose={() => handleCloseApp("mypc")}
               onMinimize={() => handleMinimize("mypc")}
               highlightClose={currentQuestType === "close-mypc"}
+              currentQuestType={currentQuestType}
+              onQuestComplete={triggerSuccess}
             />
           )}
           {openApp === "edge" && (
