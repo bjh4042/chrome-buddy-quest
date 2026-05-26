@@ -157,6 +157,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [selectedFile, setSelectedFile] = useState(false);
   const [fileContextMenu, setFileContextMenu] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const [multiSelected, setMultiSelected] = useState<Set<number>>(new Set());
+  const [startSearch, setStartSearch] = useState("");
   const [shutdownStep, setShutdownStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
    const [showSuccess, setShowSuccess] = useState(false);
@@ -230,6 +232,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
     if (currentQuestType === "volume-control") {
       setVolume(30);
+    }
+    if (currentQuestType === "multi-select") {
+      setMultiSelected(new Set());
+    }
+    if (currentQuestType === "start-search") {
+      setStartSearch("");
     }
     // Always close popups/panels on quest change so they don't bleed into the next mission
     setQuickSettingsOpen(false);
@@ -542,6 +550,28 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       triggerSuccess();
     }
   }, [volume, currentQuestType, triggerSuccess]);
+
+  // Window move/resize quest — listen to WindowFrame events
+  useEffect(() => {
+    if (currentQuestType !== "window-move-resize") return;
+    const handler = () => triggerSuccess();
+    window.addEventListener("window-interacted", handler as EventListener);
+    return () => window.removeEventListener("window-interacted", handler as EventListener);
+  }, [currentQuestType, triggerSuccess]);
+
+  // Multi-select quest — completes when 2+ files are selected
+  useEffect(() => {
+    if (currentQuestType === "multi-select" && multiSelected.size >= 2) {
+      triggerSuccess();
+    }
+  }, [multiSelected, currentQuestType, triggerSuccess]);
+
+  // Start menu search quest
+  useEffect(() => {
+    if (currentQuestType === "start-search" && startSearch.trim().includes("메모장")) {
+      triggerSuccess();
+    }
+  }, [startSearch, currentQuestType, triggerSuccess]);
 
   const handleWifiConnect = () => {
     if (wifiPassword === "12345678") {
