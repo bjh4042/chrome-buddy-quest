@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Monitor, ChevronRight, ChevronDown, HardDrive } from "lucide-react";
 import WindowFrame from "./WindowFrame";
+import type { QuestType } from "@/types/quest";
 
 interface MyPcWindowProps {
   onClose: () => void;
   onMinimize?: () => void;
   highlightClose?: boolean;
+  currentQuestType?: QuestType;
+  onQuestComplete?: () => void;
 }
 
 const sidebarItems = [
@@ -33,8 +36,21 @@ const networkFolders = [
   { label: "백업(Watermelon)", icon: "📁" },
 ];
 
-const MyPcWindow = ({ onClose, onMinimize, highlightClose }: MyPcWindowProps) => {
+const MyPcWindow = ({ onClose, onMinimize, highlightClose, currentQuestType, onQuestComplete }: MyPcWindowProps) => {
   const [expandedSections, setExpandedSections] = useState({ drives: true, network: true });
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const firedRef = useRef(false);
+
+  useEffect(() => { firedRef.current = false; }, [currentQuestType]);
+
+  const handleScroll = () => {
+    if (currentQuestType === "wheel-scroll" && !firedRef.current && scrollRef.current) {
+      if (scrollRef.current.scrollTop > 150) {
+        firedRef.current = true;
+        onQuestComplete?.();
+      }
+    }
+  };
 
   const toggleSection = (s: "drives" | "network") => {
     setExpandedSections(prev => ({ ...prev, [s]: !prev[s] }));
@@ -83,7 +99,12 @@ const MyPcWindow = ({ onClose, onMinimize, highlightClose }: MyPcWindowProps) =>
         </div>
 
         {/* Main content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-4">
+          {currentQuestType === "wheel-scroll" && (
+            <div className="mb-3 p-2 rounded bg-yellow-50 border border-yellow-300 text-[11px] text-yellow-800 animate-pulse-highlight">
+              🖱️ 마우스 휠을 아래로 굴려서 숨겨진 항목을 찾아보세요!
+            </div>
+          )}
           {/* Address bar */}
           <div className="flex items-center gap-2 mb-4 px-2 py-1.5 bg-gray-100 rounded-md text-xs text-gray-600">
             <span>←</span> <span>→</span> <span>↑</span>
@@ -155,6 +176,20 @@ const MyPcWindow = ({ onClose, onMinimize, highlightClose }: MyPcWindowProps) =>
               ))}
             </div>
           )}
+
+          {/* Extra long content for wheel-scroll quest */}
+          <div className="mt-8 space-y-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="p-3 border border-gray-200 rounded bg-gray-50 text-xs text-gray-600">
+                📁 보관함 {i + 1} — 휠을 더 굴려보세요!
+              </div>
+            ))}
+            {currentQuestType === "wheel-scroll" && (
+              <div className="p-4 rounded bg-green-50 border-2 border-green-400 text-center text-sm font-bold text-green-700">
+                🎉 잘했어요! 숨겨진 항목을 찾았어요!
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </WindowFrame>
