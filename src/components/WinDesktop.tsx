@@ -1014,10 +1014,23 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-[min(384px,calc(100vw-1rem))] p-3 sm:p-5 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4">
+            <div className={`flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4 ${
+              currentQuestType === "start-search" ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+            }`}>
               <Search className="w-4 h-4 text-gray-400" />
-              <input placeholder="앱, 설정 및 문서 검색" className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400" />
+              <input
+                value={startSearch}
+                onChange={(e) => setStartSearch(e.target.value)}
+                placeholder="앱, 설정 및 문서 검색"
+                autoFocus={currentQuestType === "start-search"}
+                className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
+              />
             </div>
+            {currentQuestType === "start-search" && startSearch.trim().length > 0 && (
+              <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
+                🔍 "{startSearch}" 검색 결과
+              </div>
+            )}
             <p className="text-xs font-medium text-gray-600 mb-2">고정됨</p>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[
