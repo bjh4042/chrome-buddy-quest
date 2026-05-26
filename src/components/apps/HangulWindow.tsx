@@ -32,6 +32,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
   const [clipboard, setClipboard] = useState<string>("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   // Text selection state
   const [textSelected, setTextSelected] = useState(false);
@@ -106,11 +107,29 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         setSaved(true);
         onQuestComplete();
       }
+      // Emoji picker: Ctrl + .  (Windows uses Win + . but Win key is OS-reserved)
+      if (e.key === "." && isQuest("shortcut-emoji")) {
+        e.preventDefault();
+        setEmojiPickerOpen(true);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentQuestType, text, clipboard]);
+
+  const insertEmoji = (emoji: string) => {
+    const ta = textAreaRef.current;
+    if (ta) {
+      const pos = ta.selectionStart ?? text.length;
+      const endPos = ta.selectionEnd ?? pos;
+      setText(text.slice(0, pos) + emoji + text.slice(endPos));
+    } else {
+      setText(text + emoji);
+    }
+    setEmojiPickerOpen(false);
+    if (isQuest("shortcut-emoji")) onQuestComplete();
+  };
 
   const checkTextSelection = useCallback(() => {
     if (textAreaRef.current) {
@@ -425,20 +444,43 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         onTouchEnd={handlePointerUp}
       >
         {/* Contextual shortcut hint */}
-        {(isQuest("shortcut-copy") || isQuest("shortcut-paste") || isQuest("shortcut-save")) && (
+        {(isQuest("shortcut-copy") || isQuest("shortcut-paste") || isQuest("shortcut-save") || isQuest("shortcut-emoji")) && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-sm border border-orange-300 rounded-full px-4 py-1.5 shadow-md flex items-center gap-2 pointer-events-none">
             <span className="text-[11px] text-gray-700">
               {isQuest("shortcut-copy") && "글자를 드래그해 선택한 뒤"}
               {isQuest("shortcut-paste") && "방금 복사한 글자를"}
               {isQuest("shortcut-save") && "한글 문서에서"}
+              {isQuest("shortcut-emoji") && "이모지 창을 열려면"}
             </span>
             <span className="flex items-center gap-1">
               <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">Ctrl</kbd>
               <span className="text-gray-400 text-[10px]">+</span>
               <kbd className="px-2 py-0.5 bg-gray-100 border-b-2 border-gray-300 rounded font-display text-[11px] text-gray-800 animate-bounce-gentle">
-                {isQuest("shortcut-copy") ? "C" : isQuest("shortcut-paste") ? "V" : "S"}
+                {isQuest("shortcut-copy") ? "C" : isQuest("shortcut-paste") ? "V" : isQuest("shortcut-save") ? "S" : "."}
               </kbd>
             </span>
+          </div>
+        )}
+
+        {/* Emoji picker overlay */}
+        {emojiPickerOpen && (
+          <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 bg-white border border-gray-300 rounded-lg shadow-xl p-3 w-64">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-gray-700">😀 이모지</span>
+              <button onClick={() => setEmojiPickerOpen(false)} className="text-gray-400 hover:text-gray-700 text-xs">✕</button>
+            </div>
+            <div className="grid grid-cols-6 gap-1">
+              {["😀","😂","😍","👍","🎉","🔥","💯","🌟","🐱","🐶","🍎","🍕","⚽","🚀","🎵","❤️"].map(em => (
+                <button
+                  key={em}
+                  onClick={() => insertEmoji(em)}
+                  className="text-xl p-1 rounded hover:bg-blue-100 transition-colors"
+                >
+                  {em}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-gray-500 text-center">이모지를 클릭해 문서에 넣어보세요!</p>
           </div>
         )}
 

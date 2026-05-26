@@ -31,6 +31,8 @@ type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
 
 const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "close-mypc": "mypc",
+  "wheel-scroll": "mypc",
+  "window-move-resize": "mypc",
   "close-edge": "edge",
   "hangul-typing": "hangul",
   "hangul-font-size": "hangul",
@@ -43,6 +45,7 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "shortcut-copy": "hangul",
   "shortcut-paste": "hangul",
   "shortcut-save": "hangul",
+  "shortcut-emoji": "hangul",
   "excel-input": "excel",
   "type-url": "edge",
   "ppt-text": "ppt",
@@ -56,10 +59,11 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
 const APP_INTERNAL_QUESTS: QuestType[] = [
   "hangul-typing", "hangul-font-size", "hangul-font-family", "hangul-image", "hangul-image-resize",
   "hangul-table", "hangul-save", "hangul-open-file",
-  "shortcut-copy", "shortcut-paste", "shortcut-save",
+  "shortcut-copy", "shortcut-paste", "shortcut-save", "shortcut-emoji",
   "excel-input",
   "ppt-text", "ppt-font-size", "ppt-font-family", "ppt-image", "ppt-image-resize",
   "type-url",
+  "wheel-scroll", "window-move-resize",
 ];
 
 // Finger positions are anchored to the actual clickable center of each target.
@@ -153,6 +157,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [selectedFile, setSelectedFile] = useState(false);
   const [fileContextMenu, setFileContextMenu] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const [multiSelected, setMultiSelected] = useState<Set<number>>(new Set());
+  const [startSearch, setStartSearch] = useState("");
   const [shutdownStep, setShutdownStep] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
    const [showSuccess, setShowSuccess] = useState(false);
@@ -226,6 +232,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
     if (currentQuestType === "volume-control") {
       setVolume(30);
+    }
+    if (currentQuestType === "multi-select") {
+      setMultiSelected(new Set());
+    }
+    if (currentQuestType === "start-search") {
+      setStartSearch("");
     }
     // Always close popups/panels on quest change so they don't bleed into the next mission
     setQuickSettingsOpen(false);
@@ -539,6 +551,28 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
   }, [volume, currentQuestType, triggerSuccess]);
 
+  // Window move/resize quest — listen to WindowFrame events
+  useEffect(() => {
+    if (currentQuestType !== "window-move-resize") return;
+    const handler = () => triggerSuccess();
+    window.addEventListener("window-interacted", handler as EventListener);
+    return () => window.removeEventListener("window-interacted", handler as EventListener);
+  }, [currentQuestType, triggerSuccess]);
+
+  // Multi-select quest — completes when 2+ files are selected
+  useEffect(() => {
+    if (currentQuestType === "multi-select" && multiSelected.size >= 2) {
+      triggerSuccess();
+    }
+  }, [multiSelected, currentQuestType, triggerSuccess]);
+
+  // Start menu search quest
+  useEffect(() => {
+    if (currentQuestType === "start-search" && startSearch.trim().includes("메모장")) {
+      triggerSuccess();
+    }
+  }, [startSearch, currentQuestType, triggerSuccess]);
+
   const handleWifiConnect = () => {
     if (wifiPassword === "12345678") {
       setWifiConnected(true);
@@ -714,6 +748,40 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 )}
               </div>
             </motion.div>
+          )}
+
+          {currentQuestType === "multi-select" && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {[1, 2, 3].map(id => {
+                const sel = multiSelected.has(id);
+                return (
+                  <div
+                    key={id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (e.ctrlKey || e.metaKey) {
+                        setMultiSelected(prev => {
+                          const next = new Set(prev);
+                          if (next.has(id)) next.delete(id); else next.add(id);
+                          return next;
+                        });
+                      } else {
+                        setMultiSelected(new Set([id]));
+                      }
+                    }}
+                    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+                      sel ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10 animate-pulse-highlight"
+                    }`}
+                  >
+                    <FileText className="w-8 h-8 text-blue-300" />
+                    <span className="text-[10px] text-white text-center drop-shadow-sm">파일{id}.txt</span>
+                  </div>
+                );
+              })}
+              <div className="basis-full text-[10px] text-yellow-200 mt-1">
+                Ctrl 키를 누른 채로 파일을 두 개 이상 클릭하세요! ({multiSelected.size}/2)
+              </div>
+            </div>
           )}
         </div>
 
@@ -909,6 +977,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               onClose={() => handleCloseApp("mypc")}
               onMinimize={() => handleMinimize("mypc")}
               highlightClose={currentQuestType === "close-mypc"}
+              currentQuestType={currentQuestType}
+              onQuestComplete={triggerSuccess}
             />
           )}
           {openApp === "edge" && (
@@ -944,10 +1014,23 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
             className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-[min(384px,calc(100vw-1rem))] p-3 sm:p-5 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4">
+            <div className={`flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4 ${
+              currentQuestType === "start-search" ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
+            }`}>
               <Search className="w-4 h-4 text-gray-400" />
-              <input placeholder="앱, 설정 및 문서 검색" className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400" />
+              <input
+                value={startSearch}
+                onChange={(e) => setStartSearch(e.target.value)}
+                placeholder="앱, 설정 및 문서 검색"
+                autoFocus={currentQuestType === "start-search"}
+                className="w-full bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
+              />
             </div>
+            {currentQuestType === "start-search" && startSearch.trim().length > 0 && (
+              <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
+                🔍 "{startSearch}" 검색 결과
+              </div>
+            )}
             <p className="text-xs font-medium text-gray-600 mb-2">고정됨</p>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[

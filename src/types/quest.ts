@@ -25,6 +25,10 @@ export type QuestType =
   | "create-file"
   | "rename-folder"
   | "delete-file"
+  | "multi-select"
+  | "wheel-scroll"
+  | "window-move-resize"
+  | "start-search"
   | "open-browser"
   | "type-url"
   | "close-edge"
@@ -34,6 +38,7 @@ export type QuestType =
   | "shortcut-paste"
   | "shortcut-save"
   | "shortcut-alt-tab"
+  | "shortcut-emoji"
   | "open-hangul"
   | "hangul-typing"
   | "hangul-font-size"
@@ -111,6 +116,11 @@ export const WRONG_CLICK_HINTS: Record<QuestType, string> = {
   "shortcut-paste": "💡 키보드의 Ctrl 키와 V 키를 동시에 눌러보세요!",
   "shortcut-save": "💡 키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
   "shortcut-alt-tab": "💡 키보드의 Alt 키와 Tab 키를 동시에 눌러보세요!",
+  "shortcut-emoji": "💡 한글 문서에서 Ctrl + . 을 눌러 이모지 창을 여세요!",
+  "multi-select": "💡 Ctrl 키를 누른 채로 파일을 두 개 이상 클릭해 보세요!",
+  "wheel-scroll": "💡 내 PC 안쪽 내용 위에서 마우스 휠을 아래로 굴려 보세요!",
+  "window-move-resize": "💡 창 제목 표시줄을 드래그하거나, 창 오른쪽 아래 모서리를 끌어 크기를 바꾸세요!",
+  "start-search": "💡 시작 메뉴를 열고 검색창에 '메모장'을 입력하세요!",
   "open-hangul": "💡 바탕화면의 '한글' 아이콘을 더블클릭하세요!",
   "hangul-typing": "💡 문서 영역을 클릭하고 '안녕하세요'를 입력하세요!",
   "hangul-font-size": "💡 글자 크기 버튼을 클릭해서 '20'을 선택하세요!",
@@ -165,10 +175,29 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     hint: "화면 맨 아래 가운데에 있는 윈도우 모양 버튼이에요!", termKey: "start-menu",
   },
   {
+    id: "start-search", title: "시작 메뉴에서 검색", description: "프로그램을 검색해 보세요!",
+    instruction: "시작 버튼을 누르고, 검색창에 '메모장'을 입력하세요!",
+    points: 15, type: "start-search", category: "windows",
+    hint: "시작 메뉴 위쪽의 '앱, 설정 및 문서 검색' 칸을 클릭한 뒤 '메모장'을 입력!",
+    termKey: "start-menu",
+  },
+  {
     id: "open-mypc", title: "내 PC 열기", description: "내 PC를 열어서 드라이브를 확인해보세요!",
     instruction: "바탕화면의 '내 PC' 아이콘을 더블클릭하세요!",
     points: 15, type: "open-mypc", category: "windows",
     hint: "'내 PC' 아이콘을 빠르게 두 번 클릭하면 열려요!",
+  },
+  {
+    id: "wheel-scroll", title: "마우스 휠 스크롤", description: "휠을 굴려 아래쪽 내용을 보세요!",
+    instruction: "내 PC 창 안에서 마우스 휠을 아래로 굴려, 숨겨진 항목을 보세요!",
+    points: 15, type: "wheel-scroll", category: "windows",
+    hint: "휠은 마우스 가운데에 있는 작은 바퀴예요. 위/아래로 굴리면 화면이 움직여요!",
+  },
+  {
+    id: "window-move-resize", title: "창 옮기기 / 크기 조절", description: "창을 옮기거나 크기를 바꿔보세요!",
+    instruction: "창의 제목 표시줄을 끌어 옮기거나, 오른쪽 아래 모서리를 끌어 크기를 바꾸세요!",
+    points: 15, type: "window-move-resize", category: "windows",
+    hint: "위쪽 제목 줄을 잡고 끌면 창이 따라와요. 오른쪽 아래 모서리를 끌면 크기가 변해요!",
   },
   {
     id: "close-mypc", title: "내 PC 닫기", description: "창을 닫는 방법을 배워보세요!",
@@ -193,6 +222,12 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     instruction: "파일을 선택한 후, 마우스 오른쪽 → '삭제' 또는 키보드 Del 키!",
     points: 15, type: "delete-file", category: "windows",
     hint: "먼저 파일을 클릭해서 선택! 그 다음 우클릭 → 삭제 또는 Del 키!",
+  },
+  {
+    id: "multi-select", title: "여러 파일 선택", description: "Ctrl 키를 활용해 여러 파일을 한꺼번에 선택해 보세요!",
+    instruction: "Ctrl 키를 누른 채 파일을 두 개 이상 클릭하세요!",
+    points: 15, type: "multi-select", category: "windows",
+    hint: "Ctrl 키를 꾹 누른 상태에서 파일을 하나씩 클릭하면 여러 개가 선택돼요!",
   },
   // Internet
   {
@@ -250,6 +285,13 @@ export const QUESTS: Omit<Quest, "completed" | "starsEarned">[] = [
     instruction: "한글 문서를 클릭한 후, Ctrl + V를 눌러 붙여넣으세요!",
     points: 15, type: "shortcut-paste", category: "hangul",
     hint: "방금 복사(Ctrl+C)한 내용을 Ctrl+V로 붙여넣어요!", termKey: "shortcut",
+  },
+  {
+    id: "shortcut-emoji", title: "이모지 입력 (Ctrl+.)", description: "이모지 창을 열어 이모지를 넣어 보세요!",
+    instruction: "한글 문서에서 Ctrl + . 을 눌러 이모지 창을 열고, 이모지를 하나 선택하세요!",
+    points: 15, type: "shortcut-emoji", category: "hangul",
+    hint: "윈도우에서는 Win+. 이지만 여기선 Ctrl+. 을 누르면 이모지 창이 나와요!",
+    termKey: "shortcut",
   },
   {
     id: "hangul-font-size", title: "글자 크기 바꾸기", description: "글자 크기를 변경해보세요!",
