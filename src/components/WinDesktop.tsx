@@ -749,6 +749,40 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
               </div>
             </motion.div>
           )}
+
+          {currentQuestType === "multi-select" && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {[1, 2, 3].map(id => {
+                const sel = multiSelected.has(id);
+                return (
+                  <div
+                    key={id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (e.ctrlKey || e.metaKey) {
+                        setMultiSelected(prev => {
+                          const next = new Set(prev);
+                          if (next.has(id)) next.delete(id); else next.add(id);
+                          return next;
+                        });
+                      } else {
+                        setMultiSelected(new Set([id]));
+                      }
+                    }}
+                    className={`flex flex-col items-center gap-0.5 cursor-pointer p-2 rounded-md w-20 transition-colors ${
+                      sel ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10 animate-pulse-highlight"
+                    }`}
+                  >
+                    <FileText className="w-8 h-8 text-blue-300" />
+                    <span className="text-[10px] text-white text-center drop-shadow-sm">파일{id}.txt</span>
+                  </div>
+                );
+              })}
+              <div className="basis-full text-[10px] text-yellow-200 mt-1">
+                Ctrl 키를 누른 채로 파일을 두 개 이상 클릭하세요! ({multiSelected.size}/2)
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Drag and drop zone */}
