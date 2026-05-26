@@ -25,6 +25,10 @@ export type QuestType =
   | "create-file"
   | "rename-folder"
   | "delete-file"
+  | "multi-select"
+  | "wheel-scroll"
+  | "window-move-resize"
+  | "start-search"
   | "open-browser"
   | "type-url"
   | "close-edge"
@@ -34,6 +38,7 @@ export type QuestType =
   | "shortcut-paste"
   | "shortcut-save"
   | "shortcut-alt-tab"
+  | "shortcut-emoji"
   | "open-hangul"
   | "hangul-typing"
   | "hangul-font-size"
@@ -111,6 +116,11 @@ export const WRONG_CLICK_HINTS: Record<QuestType, string> = {
   "shortcut-paste": "💡 키보드의 Ctrl 키와 V 키를 동시에 눌러보세요!",
   "shortcut-save": "💡 키보드의 Ctrl 키와 S 키를 동시에 눌러보세요!",
   "shortcut-alt-tab": "💡 키보드의 Alt 키와 Tab 키를 동시에 눌러보세요!",
+  "shortcut-emoji": "💡 한글 문서에서 Ctrl + . 을 눌러 이모지 창을 여세요!",
+  "multi-select": "💡 Ctrl 키를 누른 채로 파일을 두 개 이상 클릭해 보세요!",
+  "wheel-scroll": "💡 내 PC 안쪽 내용 위에서 마우스 휠을 아래로 굴려 보세요!",
+  "window-move-resize": "💡 창 제목 표시줄을 드래그하거나, 창 오른쪽 아래 모서리를 끌어 크기를 바꾸세요!",
+  "start-search": "💡 시작 메뉴를 열고 검색창에 '메모장'을 입력하세요!",
   "open-hangul": "💡 바탕화면의 '한글' 아이콘을 더블클릭하세요!",
   "hangul-typing": "💡 문서 영역을 클릭하고 '안녕하세요'를 입력하세요!",
   "hangul-font-size": "💡 글자 크기 버튼을 클릭해서 '20'을 선택하세요!",
