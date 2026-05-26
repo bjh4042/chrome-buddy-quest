@@ -73,26 +73,35 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
 
       if (key === "c" && isQuest("shortcut-copy")) {
         const ta = textAreaRef.current;
-        const { start, end } = selectionRange.current;
-        if (ta && start !== end) {
-          setClipboard(ta.value.slice(start, end));
+        if (!ta) return;
+        // Read live selection from the textarea (not just stored range)
+        const s = ta.selectionStart ?? 0;
+        const en = ta.selectionEnd ?? 0;
+        const selected = ta.value.slice(s, en).trim();
+        if (s !== en && selected.length > 0) {
+          setClipboard(ta.value.slice(s, en));
+          selectionRange.current = { start: s, end: en };
           e.preventDefault();
           onQuestComplete();
         }
       }
       if (key === "v" && isQuest("shortcut-paste")) {
+        // Require previously-copied clipboard content
+        if (!clipboard) return;
         e.preventDefault();
-        const insert = clipboard || "안녕하세요";
         const ta = textAreaRef.current;
         if (ta) {
           const pos = ta.selectionStart ?? text.length;
-          setText(text.slice(0, pos) + insert + text.slice(pos));
+          const endPos = ta.selectionEnd ?? pos;
+          setText(text.slice(0, pos) + clipboard + text.slice(endPos));
         } else {
-          setText(text + insert);
+          setText(text + clipboard);
         }
         onQuestComplete();
       }
       if (key === "s" && isQuest("shortcut-save")) {
+        // Require some content before "saving"
+        if (text.trim().length === 0) return;
         e.preventDefault();
         setSaved(true);
         onQuestComplete();
@@ -136,7 +145,13 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
-    if (isQuest("hangul-font-size") && size === "20" && textSelected) {
+    if (
+      isQuest("hangul-font-size") &&
+      size === "20" &&
+      textSelected &&
+      text.trim().length > 0 &&
+      selectionRange.current.start !== selectionRange.current.end
+    ) {
       onQuestComplete();
     }
     restoreSelection();
@@ -145,7 +160,13 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
-    if (isQuest("hangul-font-family") && f === "돋움" && textSelected) {
+    if (
+      isQuest("hangul-font-family") &&
+      f === "돋움" &&
+      textSelected &&
+      text.trim().length > 0 &&
+      selectionRange.current.start !== selectionRange.current.end
+    ) {
       onQuestComplete();
     }
     restoreSelection();

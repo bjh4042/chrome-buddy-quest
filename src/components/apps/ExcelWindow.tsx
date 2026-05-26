@@ -22,6 +22,7 @@ const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }:
   const [cells, setCells] = useState<Record<string, string>>({});
   const [activeCell, setActiveCell] = useState<string>("A1");
   const [editValue, setEditValue] = useState("");
+  const [hasTyped, setHasTyped] = useState(false);
 
   const isInputQuest = currentQuestType === "excel-input";
 
@@ -32,12 +33,20 @@ const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }:
     }
     setActiveCell(cellId);
     setEditValue(cells[cellId] || "");
+    setHasTyped(false);
   };
 
   const handleCellKeyDown = (e: React.KeyboardEvent, cellId: string) => {
     if (e.key === "Enter") {
+      const value = editValue.trim();
       setCells(prev => ({ ...prev, [cellId]: editValue }));
-      if (isInputQuest && cellId === "A1" && editValue === "100") {
+      if (
+        isInputQuest &&
+        cellId === "A1" &&
+        activeCell === "A1" &&
+        value === "100" &&
+        hasTyped
+      ) {
         onQuestComplete();
       }
       const col = cellId.match(/[A-Z]+/)?.[0] || "A";
@@ -46,6 +55,7 @@ const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }:
         const newCell = `${col}${row}`;
         setActiveCell(newCell);
         setEditValue(cells[newCell] || "");
+        setHasTyped(false);
       }
     }
   };
@@ -147,7 +157,7 @@ const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }:
                       {isActive ? (
                         <input
                           value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
+                          onChange={e => { setEditValue(e.target.value); setHasTyped(true); }}
                           onKeyDown={e => handleCellKeyDown(e, cellId)}
                           className="w-full h-full p-0.5 outline-none text-[11px]"
                           autoFocus

@@ -89,7 +89,13 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
-    if (isQuest("ppt-font-size") && size === "28" && titleSelected) {
+    if (
+      isQuest("ppt-font-size") &&
+      size === "28" &&
+      titleSelected &&
+      title.trim().length > 0 &&
+      titleSelectionRange.current.start !== titleSelectionRange.current.end
+    ) {
       onQuestComplete();
     }
     restoreTitleSelection();
@@ -98,7 +104,13 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
-    if (isQuest("ppt-font-family") && f === "바탕" && titleSelected) {
+    if (
+      isQuest("ppt-font-family") &&
+      f === "바탕" &&
+      titleSelected &&
+      title.trim().length > 0 &&
+      titleSelectionRange.current.start !== titleSelectionRange.current.end
+    ) {
       onQuestComplete();
     }
     restoreTitleSelection();
@@ -164,8 +176,8 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
     resizeStart.current = { x: pos.x, y: pos.y, w: imageSize.w, h: imageSize.h };
   };
 
-  const needsSelection = (isQuest("ppt-font-size") || isQuest("ppt-font-family")) && title.length > 0;
-  const selectionHint = needsSelection && !titleSelected;
+  const needsSelection = isQuest("ppt-font-size") || isQuest("ppt-font-family");
+  const selectionHint = needsSelection && (title.trim().length === 0 || !titleSelected);
 
   const toolbar = (
     <div className="flex flex-col">
