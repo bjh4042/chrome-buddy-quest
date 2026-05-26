@@ -31,6 +31,8 @@ type OpenApp = "mypc" | "edge" | "hangul" | "excel" | "ppt" | null;
 
 const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "close-mypc": "mypc",
+  "wheel-scroll": "mypc",
+  "window-move-resize": "mypc",
   "close-edge": "edge",
   "hangul-typing": "hangul",
   "hangul-font-size": "hangul",
@@ -43,6 +45,7 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
   "shortcut-copy": "hangul",
   "shortcut-paste": "hangul",
   "shortcut-save": "hangul",
+  "shortcut-emoji": "hangul",
   "excel-input": "excel",
   "type-url": "edge",
   "ppt-text": "ppt",
@@ -56,10 +59,11 @@ const QUEST_APP_MAP: Partial<Record<QuestType, OpenApp>> = {
 const APP_INTERNAL_QUESTS: QuestType[] = [
   "hangul-typing", "hangul-font-size", "hangul-font-family", "hangul-image", "hangul-image-resize",
   "hangul-table", "hangul-save", "hangul-open-file",
-  "shortcut-copy", "shortcut-paste", "shortcut-save",
+  "shortcut-copy", "shortcut-paste", "shortcut-save", "shortcut-emoji",
   "excel-input",
   "ppt-text", "ppt-font-size", "ppt-font-family", "ppt-image", "ppt-image-resize",
   "type-url",
+  "wheel-scroll", "window-move-resize",
 ];
 
 // Finger positions are anchored to the actual clickable center of each target.
