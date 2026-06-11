@@ -102,7 +102,7 @@ const Index = () => {
       } else {
         setScreen("complete");
       }
-    }, 2000);
+    }, 4000);
   }, [currentQuest, quests]);
 
   const handleRestart = () => {
