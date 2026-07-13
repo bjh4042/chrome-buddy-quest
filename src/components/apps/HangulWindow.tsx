@@ -164,12 +164,12 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
+    const { start, end } = selectionRange.current;
     if (
       isQuest("hangul-font-size") &&
       size === "20" &&
-      textSelected &&
       text.trim().length > 0 &&
-      selectionRange.current.start !== selectionRange.current.end
+      start !== end
     ) {
       onQuestComplete();
     }
@@ -179,12 +179,12 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
+    const { start, end } = selectionRange.current;
     if (
       isQuest("hangul-font-family") &&
       f === "돋움" &&
-      textSelected &&
       text.trim().length > 0 &&
-      selectionRange.current.start !== selectionRange.current.end
+      start !== end
     ) {
       onQuestComplete();
     }
@@ -267,8 +267,9 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
     resizeStart.current = { x: pos.x, y: pos.y, w: imageSize.w, h: imageSize.h };
   };
 
+  const hasStoredSelection = selectionRange.current.start !== selectionRange.current.end;
   const needsSelection = (isQuest("hangul-font-size") || isQuest("hangul-font-family")) && text.length > 0;
-  const selectionHint = needsSelection && !textSelected;
+  const selectionHint = needsSelection && !textSelected && !hasStoredSelection;
 
   const toolbar = (
     <div className="flex flex-col border-b border-gray-200">
@@ -365,6 +366,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font family dropdown */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
             className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[90px] ${
               isQuest("hangul-font-family")
@@ -394,6 +396,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font size */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
             className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[45px] ${
               isQuest("hangul-font-size")

@@ -89,12 +89,12 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontSizeChange = (size: string) => {
     setFontSize(size);
     setShowFontSizeDropdown(false);
+    const { start, end } = titleSelectionRange.current;
     if (
       isQuest("ppt-font-size") &&
       size === "28" &&
-      titleSelected &&
       title.trim().length > 0 &&
-      titleSelectionRange.current.start !== titleSelectionRange.current.end
+      start !== end
     ) {
       onQuestComplete();
     }
@@ -104,12 +104,12 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const handleFontFamilyChange = (f: string) => {
     setFontFamily(f);
     setShowFontDropdown(false);
+    const { start, end } = titleSelectionRange.current;
     if (
       isQuest("ppt-font-family") &&
       f === "바탕" &&
-      titleSelected &&
       title.trim().length > 0 &&
-      titleSelectionRange.current.start !== titleSelectionRange.current.end
+      start !== end
     ) {
       onQuestComplete();
     }
@@ -206,6 +206,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
         {/* Font family */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTitleSelection(); }}
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
             className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[80px] ${
               isQuest("ppt-font-family")
@@ -230,6 +231,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
         {/* Font size */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTitleSelection(); }}
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
             className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[40px] ${
               isQuest("ppt-font-size")
