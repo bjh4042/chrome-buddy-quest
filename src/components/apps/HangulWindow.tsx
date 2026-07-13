@@ -366,6 +366,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font family dropdown */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
             className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[90px] ${
               isQuest("hangul-font-family")
@@ -395,6 +396,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font size */}
         <div className="relative">
           <button
+            onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
             className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[45px] ${
               isQuest("hangul-font-size")
