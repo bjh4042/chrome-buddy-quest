@@ -6,6 +6,7 @@ import CompletionScreen from "@/components/CompletionScreen";
 import CharacterPraise from "@/components/CharacterPraise";
 import TermDictionary from "@/components/TermDictionary";
 import { QUESTS, QUEST_CATEGORIES, type Quest } from "@/types/quest";
+import { QuestEngineProvider, useQuestEngine } from "@/features/quests/useQuestEngine";
 
 type Screen = "start" | "tutorial" | "complete";
 
@@ -214,7 +215,13 @@ const Index = () => {
 
   const currentAlreadyCompleted = quests[currentQuest]?.completed === true;
 
+  const engine = useQuestEngine({
+    currentQuest: quests[currentQuest].type,
+    onComplete: handleQuestComplete,
+  });
+
   return (
+    <QuestEngineProvider value={engine}>
     <div className="h-screen flex flex-col md:flex-row overflow-hidden">
       <div className="md:h-full h-auto max-h-[35vh] md:max-h-full overflow-auto shrink-0">
         <QuestPanel
@@ -248,6 +255,7 @@ const Index = () => {
         )}
       </div>
     </div>
+    </QuestEngineProvider>
   );
 };
 
