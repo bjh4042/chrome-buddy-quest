@@ -192,3 +192,22 @@
 .animate-sparkle {
   animation: sparkle 1s ease-in-out infinite;
 }
+
+/* Accessibility: honor user preference for reduced motion.
+   Also honor an explicit opt-in via `data-reduced-motion="1"` on <html>. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-reduced-motion="1"] *,
+html[data-reduced-motion="1"] *::before,
+html[data-reduced-motion="1"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
