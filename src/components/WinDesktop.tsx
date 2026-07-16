@@ -250,6 +250,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   useEffect(() => {
     setShowFingerGuide(false);
     wrongClickCount.current = 0;
+    setTieredHint("");
+    setWrongHint({ visible: false, pos: { x: 0, y: 0 } });
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
     if (currentQuestType === "click") {
       const timer = setTimeout(() => setShowFingerGuide(true), 10000);
