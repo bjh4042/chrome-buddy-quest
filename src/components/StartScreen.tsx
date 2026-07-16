@@ -129,7 +129,6 @@ const StartScreen = ({
       </motion.p>
     </div>
   );
-);
 };
 
 export default StartScreen;
