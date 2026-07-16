@@ -11,7 +11,7 @@ import { QuestEngineProvider, useQuestEngine } from "@/features/quests/useQuestE
 type Screen = "start" | "tutorial" | "complete";
 
 const STORAGE_KEY = "win-explorer-progress-v2";
-const NEXT_QUEST_DELAY_MS = 4000;
+const NEXT_QUEST_DELAY_MS = 8000;
 
 type SavedProgress = {
   version: 2;
@@ -55,7 +55,8 @@ const loadProgress = (): SavedProgress | null => {
 
 const Index = () => {
   const saved = loadProgress();
-  const [screen, setScreen] = useState<Screen>(saved?.screen ?? "start");
+  // Do NOT auto-jump into the tutorial on load — always start on the start screen.
+  const [screen, setScreen] = useState<Screen>(saved?.screen === "complete" ? "complete" : "start");
   const [quests, setQuests] = useState<Quest[]>(() => {
     const base = QUESTS.map(q => ({ ...q, completed: false, starsEarned: 0 }));
     if (saved?.questsState) {
@@ -70,6 +71,7 @@ const Index = () => {
   });
   const [currentQuest, setCurrentQuest] = useState(saved?.currentQuest ?? 0);
   const [showPraise, setShowPraise] = useState(false);
+  const [praiceIsReplay, setPraiseIsReplay] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
   // Persistent key — don't remount WinDesktop on quest change
   const [desktopKey] = useState(() => Math.random());
@@ -122,6 +124,12 @@ const Index = () => {
   }, [quests]);
 
   const handleStart = () => setScreen("tutorial");
+  const handleResume = () => setScreen("tutorial");
+  const handleJumpTo = (index: number) => {
+    if (index < 0 || index >= QUESTS.length) return;
+    setCurrentQuest(index);
+    setScreen("tutorial");
+  };
 
   const handleQuestComplete = useCallback(() => {
     // Guard: prevent duplicate completion for the same quest
@@ -142,6 +150,7 @@ const Index = () => {
       });
     }
     // Always show praise (even in practice mode) but no double-score because state guarded above
+    setPraiseIsReplay(!!already);
     setShowPraise(true);
 
     nextTimerRef.current = setTimeout(() => {
@@ -156,6 +165,28 @@ const Index = () => {
       }
     }, NEXT_QUEST_DELAY_MS);
   }, [currentQuest, quests]);
+
+  const closePraise = () => {
+    clearNextTimer();
+    setShowPraise(false);
+    completingRef.current = false;
+  };
+
+  const advanceNow = () => {
+    const idx = currentQuest;
+    const wasReplay = praiceIsReplay;
+    closePraise();
+    if (wasReplay) return; // replay: just close
+    if (idx < QUESTS.length - 1) {
+      setCurrentQuest(idx + 1);
+    } else {
+      setScreen("complete");
+    }
+  };
+
+  const stayForPractice = () => {
+    closePraise();
+  };
 
   const doRestart = () => {
     clearNextTimer();
@@ -194,7 +225,21 @@ const Index = () => {
     setCurrentQuest(index);
   };
 
-  if (screen === "start") return <StartScreen onStart={handleStart} />;
+  if (screen === "start") {
+    const completedCount = quests.filter(q => q.completed).length;
+    return (
+      <StartScreen
+        onStart={handleStart}
+        hasProgress={completedCount > 0}
+        completedCount={completedCount}
+        totalQuests={QUESTS.length}
+        currentQuestTitle={quests[currentQuest]?.title}
+        onResume={handleResume}
+        onJumpTo={() => handleJumpTo(0)}
+        onFreshStart={() => setConfirmRestart(true)}
+      />
+    );
+  }
 
   if (screen === "complete") {
     const totalStars = quests.reduce((sum, q) => sum + q.starsEarned, 0);
@@ -249,7 +294,13 @@ const Index = () => {
           </div>
         )}
         <TermDictionary termKey={quests[currentQuest].termKey} />
-        <CharacterPraise visible={showPraise} />
+        <CharacterPraise
+          visible={showPraise}
+          onNext={advanceNow}
+          onPractice={stayForPractice}
+          isLast={currentQuest === QUESTS.length - 1}
+          practiceMode={praiceIsReplay}
+        />
         {confirmRestart && (
           <RestartConfirmDialog onCancel={() => setConfirmRestart(false)} onConfirm={doRestart} />
         )}
