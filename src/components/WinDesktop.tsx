@@ -180,6 +180,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   });
   const wrongClickCount = useRef(0);
   const [intensifyHighlight, setIntensifyHighlight] = useState(false);
+  const [tieredHint, setTieredHint] = useState<string>("");
 
   // Long-press for mobile right-click
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,11 +300,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     if (n >= 4) {
       setShowFingerGuide(true);
     }
-    // Override the map hint with the tiered message via ref-like technique:
-    // we can't rewrite WRONG_CLICK_HINTS map, so display via a local state.
     setTieredHint(msg);
   };
-  const [tieredHint, setTieredHint] = useState<string>("");
 
   const handleStarClick = (id: number) => {
     if (currentQuestType !== "click") return;
