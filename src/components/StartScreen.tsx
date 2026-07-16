@@ -1,12 +1,29 @@
 import { motion } from "framer-motion";
-import { Monitor, MousePointer, Star } from "lucide-react";
+import { Monitor, MousePointer, Star, Play, ListChecks, RotateCcw } from "lucide-react";
 import { QUESTS } from "@/types/quest";
 
 interface StartScreenProps {
   onStart: () => void;
+  hasProgress?: boolean;
+  completedCount?: number;
+  totalQuests?: number;
+  currentQuestTitle?: string;
+  onResume?: () => void;
+  onJumpTo?: () => void;
+  onFreshStart?: () => void;
 }
 
-const StartScreen = ({ onStart }: StartScreenProps) => {
+const StartScreen = ({
+  onStart,
+  hasProgress,
+  completedCount = 0,
+  totalQuests,
+  currentQuestTitle,
+  onResume,
+  onJumpTo,
+  onFreshStart,
+}: StartScreenProps) => {
+  const total = totalQuests ?? QUESTS.length;
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/90 to-primary p-6">
       <motion.div
@@ -34,7 +51,7 @@ const StartScreen = ({ onStart }: StartScreenProps) => {
         <div className="flex items-center justify-center gap-6 mb-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <MousePointer className="w-4 h-4 text-primary" />
-            <span>{QUESTS.length}개 미션</span>
+            <span>{total}개 미션</span>
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4 text-star" />
@@ -42,23 +59,64 @@ const StartScreen = ({ onStart }: StartScreenProps) => {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-2 mb-6 text-xs">
-          <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">🖱️ 마우스</span>
-          <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">🪟 윈도우</span>
-          <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded-full">🌐 인터넷</span>
-          <span className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">📝 한글</span>
-          <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">📊 엑셀</span>
-          <span className="bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">📽️ PPT</span>
+        <p className="text-xs text-muted-foreground mb-2">이런 것을 배워요</p>
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mb-6 text-xs">
+          <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full">🖱️ 마우스</span>
+          <span className="text-muted-foreground/60">→</span>
+          <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full">🪟 윈도우</span>
+          <span className="text-muted-foreground/60">→</span>
+          <span className="bg-green-50 text-green-600 px-2 py-1 rounded-full">🌐 인터넷</span>
+          <span className="text-muted-foreground/60">→</span>
+          <span className="bg-purple-50 text-purple-600 px-2 py-1 rounded-full">📝 한글</span>
+          <span className="text-muted-foreground/60">→</span>
+          <span className="bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">📊 엑셀</span>
+          <span className="text-muted-foreground/60">→</span>
+          <span className="bg-orange-50 text-orange-600 px-2 py-1 rounded-full">📽️ PPT</span>
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onStart}
-          className="w-full py-4 px-8 rounded-2xl bg-secondary text-secondary-foreground font-display text-xl shadow-quest hover:brightness-105 transition-all"
-        >
-          모험 시작하기! 🎮
-        </motion.button>
+        {hasProgress ? (
+          <div className="space-y-2">
+            <div className="bg-accent/10 border border-accent/30 rounded-xl p-3 text-sm text-foreground">
+              지난번에 <span className="font-display text-accent">{completedCount}/{total}</span> 임무까지 했어요.
+              {currentQuestTitle && (
+                <div className="text-xs text-muted-foreground mt-1 truncate">
+                  다음 임무: {currentQuestTitle}
+                </div>
+              )}
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={onResume ?? onStart}
+              className="w-full min-h-[52px] py-3 px-6 rounded-2xl bg-secondary text-secondary-foreground font-display text-lg shadow-quest flex items-center justify-center gap-2"
+            >
+              <Play className="w-5 h-5" /> 이어서 탐험하기
+            </motion.button>
+            <div className="flex gap-2">
+              <button
+                onClick={onJumpTo}
+                className="flex-1 min-h-[44px] py-2 rounded-xl bg-primary/10 text-primary font-display text-sm flex items-center justify-center gap-1.5 hover:bg-primary/20 transition"
+              >
+                <ListChecks className="w-4 h-4" /> 임무 골라서 연습
+              </button>
+              <button
+                onClick={onFreshStart}
+                className="flex-1 min-h-[44px] py-2 rounded-xl bg-muted text-foreground font-display text-sm flex items-center justify-center gap-1.5 hover:bg-muted/70 transition"
+              >
+                <RotateCcw className="w-4 h-4" /> 처음부터
+              </button>
+            </div>
+          </div>
+        ) : (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onStart}
+            className="w-full min-h-[56px] py-4 px-8 rounded-2xl bg-secondary text-secondary-foreground font-display text-xl shadow-quest hover:brightness-105 transition-all"
+          >
+            모험 시작하기! 🎮
+          </motion.button>
+        )}
       </motion.div>
 
       <motion.p

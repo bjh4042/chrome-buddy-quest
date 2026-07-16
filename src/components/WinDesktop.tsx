@@ -180,6 +180,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   });
   const wrongClickCount = useRef(0);
   const [intensifyHighlight, setIntensifyHighlight] = useState(false);
+  const [tieredHint, setTieredHint] = useState<string>("");
 
   // Long-press for mobile right-click
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -249,6 +250,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   useEffect(() => {
     setShowFingerGuide(false);
     wrongClickCount.current = 0;
+    setTieredHint("");
+    setWrongHint({ visible: false, pos: { x: 0, y: 0 } });
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
     if (currentQuestType === "click") {
       const timer = setTimeout(() => setShowFingerGuide(true), 10000);
@@ -281,16 +284,25 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
   const handleWrongClick = (e: React.MouseEvent) => {
     wrongClickCount.current += 1;
-    if (wrongClickCount.current >= 2) {
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setWrongHint({
-        visible: true,
-        pos: { x: e.clientX - rect.left, y: e.clientY - rect.top },
-      });
-      setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3000);
+    const n = wrongClickCount.current;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    // Tiered hint messages (elementary-friendly, escalating)
+    let msg = "";
+    if (n === 1) msg = "앗, 그곳은 아니에요. 임무를 한 번 더 읽어 볼까요?";
+    else if (n === 2) msg = WRONG_CLICK_HINTS[currentQuestType] || "임무에 나온 그림을 찾아보세요.";
+    else if (n === 3) msg = "정답 위치를 반짝이게 표시할게요. 잘 살펴봐요.";
+    else msg = "손가락 안내를 보여 줄게요. 그대로 따라해 봐요!";
+    setWrongHint({ visible: true, pos });
+    setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3500);
+    if (n >= 3) {
       setIntensifyHighlight(true);
-      setTimeout(() => setIntensifyHighlight(false), 4000);
+      setTimeout(() => setIntensifyHighlight(false), 5000);
     }
+    if (n >= 4) {
+      setShowFingerGuide(true);
+    }
+    setTieredHint(msg);
   };
 
   const handleStarClick = (id: number) => {
@@ -858,7 +870,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
         <WrongClickHint
           visible={wrongHint.visible}
-          message={WRONG_CLICK_HINTS[currentQuestType] || ""}
+          message={tieredHint || WRONG_CLICK_HINTS[currentQuestType] || ""}
           position={wrongHint.pos}
         />
 
