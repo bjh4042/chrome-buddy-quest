@@ -1,58 +1,91 @@
-## 3단계 UI/UX 개선 — 단계적 롤아웃 계획
+# 윈도우 탐험대 3단계 후속 - 레이아웃·상태·문구·반응형
 
-기존 디자인 톤(탐험대 컨셉, 색/폰트/카드 스타일)과 모든 퀘스트 판정 로직은 그대로 두고, **정보 우선순위·성공 흐름·힌트·시작 화면·접근성**을 순서대로 적용합니다. 각 세부 단계 후 기존 퀘스트를 실제로 눌러 회귀 여부를 확인합니다.
+이번 턴은 신규 기능/퀘스트/판정 로직을 추가하지 않고, 오직 학습 화면의 **레이아웃 재편(3-B)**, **퀘스트 상태 표시 통일(3-C)**, **학생용 문구 리라이트(3-E)**, **1366×768 중심 반응형 회귀 점검(3-G)** 만 수행합니다.
 
-### 3-A. 성공 화면 개선 (가장 먼저, 학습 흐름의 핵심)
-- `CharacterPraise`에 두 개의 버튼 추가
-  - **다음 임무** → 즉시 진행
-  - **한 번 더 연습** → 팝업 닫고 현재 화면 유지, 점수 변화 없음
-- `Index.tsx`의 자동 이동 타이머는 유지하되 8초로 늘리고, 버튼을 누르면 즉시 실행
-- 이미 완료한 퀘스트를 다시 클리어했을 때는 "연습 완료" 문구 + 확인 버튼만 노출
+## 작업 전 기준 화면 점검
 
-### 3-B. 학습 화면 구조 재편 (중간 위험)
-- 상단 얇은 **학습 바** 신설: `☰ 임무 목록` · `3 / 22` · 현재 임무 제목 · `⭐ 별 수` · `📖 도움말` · `⚙ 설정`
-- **현재 임무 카드**를 시뮬레이션 화면 위/좌측에 항상 노출 (제목·짧은 설명·용어 링크)
-- 사이드 `QuestPanel`은 기본 접힘 → 상단 바의 `☰`로 오버레이 열기 (모바일/작은 화면 우선)
-- 큰 화면(≥1440px)에서는 사이드 패널 고정도 옵션으로 유지
+Playwright로 다음 해상도 스냅샷을 먼저 저장하고 겹침/잘림/이중 스크롤을 기록합니다.
+- 1920×1080, **1366×768(최우선)**, 1280×720, 1024×768
+- 화면: 시작(진행 없음/있음), 학습 기본, 한글/엑셀/PPT/엣지 창 열림, 성공 카드, 오답 4회 후, 초기화 확인창
 
-### 3-C. 퀘스트 상태 시각/문구 강화
-- 완료: `✓ 완료한 임무예요`, 현재: `▶ 지금 하는 임무`, 미완료: `아직 하지 않았어요`, 잠김: `🔒 앞 임무를 먼저 해요`, 재연습: `↻ 다시 연습하기`
-- 색상만이 아니라 아이콘+텍스트로 상태 구분(스크린리더 대응)
+## 3-B 학습 화면 레이아웃 재편
 
-### 3-D. 점진적 힌트
-- 오답 카운터를 재사용해 4단계로 확장
-  1. `그곳은 아니에요. 임무를 다시 읽어 보세요.`
-  2. `화면 아래쪽(작업 표시줄)을 살펴보세요.` — 위치 힌트(퀘스트별 매핑)
-  3. 정답 영역에 부드러운 glow (이미 있음: intensifyHighlight 재사용)
-  4. 손가락/라벨 안내 (기존 `FingerGuide` 라벨 로직 활용, 10초 → 힌트 3회 뒤로 앞당김)
+`src/pages/Index.tsx` 구조를 다음으로 재편합니다.
 
-### 3-E. 퀘스트 문구 정리
-- `src/types/quest.ts`의 `title` / `instruction`을 한 문장·행동 순서·굵은 키워드 원칙으로 리라이트
-- 실제 UI 버튼명과 완전히 일치시키기 (예: "실행" → "열기", "우클릭" → "마우스 오른쪽 버튼")
+```
+h-[100dvh] flex-col
+ ├─ TopLearnBar     : 고정 높이 (모바일 자동 축약)
+ ├─ CurrentQuestCard: 내용 기반 제한 높이 (기본 1~3줄, 펼치기)
+ └─ Simulation      : flex-1 (WinDesktop + Praise + Term)
+```
 
-### 3-F. 시작 화면 개선
-- `StartScreen`에 학습 범위 6단계 배지 표시 (마우스→윈도우→인터넷→한글→엑셀→PPT)
-- localStorage에 진행 기록이 있으면 3개 버튼: `이어서 탐험하기` · `임무 골라서 연습하기` · `처음부터 시작하기`
-- **앱 로드 시 자동으로 tutorial 화면으로 넘어가지 않음** (`saved?.screen` 무시, 시작 화면부터)
+- **TopLearnBar** (`src/components/TopLearnBar.tsx` 신규): `[☰ 임무 목록] [12 / 48] [현재 임무 제목…] ★24 [도움말] [설정?]`. 아이콘만 있는 버튼에는 `aria-label` + `title`. 좁은 화면에서 제목 truncate.
+- **CurrentQuestCard** (`src/components/CurrentQuestCard.tsx` 신규): "지금 할 일" 라벨 + 현재 instruction + (완료 배지) + 힌트 문구. 접기/펼치기 지원. 기존 `currentAlreadyCompleted` 배지를 이 카드로 통합.
+- **QuestPanel** → `Sheet`로 감싸 슬라이드 패널로 전환 (신규 `src/components/QuestSheet.tsx` 래퍼 사용, 기존 `QuestPanel` 컴포넌트 재사용). 기본 닫힘, TopLearnBar 버튼으로 open, 퀘스트 선택 시 자동 close, ESC/backdrop close. 데스크톱에서도 오버레이 방식 유지(고정 사이드바 폐지).
+- **Simulation**: `WinDesktop`은 남은 높이를 100% 사용. 이중 스크롤 방지 위해 상위는 `overflow-hidden`, 내부만 스크롤.
+- **레이어 우선순위 재정렬**: Praise > 힌트/손가락 > TopLearnBar > 시뮬레이션. z-index 정리 (top-bar z-30, sheet z-50, praise z-[110]).
+- `100vh` → `100dvh` 로 교체.
 
-### 3-G. 클릭 영역·작은 화면 최적화 (마무리 패스)
-- 리본 아이콘 최소 40×40, 데스크톱 아이콘 전체 라벨 영역 클릭 가능 (이미 대부분 반영)
-- `WindowFrame`의 리사이즈 핸들 두께 상향
-- 1366×768 스냅샷으로 리본/작업표시줄 잘림 점검 후 국소 수정
+## 3-C 퀘스트 상태 표시 통일
 
-### 3-H. 애니메이션 접근성
-- `index.css`에 전역 `@media (prefers-reduced-motion: reduce)` 규칙 추가: transition/animation 지속시간 0에 가깝게, confetti는 정적 별로 대체
-- Quick Settings에 `움직임 줄이기` 토글 추가 → `document.documentElement.dataset.reducedMotion = "1"` 저장(localStorage)
+`src/components/QuestPanel.tsx`의 각 quest 아이템에 아이콘+글자 라벨을 함께 부여합니다.
 
-### 이번 턴 실행 범위 (권장)
-큰 리팩터가 아니라 **학습 흐름을 즉시 개선하는 A · C · D · F · H**를 이번 턴에 함께 적용하고, **B(레이아웃 재편)와 E(문구 전면 리라이트)와 G(1366×768 회귀)** 는 다음 턴에 스크린샷 확인과 함께 진행하는 것을 제안합니다. B/E/G는 회귀 위험이 커서 별도 턴이 안전합니다.
+| 상태 | 아이콘 | 텍스트 |
+| --- | --- | --- |
+| 완료 | ✓ CheckCircle2 | "완료" + 별 |
+| 진행중 | ➤ Flag | "지금 하는 임무" (테두리 강조, 반짝임 제거) |
+| 미완료 | ○ Circle | "아직" |
+| 잠김 | 🔒 Lock | "앞 임무를 먼저 해요" |
+| 재연습 | ↻ RotateCcw | "다시 연습 중" (완료+선택된 현재 퀘스트) |
 
-### 파일별 변경 요약
-- `src/pages/Index.tsx` — 성공 자동이동 시간·즉시-진행 콜백, 오답 카운터 상위 관리 여부 검토
-- `src/components/CharacterPraise.tsx` — 버튼 두 개 노출·onNext/onPractice prop 추가
-- `src/components/StartScreen.tsx` — 학습 범위 배지, 진행 기록 감지 후 세 버튼
-- `src/components/QuestPanel.tsx` — 상태 아이콘/문구 정리
-- `src/components/WinDesktop.tsx` — 힌트 3~4단계 문구·힌트 카운터 노출
-- `src/index.css` — prefers-reduced-motion 전역 규칙
+색상만이 아닌 아이콘+라벨을 항상 병기. 좁은 폭에서는 라벨 truncate 하되 아이콘 유지. 카테고리 잠금 hover-only 안내는 화면 텍스트로 노출.
 
-이 실행 범위로 진행할까요? 아니면 A~H 중 우선 순위를 다르게 지정해 주세요.
+## 3-E 학생용 문구 리라이트
+
+- `src/types/quest.ts`의 각 quest `title`, `instruction` 을 초등 저학년 눈높이로 다듬음. 제목 12자 이내, 설명 1문장 짧게, "~해요/눌러요" 톤. 우클릭/더블클릭/드래그 표현을 명세대로 통일. **id, type, points, category, termKey 등은 변경 금지**.
+- `StartScreen.tsx` 버튼 라벨: "이어서 탐험하기", "임무 골라서 연습하기", "모두 지우고 처음부터".
+- `CharacterPraise.tsx` 버튼: 기존 "다음 임무"/"한 번 더 연습" 유지. 재연습 확인 버튼은 "연습 마치기"로 검토했다가 흐름 위험이 있으면 "확인" 유지하고 개선 후보로만 기록.
+- `WrongClickHint.tsx` 및 힌트 라벨: 탓하는 표현 제거, "다른 곳을 눌렀어요. 임무를 다시 살펴봐요." 등으로 교체.
+- 판정 로직/quest id/points/카테고리 언락 규칙은 **변경 금지**.
+
+## 3-G 반응형 회귀 점검 (1366×768 최우선)
+
+- Tailwind fluid 토큰(`text-fluid-*`, `p-fluid-*`) 이미 존재 → TopLearnBar/카드/패널에 적용.
+- TopLearnBar: 좁은 폭에서 도움말/설정 버튼을 아이콘 전용으로 축소, 제목 truncate.
+- CurrentQuestCard: 기본 max-h + 펼치기.
+- Sheet: `w-[320px] sm:w-[360px] max-w-[85vw]`.
+- 1024×768 이하: 점수 별 표시 아이콘+숫자로 축약, "도움말" 텍스트 라벨 숨김.
+- Playwright로 4개 해상도 재검증 후 스크린샷 확인.
+
+## 접근성/모션
+
+- 기존 `prefers-reduced-motion` 규칙 유지. 신규 Sheet/카드 애니메이션도 reduced motion에서 즉시 표시되도록 duration 최소화.
+- 반복 pulse는 진행중 배지에서 정적 border로 대체.
+
+## 회귀 방지 (변경 금지)
+
+- 8초 자동 이동, 다음/연습 버튼, 재연습 무점수, 1~4단계 힌트, 3회 glow / 4회 손가락, 시작 3버튼, localStorage v2 스키마, 퀘스트 판정, Hook 순서 안정성.
+- **Hook 규칙**: 신규 컴포넌트 모두 최상단 Hook 사용, 조기 return 뒤 Hook 호출 금지.
+
+## 수정 예정 파일
+
+- `src/pages/Index.tsx` — 레이아웃 컨테이너 재편, QuestPanel을 Sheet로 감싸기, 배지 이동.
+- `src/components/TopLearnBar.tsx` — 신규.
+- `src/components/CurrentQuestCard.tsx` — 신규.
+- `src/components/QuestSheet.tsx` — 신규 (shadcn `Sheet` 래퍼).
+- `src/components/QuestPanel.tsx` — 상태 라벨/아이콘 통일, 헤더 축약(스코어/맵은 상단바로 이관).
+- `src/components/StartScreen.tsx` — 버튼 문구 다듬기.
+- `src/components/WrongClickHint.tsx` — 문구.
+- `src/components/CharacterPraise.tsx` — 문구 미세 조정 (동작 유지).
+- `src/types/quest.ts` — title/instruction 리라이트.
+- `src/index.css` — `100dvh` 유틸리티, reduced-motion 신규 애니메이션 커버.
+
+## 검증
+
+- `tsgo --noEmit`, `eslint`, `bun run build`.
+- Playwright 4해상도 × 주요 화면 스크린샷 후 `code--view`로 확인.
+- 기능 시나리오: 시작(기록 무/유), 이어서/골라서/처음부터(취소·확정), 목록 선택, 완료 재선택, 성공 후 다음/연습, 재연습 완료, 오답 4회, 새로고침 복구.
+
+## 보고 형식
+
+명세대로: 수정 전 문제 → 적용 변경 → 수정 파일 → 회귀 결과 → 해상도별 결과 → 검사 결과 → 남은 문제.
