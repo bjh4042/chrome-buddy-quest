@@ -97,13 +97,13 @@ const StartScreen = ({
                 onClick={onJumpTo}
                 className="flex-1 min-h-[44px] py-2 rounded-xl bg-primary/10 text-primary font-display text-sm flex items-center justify-center gap-1.5 hover:bg-primary/20 transition"
               >
-                <ListChecks className="w-4 h-4" /> 임무 골라서 연습
+                <ListChecks className="w-4 h-4" /> 임무 골라서 연습하기
               </button>
               <button
                 onClick={onFreshStart}
                 className="flex-1 min-h-[44px] py-2 rounded-xl bg-muted text-foreground font-display text-sm flex items-center justify-center gap-1.5 hover:bg-muted/70 transition"
               >
-                <RotateCcw className="w-4 h-4" /> 처음부터
+                <RotateCcw className="w-4 h-4" /> 모두 지우고 처음부터
               </button>
             </div>
           </div>

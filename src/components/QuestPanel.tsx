@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, CheckCircle2, Lock, RotateCcw, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
+import { Star, CheckCircle2, Lock, RotateCcw, RefreshCw, ChevronDown, ChevronRight, Flag, Circle } from "lucide-react";
 import type { Quest } from "@/types/quest";
 import { QUEST_CATEGORIES } from "@/types/quest";
 
@@ -14,11 +14,15 @@ interface QuestPanelProps {
   onRetryQuest: (index: number) => void;
   showComplete: boolean;
   unlockedCategories: string[];
+  showHeader?: boolean;
 }
 
 const MEDAL_THRESHOLD = 10;
 
-const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, onRestart, onRetryQuest, showComplete, unlockedCategories }: QuestPanelProps) => {
+const QuestPanel = ({
+  quests, currentQuest, score, totalScore, onSelectQuest, onRestart,
+  onRetryQuest, showComplete, unlockedCategories, showHeader = true,
+}: QuestPanelProps) => {
   const progress = (quests.filter(q => q.completed).length / quests.length) * 100;
   const totalStars = quests.reduce((sum, q) => sum + q.starsEarned, 0);
   const goldMedals = Math.floor(totalStars / MEDAL_THRESHOLD);
@@ -46,8 +50,8 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
   };
 
   return (
-    <div className="w-full md:w-72 bg-card border-r border-border flex flex-col h-full overflow-hidden">
-      {/* Header */}
+    <div className="w-full bg-card flex flex-col h-full overflow-hidden">
+      {showHeader && (
       <div className="p-3 border-b border-border bg-primary/5">
         <div className="flex items-center justify-between mb-2">
           <h2 className="font-display text-base text-foreground">🗺️ 탐험 지도</h2>
@@ -97,6 +101,26 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
           )}
         </div>
       </div>
+      )}
+      {!showHeader && (
+        <div className="px-3 pt-2 pb-3 border-b border-border bg-primary/5">
+          <div className="relative h-2 bg-muted rounded-full overflow-hidden mb-1">
+            <motion.div
+              className="h-full bg-gradient-to-r from-primary via-accent to-secondary rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.4 }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-fluid-2xs text-muted-foreground">
+            <span>{quests.filter(q => q.completed).length} / {quests.length} 완료</span>
+            <span className="inline-flex items-center gap-1">
+              {goldMedals > 0 && <span>🏅×{goldMedals}</span>}
+              <Star className="w-3 h-3 text-star fill-star" />×{remainingStars || totalStars}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Quest list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -173,23 +197,55 @@ const QuestPanel = ({ quests, currentQuest, score, totalScore, onSelectQuest, on
                                 if (!isLocked) onSelectQuest(quest.index);
                               }}
                               disabled={isLocked}
-                              className={`flex-1 flex items-center justify-between text-left px-2 py-1 rounded-lg text-xs transition-all ${
+                              className={`flex-1 flex items-center justify-between text-left px-2 py-1 rounded-lg text-xs transition-all min-h-[36px] ${
                                 isCurrent
-                                  ? "bg-primary/10 border border-primary shadow-game text-primary font-bold"
+                                  ? "bg-primary/10 border-2 border-primary shadow-game text-primary font-bold"
                                   : isCompleted
                                   ? "text-accent hover:bg-accent/5"
                                   : isLocked
                                   ? "text-muted-foreground/40 cursor-not-allowed"
                                   : "text-foreground hover:bg-muted/50"
                               }`}
+                              aria-label={
+                                isLocked ? `잠김: ${quest.title}` :
+                                isCurrent && isCompleted ? `다시 연습 중: ${quest.title}` :
+                                isCurrent ? `지금 하는 임무: ${quest.title}` :
+                                isCompleted ? `완료: ${quest.title}` : `아직 하지 않은 임무: ${quest.title}`
+                              }
                             >
-                              <span className="truncate">{quest.title}</span>
-                              <div className="flex items-center gap-1">
+                              <span className="flex items-center gap-1 min-w-0">
+                                {isLocked ? (
+                                  <Lock className="w-3 h-3 shrink-0 text-muted-foreground" />
+                                ) : isCurrent && isCompleted ? (
+                                  <RotateCcw className="w-3 h-3 shrink-0 text-accent" />
+                                ) : isCurrent ? (
+                                  <Flag className="w-3 h-3 shrink-0 text-primary" />
+                                ) : isCompleted ? (
+                                  <CheckCircle2 className="w-3 h-3 shrink-0 text-accent" />
+                                ) : (
+                                  <Circle className="w-3 h-3 shrink-0 text-muted-foreground" />
+                                )}
+                                <span className="truncate">{quest.title}</span>
+                                <span className={`hidden sm:inline shrink-0 text-[9px] font-normal px-1 py-[1px] rounded ${
+                                  isLocked ? "bg-muted text-muted-foreground" :
+                                  isCurrent && isCompleted ? "bg-accent/15 text-accent" :
+                                  isCurrent ? "bg-primary/15 text-primary" :
+                                  isCompleted ? "bg-accent/15 text-accent" :
+                                  "bg-muted text-muted-foreground"
+                                }`}>
+                                  {isLocked ? "앞 임무 먼저" :
+                                   isCurrent && isCompleted ? "다시 연습 중" :
+                                   isCurrent ? "지금 하는 임무" :
+                                   isCompleted ? "완료" : "아직"}
+                                </span>
+                              </span>
+                              <div className="flex items-center gap-1 shrink-0">
                                 {isCompleted && (
                                   <button
                                     onClick={e => { e.stopPropagation(); onRetryQuest(quest.index); }}
                                     className="p-0.5 hover:bg-accent/20 rounded"
-                                    title="다시 하기"
+                                    title="다시 연습하기"
+                                    aria-label="다시 연습하기"
                                   >
                                     <RefreshCw className="w-2.5 h-2.5 text-accent" />
                                   </button>
