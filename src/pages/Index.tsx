@@ -225,6 +225,13 @@ const Index = () => {
     setCurrentQuest(index);
   };
 
+  const currentAlreadyCompleted = quests[currentQuest]?.completed === true;
+
+  const engine = useQuestEngine({
+    currentQuest: quests[currentQuest]?.type ?? QUESTS[0].type,
+    onComplete: handleQuestComplete,
+  });
+
   if (screen === "start") {
     const completedCount = quests.filter(q => q.completed).length;
     return (
@@ -257,13 +264,6 @@ const Index = () => {
       </>
     );
   }
-
-  const currentAlreadyCompleted = quests[currentQuest]?.completed === true;
-
-  const engine = useQuestEngine({
-    currentQuest: quests[currentQuest].type,
-    onComplete: handleQuestComplete,
-  });
 
   return (
     <QuestEngineProvider value={engine}>
