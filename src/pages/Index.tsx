@@ -1,6 +1,9 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import StartScreen from "@/components/StartScreen";
 import QuestPanel from "@/components/QuestPanel";
+import QuestSheet from "@/components/QuestSheet";
+import TopLearnBar from "@/components/TopLearnBar";
+import CurrentQuestCard from "@/components/CurrentQuestCard";
 import WinDesktop from "@/components/WinDesktop";
 import CompletionScreen from "@/components/CompletionScreen";
 import CharacterPraise from "@/components/CharacterPraise";
@@ -73,6 +76,7 @@ const Index = () => {
   const [showPraise, setShowPraise] = useState(false);
   const [praiceIsReplay, setPraiseIsReplay] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   // Persistent key — don't remount WinDesktop on quest change
   const [desktopKey] = useState(() => Math.random());
 
@@ -232,6 +236,20 @@ const Index = () => {
     onComplete: handleQuestComplete,
   });
 
+  const totalStars = useMemo(
+    () => quests.reduce((sum, q) => sum + q.starsEarned, 0),
+    [quests]
+  );
+
+  const handleSelectFromSheet = (index: number) => {
+    handleSelectQuest(index);
+    setSheetOpen(false);
+  };
+  const handleRetryFromSheet = (index: number) => {
+    handleRetryQuest(index);
+    setSheetOpen(false);
+  };
+
   if (screen === "start") {
     const completedCount = quests.filter(q => q.completed).length;
     return (
@@ -267,32 +285,27 @@ const Index = () => {
 
   return (
     <QuestEngineProvider value={engine}>
-    <div className="h-screen flex flex-col md:flex-row overflow-hidden">
-      <div className="md:h-full h-auto max-h-[35vh] md:max-h-full overflow-auto shrink-0">
-        <QuestPanel
-          quests={quests}
-          currentQuest={currentQuest}
-          score={score}
-          totalScore={totalScore}
-          onSelectQuest={handleSelectQuest}
-          onRestart={handleRestart}
-          onRetryQuest={handleRetryQuest}
-          showComplete={quests.every(q => q.completed)}
-          unlockedCategories={unlockedCategories}
-        />
-      </div>
-      <div className="flex-1 h-full overflow-hidden relative">
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
+      <TopLearnBar
+        index={currentQuest}
+        total={QUESTS.length}
+        title={quests[currentQuest]?.title ?? ""}
+        stars={totalStars}
+        onOpenList={() => setSheetOpen(true)}
+        onHelp={() => setSheetOpen(true)}
+      />
+      <CurrentQuestCard
+        instruction={quests[currentQuest]?.instruction ?? ""}
+        hint={quests[currentQuest]?.hint}
+        alreadyCompleted={currentAlreadyCompleted}
+      />
+      <div className="flex-1 min-h-0 relative overflow-hidden">
         <WinDesktop
           key={desktopKey}
           currentQuestType={quests[currentQuest].type}
           onQuestComplete={handleQuestComplete}
           instruction={quests[currentQuest].instruction}
         />
-        {currentAlreadyCompleted && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-40 bg-accent/90 text-accent-foreground text-xs md:text-sm px-3 py-1.5 rounded-full shadow-md pointer-events-none">
-            ✅ 완료한 임무예요. 다시 연습할 수 있지만 점수는 추가되지 않아요.
-          </div>
-        )}
         <TermDictionary termKey={quests[currentQuest].termKey} />
         <CharacterPraise
           visible={showPraise}
@@ -301,10 +314,26 @@ const Index = () => {
           isLast={currentQuest === QUESTS.length - 1}
           practiceMode={praiceIsReplay}
         />
-        {confirmRestart && (
-          <RestartConfirmDialog onCancel={() => setConfirmRestart(false)} onConfirm={doRestart} />
-        )}
       </div>
+
+      <QuestSheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <QuestPanel
+          quests={quests}
+          currentQuest={currentQuest}
+          score={score}
+          totalScore={totalScore}
+          onSelectQuest={handleSelectFromSheet}
+          onRestart={() => { setSheetOpen(false); handleRestart(); }}
+          onRetryQuest={handleRetryFromSheet}
+          showComplete={quests.every(q => q.completed)}
+          unlockedCategories={unlockedCategories}
+          showHeader={false}
+        />
+      </QuestSheet>
+
+      {confirmRestart && (
+        <RestartConfirmDialog onCancel={() => setConfirmRestart(false)} onConfirm={doRestart} />
+      )}
     </div>
     </QuestEngineProvider>
   );
