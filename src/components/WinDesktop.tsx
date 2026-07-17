@@ -593,7 +593,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         setTimeout(() => { setQuickSettingsOpen(false); triggerSuccess(); }, 700);
       }
     } else {
-      setWifiError("비밀번호가 틀렸어요. 12345678 을 입력하세요!");
+      setWifiError("비밀번호를 다시 확인해 봐요. (12345678)");
     }
   };
 
