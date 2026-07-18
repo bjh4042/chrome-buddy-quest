@@ -253,16 +253,21 @@ const Index = () => {
   if (screen === "start") {
     const completedCount = quests.filter(q => q.completed).length;
     return (
-      <StartScreen
-        onStart={handleStart}
-        hasProgress={completedCount > 0}
-        completedCount={completedCount}
-        totalQuests={QUESTS.length}
-        currentQuestTitle={quests[currentQuest]?.title}
-        onResume={handleResume}
-        onJumpTo={() => handleJumpTo(0)}
-        onFreshStart={() => setConfirmRestart(true)}
-      />
+      <>
+        <StartScreen
+          onStart={handleStart}
+          hasProgress={completedCount > 0}
+          completedCount={completedCount}
+          totalQuests={QUESTS.length}
+          currentQuestTitle={quests[currentQuest]?.title}
+          onResume={handleResume}
+          onJumpTo={() => handleJumpTo(0)}
+          onFreshStart={() => setConfirmRestart(true)}
+        />
+        {confirmRestart && (
+          <RestartConfirmDialog onCancel={() => setConfirmRestart(false)} onConfirm={doRestart} />
+        )}
+      </>
     );
   }
 
