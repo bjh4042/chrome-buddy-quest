@@ -15,6 +15,8 @@ interface QuestPanelProps {
   showComplete: boolean;
   unlockedCategories: string[];
   showHeader?: boolean;
+  strictOrder?: boolean;
+  visibleCategoryIds?: string[];
 }
 
 const MEDAL_THRESHOLD = 10;
@@ -22,6 +24,7 @@ const MEDAL_THRESHOLD = 10;
 const QuestPanel = ({
   quests, currentQuest, score, totalScore, onSelectQuest, onRestart,
   onRetryQuest, showComplete, unlockedCategories, showHeader = true,
+  strictOrder = true, visibleCategoryIds,
 }: QuestPanelProps) => {
   const progress = (quests.filter(q => q.completed).length / quests.length) * 100;
   const totalStars = quests.reduce((sum, q) => sum + q.starsEarned, 0);
@@ -40,7 +43,9 @@ const QuestPanel = ({
   const categories = QUEST_CATEGORIES.map(cat => ({
     ...cat,
     quests: quests.map((q, i) => ({ ...q, index: i })).filter(q => q.category === cat.id),
-  })).filter(cat => cat.quests.length > 0);
+  }))
+    .filter(cat => cat.quests.length > 0)
+    .filter(cat => !visibleCategoryIds || visibleCategoryIds.includes(cat.id));
 
   const getBadge = () => {
     const pct = (score / totalScore) * 100;
@@ -170,7 +175,7 @@ const QuestPanel = ({
                       {cat.quests.map((quest) => {
                         const isCurrent = quest.index === currentQuest;
                         const isCompleted = quest.completed;
-                        const isLocked = quest.index > currentQuest && !quest.completed;
+                        const isLocked = strictOrder && quest.index > currentQuest && !quest.completed;
 
                         return (
                           <div key={quest.id} className="relative flex items-center gap-2 py-1">
