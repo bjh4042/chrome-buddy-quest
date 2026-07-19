@@ -1,7 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { PRAISE_MESSAGES } from "@/types/quest";
 import { useMemo } from "react";
-import { Star, ArrowRight, RotateCcw } from "lucide-react";
+import { Star, ArrowRight, RotateCcw, List, Check } from "lucide-react";
+import type { LearningMode } from "@/features/learning/learningMode";
 
 interface CharacterPraiseProps {
   visible: boolean;
@@ -9,6 +10,10 @@ interface CharacterPraiseProps {
   onPractice?: () => void;
   isLast?: boolean;
   practiceMode?: boolean;
+  mode?: LearningMode;
+  /** In teacher mode: whether there is a next quest inside the same category */
+  hasCategoryNext?: boolean;
+  onBackToList?: () => void;
 }
 
 const CONFETTI_COLORS = [
@@ -16,7 +21,10 @@ const CONFETTI_COLORS = [
   "hsl(0 75% 60%)", "hsl(280 70% 60%)", "hsl(30 100% 60%)",
 ];
 
-const CharacterPraise = ({ visible, onNext, onPractice, isLast, practiceMode }: CharacterPraiseProps) => {
+const CharacterPraise = ({
+  visible, onNext, onPractice, isLast, practiceMode,
+  mode = "story", hasCategoryNext = true, onBackToList,
+}: CharacterPraiseProps) => {
   const msg = useMemo(
     () => PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,29 +104,61 @@ const CharacterPraise = ({ visible, onNext, onPractice, isLast, practiceMode }: 
             </div>
             {(onNext || onPractice) && (
               <div className="flex gap-2 mt-3">
-                {onPractice && (
-                  <button
-                    onClick={onPractice}
-                    className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-muted text-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:bg-muted/70 active:scale-95 transition"
-                  >
-                    <RotateCcw className="w-4 h-4" /> 한 번 더 연습
-                  </button>
-                )}
-                {onNext && !practiceMode && (
+                {/* practice-only completion: single confirm button */}
+                {practiceMode && onNext && (
                   <button
                     onClick={onNext}
                     className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition"
                   >
-                    {isLast ? "완료 화면 보기" : "다음 임무"} <ArrowRight className="w-4 h-4" />
+                    <Check className="w-4 h-4" /> 확인
                   </button>
                 )}
-                {practiceMode && onNext && (
-                  <button
-                    onClick={onNext}
-                    className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display hover:brightness-110 active:scale-95 transition"
-                  >
-                    확인
-                  </button>
+
+                {/* first-time completion: mode-aware actions */}
+                {!practiceMode && (
+                  <>
+                    {onPractice && (
+                      <button
+                        onClick={onPractice}
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-muted text-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:bg-muted/70 active:scale-95 transition"
+                      >
+                        <RotateCcw className="w-4 h-4" /> 한 번 더 연습
+                      </button>
+                    )}
+                    {mode === "story" && onNext && (
+                      <button
+                        onClick={onNext}
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition"
+                      >
+                        {isLast ? "완료 화면 보기" : "다음 임무"} <ArrowRight className="w-4 h-4" />
+                      </button>
+                    )}
+                    {mode === "free-practice" && onBackToList && (
+                      <button
+                        onClick={onBackToList}
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition"
+                      >
+                        <List className="w-4 h-4" /> 임무 목록으로
+                      </button>
+                    )}
+                    {mode === "teacher" && (
+                      hasCategoryNext && onNext ? (
+                        <button
+                          onClick={onNext}
+                          className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition"
+                        >
+                          같은 주제 다음 임무 <ArrowRight className="w-4 h-4" />
+                        </button>
+                      ) : onBackToList ? (
+                        <button
+                          onClick={onBackToList}
+                          className="flex-1 min-h-[44px] px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-display flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition"
+                        >
+                          <List className="w-4 h-4" /> 임무 목록으로
+                        </button>
+                      ) : null
+                    )}
+                  </>
                 )}
               </div>
             )}

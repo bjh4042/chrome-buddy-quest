@@ -1,4 +1,4 @@
-import { Menu, Star, HelpCircle, Volume2 } from "lucide-react";
+import { Menu, Star, HelpCircle, Volume2, Shuffle } from "lucide-react";
 
 interface TopLearnBarProps {
   index: number;
@@ -8,9 +8,11 @@ interface TopLearnBarProps {
   onOpenList: () => void;
   onHelp?: () => void;
   onReadAloud?: () => void;
+  onChangeMode?: () => void;
+  modeShort?: string;
 }
 
-const TopLearnBar = ({ index, total, title, stars, onOpenList, onHelp, onReadAloud }: TopLearnBarProps) => (
+const TopLearnBar = ({ index, total, title, stars, onOpenList, onHelp, onReadAloud, onChangeMode, modeShort }: TopLearnBarProps) => (
   <header className="shrink-0 h-12 sm:h-14 border-b border-border bg-card/95 backdrop-blur flex items-center gap-2 px-2 sm:px-3 z-30">
     <button
       onClick={onOpenList}
@@ -36,6 +38,17 @@ const TopLearnBar = ({ index, total, title, stars, onOpenList, onHelp, onReadAlo
       <span className="font-display text-xs">{stars}</span>
     </div>
 
+    {onChangeMode && (
+      <button
+        onClick={onChangeMode}
+        aria-label="학습 방법 바꾸기"
+        title={modeShort ? `${modeShort} · 학습 방법 바꾸기` : "학습 방법 바꾸기"}
+        className="inline-flex items-center gap-1 min-h-[40px] px-2 rounded-lg hover:bg-muted transition"
+      >
+        <Shuffle className="w-4 h-4 text-foreground" />
+        <span className="hidden md:inline text-xs font-display">학습 방법</span>
+      </button>
+    )}
     {onReadAloud && (
       <button
         onClick={onReadAloud}

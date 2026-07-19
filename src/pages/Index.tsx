@@ -8,10 +8,22 @@ import WinDesktop from "@/components/WinDesktop";
 import CompletionScreen from "@/components/CompletionScreen";
 import CharacterPraise from "@/components/CharacterPraise";
 import TermDictionary from "@/components/TermDictionary";
-import { QUESTS, QUEST_CATEGORIES, type Quest } from "@/types/quest";
+import CategoryPicker from "@/components/CategoryPicker";
+import { QUESTS, type Quest, type QuestCategory } from "@/types/quest";
 import { QuestEngineProvider, useQuestEngine } from "@/features/quests/useQuestEngine";
+import {
+  LEARNING_MODES,
+  getLearningMode,
+  type LearningMode,
+} from "@/features/learning/learningMode";
+import {
+  computeStoryUnlockedCategories,
+  unlockedCategoriesForMode,
+  visibleCategoriesForMode,
+  strictQuestOrder,
+} from "@/features/learning/access";
 
-type Screen = "start" | "tutorial" | "complete";
+type Screen = "start" | "tutorial" | "complete" | "category-picker";
 
 const STORAGE_KEY = "win-explorer-progress-v2";
 const NEXT_QUEST_DELAY_MS = 8000;
@@ -21,9 +33,14 @@ type SavedProgress = {
   screen: Screen;
   questsState: { id: string; completed: boolean; starsEarned: number }[];
   currentQuest: number;
+  learningMode?: LearningMode;
+  practiceQuestId?: string | null;
+  teacherCategory?: QuestCategory | null;
 };
 
-const ALLOWED_SCREENS: Screen[] = ["start", "tutorial", "complete"];
+const ALLOWED_SCREENS: Screen[] = ["start", "tutorial", "complete", "category-picker"];
+const ALLOWED_MODES: LearningMode[] = ["story", "free-practice", "teacher"];
+const ALLOWED_CATEGORIES: QuestCategory[] = ["mouse", "windows", "internet", "settings", "hangul", "excel", "powerpoint", "finish"];
 
 const loadProgress = (): SavedProgress | null => {
   try {
@@ -50,7 +67,14 @@ const loadProgress = (): SavedProgress | null => {
       .map(s => ({ id: s.id, completed: !!s.completed, starsEarned: Math.max(0, Math.min(3, Math.floor(s.starsEarned))) }));
     const cq = typeof parsed.currentQuest === "number" ? Math.floor(parsed.currentQuest) : 0;
     const currentQuest = Math.max(0, Math.min(QUESTS.length - 1, cq));
-    return { version: 2, screen, questsState, currentQuest };
+    const learningMode: LearningMode = ALLOWED_MODES.includes(parsed.learningMode) ? parsed.learningMode : "story";
+    const practiceQuestId =
+      typeof parsed.practiceQuestId === "string" && validIds.has(parsed.practiceQuestId)
+        ? parsed.practiceQuestId
+        : null;
+    const teacherCategory =
+      ALLOWED_CATEGORIES.includes(parsed.teacherCategory) ? (parsed.teacherCategory as QuestCategory) : null;
+    return { version: 2, screen, questsState, currentQuest, learningMode, practiceQuestId, teacherCategory };
   } catch {
     return null;
   }
@@ -73,6 +97,9 @@ const Index = () => {
     return base;
   });
   const [currentQuest, setCurrentQuest] = useState(saved?.currentQuest ?? 0);
+  const [learningMode, setLearningMode] = useState<LearningMode>(saved?.learningMode ?? "story");
+  const [practiceQuestId, setPracticeQuestId] = useState<string | null>(saved?.practiceQuestId ?? null);
+  const [teacherCategory, setTeacherCategory] = useState<QuestCategory | null>(saved?.teacherCategory ?? null);
   const [showPraise, setShowPraise] = useState(false);
   const [praiceIsReplay, setPraiseIsReplay] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
@@ -98,9 +125,12 @@ const Index = () => {
       screen,
       questsState: quests.map(q => ({ id: q.id, completed: q.completed, starsEarned: q.starsEarned })),
       currentQuest,
+      learningMode,
+      practiceQuestId,
+      teacherCategory,
     };
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-  }, [screen, quests, currentQuest]);
+  }, [screen, quests, currentQuest, learningMode, practiceQuestId, teacherCategory]);
 
   const totalScore = QUESTS.reduce((sum, q) => sum + q.points, 0);
 
@@ -110,35 +140,76 @@ const Index = () => {
     [quests]
   );
 
-  const unlockedCategories = useMemo(() => {
-    const unlocked: string[] = [];
-    for (const cat of QUEST_CATEGORIES) {
-      const prevCatIndex = QUEST_CATEGORIES.findIndex(c => c.id === cat.id) - 1;
-      if (prevCatIndex < 0) {
-        unlocked.push(cat.id);
-      } else {
-        const prevCat = QUEST_CATEGORIES[prevCatIndex];
-        const prevCatQuests = quests.filter(q => q.category === prevCat.id);
-        if (prevCatQuests.every(q => q.completed)) {
-          unlocked.push(cat.id);
-        }
-      }
-    }
-    return unlocked;
-  }, [quests]);
+  const storyUnlockedCategories = useMemo(
+    () => computeStoryUnlockedCategories(quests),
+    [quests]
+  );
+  const unlockedCategories = useMemo(
+    () => unlockedCategoriesForMode(learningMode, storyUnlockedCategories),
+    [learningMode, storyUnlockedCategories]
+  );
+  const visibleCategoryIds = useMemo(
+    () => visibleCategoriesForMode(learningMode, teacherCategory),
+    [learningMode, teacherCategory]
+  );
 
-  const handleStart = () => setScreen("tutorial");
-  const handleResume = () => setScreen("tutorial");
-  const handleJumpTo = (index: number) => {
-    if (index < 0 || index >= QUESTS.length) return;
-    setCurrentQuest(index);
+  // Active quest index depends on mode:
+  // - story: storyCurrentQuest (state `currentQuest`)
+  // - free-practice: practiceQuestId (fallback: currentQuest)
+  // - teacher: practiceQuestId (must be within category) or first quest in category
+  const activeQuestIndex = useMemo(() => {
+    if (learningMode === "story") return currentQuest;
+    const findById = (id: string | null) => (id ? quests.findIndex(q => q.id === id) : -1);
+    if (learningMode === "free-practice") {
+      const i = findById(practiceQuestId);
+      return i >= 0 ? i : currentQuest;
+    }
+    // teacher
+    if (teacherCategory) {
+      const i = findById(practiceQuestId);
+      if (i >= 0 && quests[i]?.category === teacherCategory) return i;
+      const firstIncomplete = quests.findIndex(q => q.category === teacherCategory && !q.completed);
+      if (firstIncomplete >= 0) return firstIncomplete;
+      const first = quests.findIndex(q => q.category === teacherCategory);
+      return first >= 0 ? first : currentQuest;
+    }
+    return currentQuest;
+  }, [learningMode, currentQuest, practiceQuestId, teacherCategory, quests]);
+
+  const clampedActiveIndex = Math.max(0, Math.min(QUESTS.length - 1, activeQuestIndex));
+
+  // Mode transitions
+  const enterStory = () => {
+    setLearningMode("story");
     setScreen("tutorial");
+  };
+  const enterFreePractice = () => {
+    setLearningMode("free-practice");
+    if (!practiceQuestId) setPracticeQuestId(quests[currentQuest]?.id ?? quests[0].id);
+    setScreen("tutorial");
+  };
+  const enterTeacher = () => {
+    setLearningMode("teacher");
+    setScreen("category-picker");
+  };
+  const handlePickCategory = (cat: QuestCategory) => {
+    setTeacherCategory(cat);
+    const firstIncomplete = quests.findIndex(q => q.category === cat && !q.completed);
+    const first = firstIncomplete >= 0 ? firstIncomplete : quests.findIndex(q => q.category === cat);
+    if (first >= 0) setPracticeQuestId(quests[first].id);
+    setScreen("tutorial");
+  };
+  const changeMode = () => {
+    clearNextTimer();
+    completingRef.current = false;
+    setShowPraise(false);
+    setScreen("start");
   };
 
   const handleQuestComplete = useCallback(() => {
     // Guard: prevent duplicate completion for the same quest
     if (completingRef.current) return;
-    const idx = currentQuest;
+    const idx = clampedActiveIndex;
     if (idx < 0 || idx >= QUESTS.length) return;
     const already = quests[idx]?.completed;
 
@@ -162,13 +233,16 @@ const Index = () => {
       nextTimerRef.current = null;
       completingRef.current = false;
       if (already) return; // practice replay — don't auto-advance
-      if (idx < QUESTS.length - 1) {
-        setCurrentQuest(idx + 1);
-      } else {
-        setScreen("complete");
+      // Only auto-advance in story mode
+      if (learningMode === "story") {
+        if (idx < QUESTS.length - 1) {
+          setCurrentQuest(idx + 1);
+        } else {
+          setScreen("complete");
+        }
       }
     }, NEXT_QUEST_DELAY_MS);
-  }, [currentQuest, quests]);
+  }, [clampedActiveIndex, quests, learningMode]);
 
   const closePraise = () => {
     clearNextTimer();
@@ -177,15 +251,34 @@ const Index = () => {
   };
 
   const advanceNow = () => {
-    const idx = currentQuest;
+    const idx = clampedActiveIndex;
     const wasReplay = praiceIsReplay;
     closePraise();
     if (wasReplay) return; // replay: just close
-    if (idx < QUESTS.length - 1) {
-      setCurrentQuest(idx + 1);
-    } else {
-      setScreen("complete");
+    if (learningMode === "story") {
+      if (idx < QUESTS.length - 1) {
+        setCurrentQuest(idx + 1);
+      } else {
+        setScreen("complete");
+      }
+      return;
     }
+    if (learningMode === "teacher" && teacherCategory) {
+      // move to next incomplete quest in same category
+      const nextInCat = quests.findIndex(
+        (q, i) => i > idx && q.category === teacherCategory && !q.completed
+      );
+      if (nextInCat >= 0) setPracticeQuestId(quests[nextInCat].id);
+      else setSheetOpen(true);
+      return;
+    }
+    // free-practice: open list
+    setSheetOpen(true);
+  };
+
+  const backToList = () => {
+    closePraise();
+    setSheetOpen(true);
   };
 
   const stayForPractice = () => {
@@ -198,6 +291,9 @@ const Index = () => {
     setShowPraise(false);
     setQuests(QUESTS.map(q => ({ ...q, completed: false, starsEarned: 0 })));
     setCurrentQuest(0);
+    setLearningMode("story");
+    setPracticeQuestId(null);
+    setTeacherCategory(null);
     setScreen("start");
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setConfirmRestart(false);
@@ -209,7 +305,11 @@ const Index = () => {
     clearNextTimer();
     completingRef.current = false;
     setShowPraise(false);
-    setCurrentQuest(index);
+    if (learningMode === "story") {
+      setCurrentQuest(index);
+    } else {
+      setPracticeQuestId(quests[index]?.id ?? null);
+    }
   };
 
   const handleRetryQuest = (index: number) => {
@@ -226,13 +326,17 @@ const Index = () => {
       updated[index] = { ...updated[index], completed: false, starsEarned: 0 };
       return updated;
     });
-    setCurrentQuest(index);
+    if (learningMode === "story") {
+      setCurrentQuest(index);
+    } else {
+      setPracticeQuestId(quests[index]?.id ?? null);
+    }
   };
 
-  const currentAlreadyCompleted = quests[currentQuest]?.completed === true;
+  const currentAlreadyCompleted = quests[clampedActiveIndex]?.completed === true;
 
   const engine = useQuestEngine({
-    currentQuest: quests[currentQuest]?.type ?? QUESTS[0].type,
+    currentQuest: quests[clampedActiveIndex]?.type ?? QUESTS[0].type,
     onComplete: handleQuestComplete,
   });
 
@@ -240,6 +344,14 @@ const Index = () => {
     () => quests.reduce((sum, q) => sum + q.starsEarned, 0),
     [quests]
   );
+
+  const modeMeta = getLearningMode(learningMode);
+  const hasCategoryNext = useMemo(() => {
+    if (learningMode !== "teacher" || !teacherCategory) return false;
+    return quests.some(
+      (q, i) => i > clampedActiveIndex && q.category === teacherCategory && !q.completed
+    );
+  }, [learningMode, teacherCategory, quests, clampedActiveIndex]);
 
   const handleSelectFromSheet = (index: number) => {
     handleSelectQuest(index);
@@ -255,19 +367,30 @@ const Index = () => {
     return (
       <>
         <StartScreen
-          onStart={handleStart}
+          onStart={enterStory}
           hasProgress={completedCount > 0}
           completedCount={completedCount}
           totalQuests={QUESTS.length}
           currentQuestTitle={quests[currentQuest]?.title}
-          onResume={handleResume}
-          onJumpTo={() => handleJumpTo(0)}
+          onResume={enterStory}
+          onFreePractice={enterFreePractice}
+          onTeacher={enterTeacher}
           onFreshStart={() => setConfirmRestart(true)}
         />
         {confirmRestart && (
           <RestartConfirmDialog onCancel={() => setConfirmRestart(false)} onConfirm={doRestart} />
         )}
       </>
+    );
+  }
+
+  if (screen === "category-picker") {
+    return (
+      <CategoryPicker
+        quests={quests}
+        onPick={handlePickCategory}
+        onBack={() => setScreen("start")}
+      />
     );
   }
 
@@ -292,39 +415,49 @@ const Index = () => {
     <QuestEngineProvider value={engine}>
     <div className="h-[100dvh] flex flex-col overflow-hidden">
       <TopLearnBar
-        index={currentQuest}
+        index={clampedActiveIndex}
         total={QUESTS.length}
-        title={quests[currentQuest]?.title ?? ""}
+        title={quests[clampedActiveIndex]?.title ?? ""}
         stars={totalStars}
         onOpenList={() => setSheetOpen(true)}
         onHelp={() => setSheetOpen(true)}
+        onChangeMode={changeMode}
+        modeShort={modeMeta.short}
       />
       <CurrentQuestCard
-        instruction={quests[currentQuest]?.instruction ?? ""}
-        hint={quests[currentQuest]?.hint}
+        instruction={quests[clampedActiveIndex]?.instruction ?? ""}
+        hint={quests[clampedActiveIndex]?.hint}
         alreadyCompleted={currentAlreadyCompleted}
+        modeBadge={
+          learningMode === "story"
+            ? undefined
+            : { label: `${modeMeta.emoji} ${modeMeta.short}`, hint: modeMeta.hint }
+        }
       />
       <div className="flex-1 min-h-0 relative overflow-hidden">
         <WinDesktop
           key={desktopKey}
-          currentQuestType={quests[currentQuest].type}
+          currentQuestType={quests[clampedActiveIndex].type}
           onQuestComplete={handleQuestComplete}
-          instruction={quests[currentQuest].instruction}
+          instruction={quests[clampedActiveIndex].instruction}
         />
-        <TermDictionary termKey={quests[currentQuest].termKey} />
+        <TermDictionary termKey={quests[clampedActiveIndex].termKey} />
         <CharacterPraise
           visible={showPraise}
           onNext={advanceNow}
           onPractice={stayForPractice}
-          isLast={currentQuest === QUESTS.length - 1}
+          isLast={clampedActiveIndex === QUESTS.length - 1}
           practiceMode={praiceIsReplay}
+          mode={learningMode}
+          hasCategoryNext={hasCategoryNext}
+          onBackToList={backToList}
         />
       </div>
 
       <QuestSheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <QuestPanel
           quests={quests}
-          currentQuest={currentQuest}
+          currentQuest={clampedActiveIndex}
           score={score}
           totalScore={totalScore}
           onSelectQuest={handleSelectFromSheet}
@@ -333,6 +466,8 @@ const Index = () => {
           showComplete={quests.every(q => q.completed)}
           unlockedCategories={unlockedCategories}
           showHeader={false}
+          strictOrder={strictQuestOrder(learningMode)}
+          visibleCategoryIds={visibleCategoryIds}
         />
       </QuestSheet>
 
