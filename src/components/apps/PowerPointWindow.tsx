@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronDown, Bold, Italic, Underline, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Undo, Redo } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import ImagePickerDialog from "./ImagePickerDialog";
+import ToolbarDropdown from "./ToolbarDropdown";
 import type { QuestType } from "@/types/quest";
 import pptIconImg from "@/assets/ppt-icon.png";
 
@@ -28,6 +29,8 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   const [fontFamily, setFontFamily] = useState("맑은 고딕");
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontDropdown, setShowFontDropdown] = useState(false);
+  const fontBtnRef = useRef<HTMLButtonElement>(null);
+  const fontSizeBtnRef = useRef<HTMLButtonElement>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
 
   // Text selection for title
@@ -206,6 +209,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
         {/* Font family */}
         <div className="relative">
           <button
+            ref={fontBtnRef}
             onMouseDown={(e) => { e.preventDefault(); checkTitleSelection(); }}
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
             className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[80px] ${
@@ -217,20 +221,24 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
             <span>{fontFamily}</span>
             <ChevronDown className="w-3 h-3" />
           </button>
-          {showFontDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[120px]">
-              {fonts.map(f => (
+          <ToolbarDropdown
+            open={showFontDropdown}
+            anchorRef={fontBtnRef}
+            onClose={() => setShowFontDropdown(false)}
+            minWidth={120}
+          >
+            {fonts.map(f => (
                 <button key={f} onClick={() => handleFontFamilyChange(f)}
                   className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 ${
                     isQuest("ppt-font-family") && f === "바탕" ? "bg-yellow-50 font-bold text-orange-600" : ""
                   }`}>{f}</button>
-              ))}
-            </div>
-          )}
+            ))}
+          </ToolbarDropdown>
         </div>
         {/* Font size */}
         <div className="relative">
           <button
+            ref={fontSizeBtnRef}
             onMouseDown={(e) => { e.preventDefault(); checkTitleSelection(); }}
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
             className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[40px] ${
@@ -242,16 +250,19 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
             <span>{fontSize}</span>
             <ChevronDown className="w-3 h-3" />
           </button>
-          {showFontSizeDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[55px]">
-              {fontSizes.map(s => (
+          <ToolbarDropdown
+            open={showFontSizeDropdown}
+            anchorRef={fontSizeBtnRef}
+            onClose={() => setShowFontSizeDropdown(false)}
+            minWidth={55}
+          >
+            {fontSizes.map(s => (
                 <button key={s} onClick={() => handleFontSizeChange(s)}
                   className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 ${
                     isQuest("ppt-font-size") && s === "28" ? "bg-yellow-50 font-bold text-orange-600" : ""
                   }`}>{s}</button>
-              ))}
-            </div>
-          )}
+            ))}
+          </ToolbarDropdown>
         </div>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
         <button className="p-1 rounded hover:bg-gray-200"><Bold className="w-3.5 h-3.5 text-gray-600" /></button>
