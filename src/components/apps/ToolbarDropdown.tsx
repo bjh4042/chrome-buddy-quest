@@ -87,6 +87,8 @@ const ToolbarDropdown = ({ open, anchorRef, onClose, minWidth = 80, children }: 
         top: pos?.top ?? -9999,
         left: pos?.left ?? -9999,
         minWidth,
+        width: "max-content",
+        maxWidth: "min(90vw, 320px)",
         maxHeight: pos?.maxHeight,
         visibility: pos ? "visible" : "hidden",
       }}
