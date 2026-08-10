@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Save, Table, Image as ImageIcon, Bold, Italic, Underline, ChevronDown, Undo, Redo, AlignLeft, AlignCenter, AlignRight, Strikethrough, FolderOpen, Copy, Scissors, FileText, Columns, BarChart3, Search as SearchIcon, Shield, PenTool, Layout, Type } from "lucide-react";
 import WindowFrame from "./WindowFrame";
 import TableDialog from "./TableDialog";
+import ToolbarDropdown from "./ToolbarDropdown";
 import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
 import hangulIconImg from "@/assets/hangul-icon.png";
@@ -28,6 +29,8 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
   const [saved, setSaved] = useState(false);
   const [showFontSizeDropdown, setShowFontSizeDropdown] = useState(false);
   const [showFontDropdown, setShowFontDropdown] = useState(false);
+  const fontBtnRef = useRef<HTMLButtonElement>(null);
+  const fontSizeBtnRef = useRef<HTMLButtonElement>(null);
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [fileLoaded, setFileLoaded] = useState(false);
@@ -366,6 +369,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font family dropdown */}
         <div className="relative">
           <button
+            ref={fontBtnRef}
             onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontDropdown(!showFontDropdown); setShowFontSizeDropdown(false); }}
             className={`flex items-center gap-1 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[90px] ${
@@ -377,16 +381,19 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
             <span>{fontFamily}</span>
             <ChevronDown className="w-3 h-3" />
           </button>
-          {showFontDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[130px]">
-              {fonts.map(f => (
+          <ToolbarDropdown
+            open={showFontDropdown}
+            anchorRef={fontBtnRef}
+            onClose={() => setShowFontDropdown(false)}
+            minWidth={130}
+          >
+            {fonts.map(f => (
                 <button key={f} onClick={() => handleFontFamilyChange(f)}
                   className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 transition-colors ${
                     isQuest("hangul-font-family") && f === "돋움" ? "bg-yellow-50 font-bold text-blue-600" : ""
                   }`}>{f}</button>
-              ))}
-            </div>
-          )}
+            ))}
+          </ToolbarDropdown>
         </div>
         {/* Style dropdown */}
         <div className="flex items-center gap-0.5 px-1 py-0.5 bg-white border border-gray-300 rounded text-[11px] min-w-[50px]">
@@ -396,6 +403,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
         {/* Font size */}
         <div className="relative">
           <button
+            ref={fontSizeBtnRef}
             onMouseDown={(e) => { e.preventDefault(); checkTextSelection(); }}
             onClick={() => { setShowFontSizeDropdown(!showFontSizeDropdown); setShowFontDropdown(false); }}
             className={`flex items-center gap-0.5 px-2 py-0.5 bg-white border rounded text-[11px] min-w-[45px] ${
@@ -407,16 +415,19 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
             <span>{fontSize}</span>
             <ChevronDown className="w-3 h-3" />
           </button>
-          {showFontSizeDropdown && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 min-w-[60px]">
-              {fontSizes.map(s => (
+          <ToolbarDropdown
+            open={showFontSizeDropdown}
+            anchorRef={fontSizeBtnRef}
+            onClose={() => setShowFontSizeDropdown(false)}
+            minWidth={60}
+          >
+            {fontSizes.map(s => (
                 <button key={s} onClick={() => handleFontSizeChange(s)}
                   className={`w-full text-left px-3 py-1.5 text-[11px] hover:bg-blue-50 transition-colors ${
                     isQuest("hangul-font-size") && s === "20" ? "bg-yellow-50 font-bold text-blue-600" : ""
                   }`}>{s}</button>
-              ))}
-            </div>
-          )}
+            ))}
+          </ToolbarDropdown>
         </div>
         <span className="text-[10px] text-gray-500">pt</span>
         <span className="w-px h-4 bg-gray-300 mx-0.5" />
