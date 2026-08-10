@@ -16,7 +16,7 @@ interface ToolbarDropdownProps {
  */
 const ToolbarDropdown = ({ open, anchorRef, onClose, minWidth = 80, children }: ToolbarDropdownProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number; maxHeight: number; width: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!open) { setPos(null); return; }
@@ -24,7 +24,18 @@ const ToolbarDropdown = ({ open, anchorRef, onClose, minWidth = 80, children }: 
       const anchor = anchorRef.current;
       if (!anchor) return;
       const r = anchor.getBoundingClientRect();
-      const menuW = Math.max(minWidth, menuRef.current?.offsetWidth ?? minWidth);
+      // Intrinsic width: children use w-full, so measure their content width directly.
+      let contentW = minWidth;
+      const el = menuRef.current;
+      if (el) {
+        for (const child of Array.from(el.children) as HTMLElement[]) {
+          const prev = child.style.width;
+          child.style.width = "auto";
+          contentW = Math.max(contentW, Math.ceil(child.getBoundingClientRect().width) + 2);
+          child.style.width = prev;
+        }
+      }
+      const menuW = Math.min(contentW, Math.max(120, window.innerWidth - 16));
       const menuH = menuRef.current?.offsetHeight ?? 200;
       const margin = 8;
       let left = r.left;
@@ -39,7 +50,7 @@ const ToolbarDropdown = ({ open, anchorRef, onClose, minWidth = 80, children }: 
         maxHeight = spaceAbove;
         top = Math.max(margin, r.top - 4 - Math.min(menuH, maxHeight));
       }
-      setPos({ top, left, maxHeight: Math.max(120, maxHeight) });
+      setPos({ top, left, maxHeight: Math.max(120, maxHeight), width: menuW });
     };
     update();
     const raf = requestAnimationFrame(update);
@@ -87,8 +98,7 @@ const ToolbarDropdown = ({ open, anchorRef, onClose, minWidth = 80, children }: 
         top: pos?.top ?? -9999,
         left: pos?.left ?? -9999,
         minWidth,
-        width: "max-content",
-        maxWidth: "min(90vw, 320px)",
+        width: pos?.width,
         maxHeight: pos?.maxHeight,
         visibility: pos ? "visible" : "hidden",
       }}
