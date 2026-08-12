@@ -163,6 +163,13 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [lastClickTime, setLastClickTime] = useState(0);
    const [showSuccess, setShowSuccess] = useState(false);
   const isCompleting = useRef(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearSuccessTimer = useCallback(() => {
+    if (successTimerRef.current !== null) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+  }, []);
 
   // Drag and drop
   const [dragFile, setDragFile] = useState(true);
@@ -195,6 +202,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       setOpenApp(neededApp);
     }
     // Reset quest-specific states
+    clearSuccessTimer();
     isCompleting.current = false;
     setShowSuccess(false);
     if (currentQuestType === "click") {
@@ -244,7 +252,10 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setQuickSettingsOpen(false);
     setWifiSubOpen(false);
     setCalendarOpen(false);
-  }, [currentQuestType]);
+  }, [currentQuestType, clearSuccessTimer]);
+
+  // Cancel any pending success timer on unmount
+  useEffect(() => () => clearSuccessTimer(), [clearSuccessTimer]);
 
   // Show finger guide after delay
   useEffect(() => {
@@ -266,15 +277,17 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
 
   const triggerSuccess = useCallback(() => {
     if (isCompleting.current) return;
+    clearSuccessTimer();
     isCompleting.current = true;
     setShowSuccess(true);
     setShowFingerGuide(false);
-    setTimeout(() => {
+    successTimerRef.current = setTimeout(() => {
+      successTimerRef.current = null;
       setShowSuccess(false);
       isCompleting.current = false;
       onQuestComplete();
     }, 1200);
-  }, [onQuestComplete]);
+  }, [onQuestComplete, clearSuccessTimer]);
 
   const handleCloseApp = useCallback((app: OpenApp) => {
     setOpenApp(null);

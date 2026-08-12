@@ -197,12 +197,14 @@ const QuestPanel = ({
                               )}
                             </div>
 
+                            <div className="flex-1 flex items-center gap-1 min-w-0">
                             <button
+                              type="button"
                               onClick={() => {
                                 if (!isLocked) onSelectQuest(quest.index);
                               }}
                               disabled={isLocked}
-                              className={`flex-1 flex items-center justify-between text-left px-2 py-1 rounded-lg text-xs transition-all min-h-[36px] ${
+                              className={`flex-1 min-w-0 flex items-center justify-between text-left px-2 py-1 rounded-lg text-xs transition-all min-h-[36px] ${
                                 isCurrent
                                   ? "bg-primary/10 border-2 border-primary shadow-game text-primary font-bold"
                                   : isCompleted
@@ -245,16 +247,6 @@ const QuestPanel = ({
                                 </span>
                               </span>
                               <div className="flex items-center gap-1 shrink-0">
-                                {isCompleted && (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); onRetryQuest(quest.index); }}
-                                    className="p-0.5 hover:bg-accent/20 rounded"
-                                    title="다시 연습하기"
-                                    aria-label="다시 연습하기"
-                                  >
-                                    <RefreshCw className="w-2.5 h-2.5 text-accent" />
-                                  </button>
-                                )}
                                 <div className="flex">
                                   {[...Array(3)].map((_, i) => (
                                     <Star
@@ -269,6 +261,18 @@ const QuestPanel = ({
                                 </div>
                               </div>
                             </button>
+                            {isCompleted && !isLocked && (
+                              <button
+                                type="button"
+                                onClick={() => onRetryQuest(quest.index)}
+                                className="shrink-0 p-2 min-h-[36px] min-w-[36px] flex items-center justify-center hover:bg-accent/20 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                title="다시 연습하기"
+                                aria-label={`${quest.title} 다시 연습하기`}
+                              >
+                                <RefreshCw className="w-3 h-3 text-accent" />
+                              </button>
+                            )}
+                            </div>
                           </div>
                         );
                       })}

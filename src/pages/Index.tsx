@@ -317,15 +317,7 @@ const Index = () => {
     clearNextTimer();
     completingRef.current = false;
     setShowPraise(false);
-    setQuests(prev => {
-      if (!prev[index]?.completed) {
-        // No score deduction if it wasn't completed
-        return prev;
-      }
-      const updated = [...prev];
-      updated[index] = { ...updated[index], completed: false, starsEarned: 0 };
-      return updated;
-    });
+    // Replay policy: keep completed / starsEarned / score intact — just re-enter the quest.
     if (learningMode === "story") {
       setCurrentQuest(index);
     } else {
