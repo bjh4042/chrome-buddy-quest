@@ -182,7 +182,7 @@ const Index = () => {
       return first >= 0 ? first : currentQuest;
     }
     return currentQuest;
-  }, [learningMode, currentQuest, practiceQuestId, teacherCategory, quests]);
+  }, [learningMode, currentQuest, replayQuestIndex, practiceQuestId, teacherCategory, quests]);
 
   const clampedActiveIndex = Math.max(0, Math.min(QUESTS.length - 1, activeQuestIndex));
 
