@@ -99,6 +99,8 @@ const Index = () => {
   const [currentQuest, setCurrentQuest] = useState(saved?.currentQuest ?? 0);
   const [learningMode, setLearningMode] = useState<LearningMode>(saved?.learningMode ?? "story");
   const [practiceQuestId, setPracticeQuestId] = useState<string | null>(saved?.practiceQuestId ?? null);
+  // Temporary story replay target (NOT persisted): story progress (`currentQuest`) must stay intact.
+  const [replayQuestIndex, setReplayQuestIndex] = useState<number | null>(null);
   const [teacherCategory, setTeacherCategory] = useState<QuestCategory | null>(saved?.teacherCategory ?? null);
   const [showPraise, setShowPraise] = useState(false);
   const [praiceIsReplay, setPraiseIsReplay] = useState(false);
