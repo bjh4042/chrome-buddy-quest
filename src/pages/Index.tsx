@@ -160,7 +160,13 @@ const Index = () => {
   // - free-practice: practiceQuestId (fallback: currentQuest)
   // - teacher: practiceQuestId (must be within category) or first quest in category
   const activeQuestIndex = useMemo(() => {
-    if (learningMode === "story") return currentQuest;
+    if (learningMode === "story") {
+      // Replaying a past quest never moves the real story progress marker.
+      if (replayQuestIndex !== null && replayQuestIndex >= 0 && replayQuestIndex < quests.length) {
+        return replayQuestIndex;
+      }
+      return currentQuest;
+    }
     const findById = (id: string | null) => (id ? quests.findIndex(q => q.id === id) : -1);
     if (learningMode === "free-practice") {
       const i = findById(practiceQuestId);
