@@ -189,9 +189,34 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const [intensifyHighlight, setIntensifyHighlight] = useState(false);
   const [tieredHint, setTieredHint] = useState<string>("");
 
+  // Hint timers (wrong-click bubble + strong highlight) — must not leak across quests
+  const wrongHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearHintTimers = useCallback(() => {
+    if (wrongHintTimerRef.current !== null) {
+      clearTimeout(wrongHintTimerRef.current);
+      wrongHintTimerRef.current = null;
+    }
+    if (highlightTimerRef.current !== null) {
+      clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
+  }, []);
+
   // Long-press for mobile right-click
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressPos = useRef({ x: 0, y: 0 });
+  const fileLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearLongPressTimers = useCallback(() => {
+    if (longPressTimer.current !== null) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    if (fileLongPressTimer.current !== null) {
+      clearTimeout(fileLongPressTimer.current);
+      fileLongPressTimer.current = null;
+    }
+  }, []);
 
   const koreanTime = useKoreanClock();
 
@@ -203,6 +228,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     }
     // Reset quest-specific states
     clearSuccessTimer();
+    clearHintTimers();
+    clearLongPressTimers();
+    setIntensifyHighlight(false);
     isCompleting.current = false;
     setShowSuccess(false);
     if (currentQuestType === "click") {
@@ -252,10 +280,17 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     setQuickSettingsOpen(false);
     setWifiSubOpen(false);
     setCalendarOpen(false);
-  }, [currentQuestType, clearSuccessTimer]);
+  }, [currentQuestType, clearSuccessTimer, clearHintTimers, clearLongPressTimers]);
 
-  // Cancel any pending success timer on unmount
-  useEffect(() => () => clearSuccessTimer(), [clearSuccessTimer]);
+  // Cancel any pending timers on unmount
+  useEffect(
+    () => () => {
+      clearSuccessTimer();
+      clearHintTimers();
+      clearLongPressTimers();
+    },
+    [clearSuccessTimer, clearHintTimers, clearLongPressTimers]
+  );
 
   // Show finger guide after delay
   useEffect(() => {
@@ -263,6 +298,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     wrongClickCount.current = 0;
     setTieredHint("");
     setWrongHint({ visible: false, pos: { x: 0, y: 0 } });
+    clearHintTimers();
     if (APP_INTERNAL_QUESTS.includes(currentQuestType)) return;
     if (currentQuestType === "click") {
       const timer = setTimeout(() => setShowFingerGuide(true), 10000);
@@ -273,7 +309,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       const timer = setTimeout(() => setShowFingerGuide(true), 10000);
       return () => clearTimeout(timer);
     }
-  }, [currentQuestType]);
+  }, [currentQuestType, clearHintTimers]);
 
   const triggerSuccess = useCallback(() => {
     if (isCompleting.current) return;
@@ -307,10 +343,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     else if (n === 3) msg = "정답 위치를 반짝이게 표시할게요. 잘 살펴봐요.";
     else msg = "손가락 안내를 보여 줄게요. 그대로 따라해 봐요!";
     setWrongHint({ visible: true, pos });
-    setTimeout(() => setWrongHint({ visible: false, pos: { x: 0, y: 0 } }), 3500);
+    if (wrongHintTimerRef.current !== null) clearTimeout(wrongHintTimerRef.current);
+    wrongHintTimerRef.current = setTimeout(() => {
+      wrongHintTimerRef.current = null;
+      setWrongHint({ visible: false, pos: { x: 0, y: 0 } });
+    }, 3500);
     if (n >= 3) {
       setIntensifyHighlight(true);
-      setTimeout(() => setIntensifyHighlight(false), 5000);
+      if (highlightTimerRef.current !== null) clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = setTimeout(() => {
+        highlightTimerRef.current = null;
+        setIntensifyHighlight(false);
+      }, 5000);
     }
     if (n >= 4) {
       setShowFingerGuide(true);
@@ -367,6 +411,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     const touch = e.touches[0];
     longPressPos.current = { x: touch.clientX, y: touch.clientY };
     longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null;
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
       openContextMenu(
         touch.clientX - rect.left,
@@ -404,13 +449,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   };
 
   // Long-press on file for mobile
-  const fileLongPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleFileTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
     setSelectedFile(true);
     const touch = e.touches[0];
     fileLongPressTimer.current = setTimeout(() => {
-      if (currentQuestType === "delete-file" && selectedFile) {
+      fileLongPressTimer.current = null;
+      // The file is selected synchronously above, so don't re-read the stale `selectedFile` state here.
+      if (currentQuestType === "delete-file") {
         const rect = (e.currentTarget.closest('.desktop-area') as HTMLElement)?.getBoundingClientRect();
         if (rect) {
           setContextMenuPos({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
@@ -426,6 +472,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
       fileLongPressTimer.current = null;
     }
   };
+  const handleFileTouchMove = handleFileTouchEnd;
 
   const handleDeleteFile = () => {
     setFileToDelete(false);
