@@ -99,6 +99,8 @@ const Index = () => {
   const [currentQuest, setCurrentQuest] = useState(saved?.currentQuest ?? 0);
   const [learningMode, setLearningMode] = useState<LearningMode>(saved?.learningMode ?? "story");
   const [practiceQuestId, setPracticeQuestId] = useState<string | null>(saved?.practiceQuestId ?? null);
+  // Temporary story replay target (NOT persisted): story progress (`currentQuest`) must stay intact.
+  const [replayQuestIndex, setReplayQuestIndex] = useState<number | null>(null);
   const [teacherCategory, setTeacherCategory] = useState<QuestCategory | null>(saved?.teacherCategory ?? null);
   const [showPraise, setShowPraise] = useState(false);
   const [praiceIsReplay, setPraiseIsReplay] = useState(false);
@@ -158,7 +160,13 @@ const Index = () => {
   // - free-practice: practiceQuestId (fallback: currentQuest)
   // - teacher: practiceQuestId (must be within category) or first quest in category
   const activeQuestIndex = useMemo(() => {
-    if (learningMode === "story") return currentQuest;
+    if (learningMode === "story") {
+      // Replaying a past quest never moves the real story progress marker.
+      if (replayQuestIndex !== null && replayQuestIndex >= 0 && replayQuestIndex < quests.length) {
+        return replayQuestIndex;
+      }
+      return currentQuest;
+    }
     const findById = (id: string | null) => (id ? quests.findIndex(q => q.id === id) : -1);
     if (learningMode === "free-practice") {
       const i = findById(practiceQuestId);
@@ -174,7 +182,7 @@ const Index = () => {
       return first >= 0 ? first : currentQuest;
     }
     return currentQuest;
-  }, [learningMode, currentQuest, practiceQuestId, teacherCategory, quests]);
+  }, [learningMode, currentQuest, replayQuestIndex, practiceQuestId, teacherCategory, quests]);
 
   const clampedActiveIndex = Math.max(0, Math.min(QUESTS.length - 1, activeQuestIndex));
 
@@ -203,6 +211,7 @@ const Index = () => {
     clearNextTimer();
     completingRef.current = false;
     setShowPraise(false);
+    setReplayQuestIndex(null);
     setScreen("start");
   };
 
@@ -254,7 +263,11 @@ const Index = () => {
     const idx = clampedActiveIndex;
     const wasReplay = praiceIsReplay;
     closePraise();
-    if (wasReplay) return; // replay: just close
+    if (wasReplay) {
+      // Story replay finished — return to the real story progress position.
+      if (learningMode === "story") setReplayQuestIndex(null);
+      return;
+    }
     if (learningMode === "story") {
       if (idx < QUESTS.length - 1) {
         setCurrentQuest(idx + 1);
@@ -294,6 +307,7 @@ const Index = () => {
     setLearningMode("story");
     setPracticeQuestId(null);
     setTeacherCategory(null);
+    setReplayQuestIndex(null);
     setScreen("start");
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     setConfirmRestart(false);
@@ -306,7 +320,9 @@ const Index = () => {
     completingRef.current = false;
     setShowPraise(false);
     if (learningMode === "story") {
-      setCurrentQuest(index);
+      // Selecting an already-completed quest is a temporary replay: keep story progress.
+      if (quests[index]?.completed) setReplayQuestIndex(index);
+      else { setReplayQuestIndex(null); setCurrentQuest(index); }
     } else {
       setPracticeQuestId(quests[index]?.id ?? null);
     }
@@ -318,8 +334,10 @@ const Index = () => {
     completingRef.current = false;
     setShowPraise(false);
     // Replay policy: keep completed / starsEarned / score intact — just re-enter the quest.
+    // In story mode the real progress marker (currentQuest) must never move backwards.
     if (learningMode === "story") {
-      setCurrentQuest(index);
+      if (index === currentQuest) setReplayQuestIndex(null);
+      else setReplayQuestIndex(index);
     } else {
       setPracticeQuestId(quests[index]?.id ?? null);
     }
