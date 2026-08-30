@@ -702,6 +702,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
         onTouchStart={handleDesktopTouchStart}
         onTouchMove={handleDesktopTouchMove}
         onTouchEnd={handleDesktopTouchEnd}
+        onTouchCancel={handleDesktopTouchEnd}
         onClick={handleDesktopClick}
       >
         {/* Desktop icons grid */}
@@ -764,7 +765,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
                 onClick={(e) => { e.stopPropagation(); setSelectedFile(true); }}
                 onContextMenu={handleFileRightClick}
                 onTouchStart={handleFileTouchStart}
+                onTouchMove={handleFileTouchMove}
                 onTouchEnd={handleFileTouchEnd}
+                onTouchCancel={handleFileTouchEnd}
               >
                 <div className="w-10 h-10 flex items-center justify-center">
                   <FileText className="w-8 h-8 text-blue-300" />
