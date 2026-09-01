@@ -453,14 +453,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
     e.stopPropagation();
     setSelectedFile(true);
     const touch = e.touches[0];
+    const touchPoint = { x: touch.clientX, y: touch.clientY };
+    // Capture the desktop element now: React nulls out `currentTarget` after dispatch.
+    const desktopEl = (e.currentTarget as HTMLElement).closest('.desktop-area') as HTMLElement | null;
     fileLongPressTimer.current = setTimeout(() => {
       fileLongPressTimer.current = null;
       // The file is selected synchronously above, so don't re-read the stale `selectedFile` state here.
       if (currentQuestType === "delete-file") {
-        const rect = (e.currentTarget.closest('.desktop-area') as HTMLElement)?.getBoundingClientRect();
+        const rect = desktopEl?.getBoundingClientRect();
         if (rect) {
-          setContextMenuPos({ x: touch.clientX - rect.left, y: touch.clientY - rect.top });
+          setContextMenuPos({ x: touchPoint.x - rect.left, y: touchPoint.y - rect.top });
         }
+
         setFileContextMenu(true);
         setContextMenuOpen(false);
       }
