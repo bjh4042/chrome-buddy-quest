@@ -410,16 +410,20 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction }: WinDeskt
   const handleDesktopTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     longPressPos.current = { x: touch.clientX, y: touch.clientY };
+    const touchPoint = { x: touch.clientX, y: touch.clientY };
+    // Capture the element now: React nulls out `currentTarget` after dispatch.
+    const areaEl = e.currentTarget as HTMLElement;
     longPressTimer.current = setTimeout(() => {
       longPressTimer.current = null;
-      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const rect = areaEl.getBoundingClientRect();
       openContextMenu(
-        touch.clientX - rect.left,
-        touch.clientY - rect.top,
+        touchPoint.x - rect.left,
+        touchPoint.y - rect.top,
         true
       );
     }, 600);
   };
+
 
   const handleDesktopTouchMove = () => {
     if (longPressTimer.current) {
