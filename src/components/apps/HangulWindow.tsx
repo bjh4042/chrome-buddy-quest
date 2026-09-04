@@ -5,6 +5,7 @@ import TableDialog from "./TableDialog";
 import ToolbarDropdown from "./ToolbarDropdown";
 import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
+import { getFontStack } from "@/lib/fontStacks";
 import hangulIconImg from "@/assets/hangul-icon.png";
 
 interface HangulWindowProps {
@@ -531,7 +532,7 @@ const HangulWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }
               onTouchEnd={checkTextSelection}
               placeholder={isQuest("hangul-typing") ? "'안녕하세요'를 입력해보세요!" : "여기에 글을 입력하세요..."}
               className="w-full h-full min-h-[200px] outline-none resize-none text-gray-800"
-              style={{ fontFamily: fontFamily, fontSize: `${parseFloat(fontSize) * 1.5}px` }}
+              style={{ fontFamily: getFontStack(fontFamily), fontSize: `${parseFloat(fontSize) * 1.5}px` }}
               autoFocus={isQuest("hangul-typing")}
             />
 
