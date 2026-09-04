@@ -105,17 +105,33 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
+    font-weight: 600;
   }
 }
 
 @layer utilities {
+  /* Emphasis role (labels, buttons, titles) — now a system UI font with medium weight
+     instead of a decorative rounded font. */
   .font-display {
     font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.45;
   }
 
   .font-body {
     font-family: var(--font-body);
   }
+
+  /* Decorative logo only (app title on the start screen) */
+  .font-logo {
+    font-family: var(--font-logo);
+    font-weight: 400;
+  }
+
+  /* Document surfaces inside the simulated programs */
+  .font-doc-hangul { font-family: var(--font-hangul-document); }
+  .font-doc-office { font-family: var(--font-office-document); }
+
 
   /* Fluid type utilities — use in place of fixed text-xs/sm/... when content must scale */
   .text-fluid-2xs { font-size: var(--fs-2xs); line-height: 1.3; }
