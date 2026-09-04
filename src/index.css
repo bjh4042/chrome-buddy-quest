@@ -63,8 +63,14 @@
     --quest-locked: 220 15% 70%;
     --star-fill: 45 100% 55%;
 
-    --font-display: 'Jua', sans-serif;
-    --font-body: 'Noto Sans KR', sans-serif;
+    /* Real Windows / Office feel: system-installed fonts only, no font files. */
+    --font-windows-ui: "Segoe UI", "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+    --font-hangul-document: "HCR Batang", "함초롬바탕", "Batang", "바탕", serif;
+    --font-office-document: "Aptos", "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+
+    --font-display: var(--font-windows-ui);
+    --font-body: var(--font-windows-ui);
+    --font-logo: 'Jua', var(--font-windows-ui);
 
     --shadow-game: 0 4px 20px -4px hsl(213 90% 52% / 0.25);
     --shadow-card: 0 8px 30px -8px hsl(220 30% 15% / 0.12);
