@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -63,8 +63,14 @@
     --quest-locked: 220 15% 70%;
     --star-fill: 45 100% 55%;
 
-    --font-display: 'Jua', sans-serif;
-    --font-body: 'Noto Sans KR', sans-serif;
+    /* Real Windows / Office feel: system-installed fonts only, no font files. */
+    --font-windows-ui: "Segoe UI", "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+    --font-hangul-document: "HCR Batang", "함초롬바탕", "Batang", "바탕", serif;
+    --font-office-document: "Aptos", "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+
+    --font-display: var(--font-windows-ui);
+    --font-body: var(--font-windows-ui);
+    --font-logo: 'Jua', var(--font-windows-ui);
 
     --shadow-game: 0 4px 20px -4px hsl(213 90% 52% / 0.25);
     --shadow-card: 0 8px 30px -8px hsl(220 30% 15% / 0.12);
@@ -99,17 +105,33 @@
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
+    font-weight: 600;
   }
 }
 
 @layer utilities {
+  /* Emphasis role (labels, buttons, titles) — now a system UI font with medium weight
+     instead of a decorative rounded font. */
   .font-display {
     font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.45;
   }
 
   .font-body {
     font-family: var(--font-body);
   }
+
+  /* Decorative logo only (app title on the start screen) */
+  .font-logo {
+    font-family: var(--font-logo);
+    font-weight: 400;
+  }
+
+  /* Document surfaces inside the simulated programs */
+  .font-doc-hangul { font-family: var(--font-hangul-document); }
+  .font-doc-office { font-family: var(--font-office-document); }
+
 
   /* Fluid type utilities — use in place of fixed text-xs/sm/... when content must scale */
   .text-fluid-2xs { font-size: var(--fs-2xs); line-height: 1.3; }

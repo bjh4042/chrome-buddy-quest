@@ -36,8 +36,9 @@ export default {
         "fluid-6": "var(--space-6)",
       },
       fontFamily: {
-        display: ['Jua', 'sans-serif'],
-        body: ['Noto Sans KR', 'sans-serif'],
+        display: ['Segoe UI', 'Malgun Gothic', '맑은 고딕', 'Arial', 'sans-serif'],
+        body: ['Segoe UI', 'Malgun Gothic', '맑은 고딕', 'Arial', 'sans-serif'],
+        logo: ['Jua', 'Segoe UI', 'Malgun Gothic', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

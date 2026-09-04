@@ -121,7 +121,7 @@ const ExcelWindow = ({ onClose, onMinimize, currentQuestType, onQuestComplete }:
       toolbar={toolbar}
     >
       <div className="flex-1 overflow-auto">
-        <table className="border-collapse w-full text-[11px]">
+        <table className="border-collapse w-full text-[11px] font-doc-office">
           <thead className="sticky top-0 z-10">
             <tr className="bg-gray-100">
               <th className="border border-gray-300 w-8 p-0.5 text-gray-500 sticky left-0 bg-gray-100 z-20"></th>

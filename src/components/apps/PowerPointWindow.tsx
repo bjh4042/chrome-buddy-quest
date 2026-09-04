@@ -4,6 +4,7 @@ import WindowFrame from "./WindowFrame";
 import ImagePickerDialog from "./ImagePickerDialog";
 import ToolbarDropdown from "./ToolbarDropdown";
 import type { QuestType } from "@/types/quest";
+import { getFontStack } from "@/lib/fontStacks";
 import pptIconImg from "@/assets/ppt-icon.png";
 
 interface PowerPointWindowProps {
@@ -180,6 +181,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
   };
 
   const needsSelection = isQuest("ppt-font-size") || isQuest("ppt-font-family");
+  const slideFont = getFontStack(fontFamily);
   const selectionHint = needsSelection && (title.trim().length === 0 || !titleSelected);
 
   const toolbar = (
@@ -333,7 +335,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
                       onTouchEnd={checkTitleSelection}
                       placeholder={isQuest("ppt-text") ? "'나의 발표'를 입력하세요!" : "제목을 추가하려면 클릭하십시오."}
                       className="w-full text-center outline-none text-gray-800 font-bold"
-                      style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}
+                      style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily: slideFont }}
                       autoFocus
                       onBlur={() => !isQuest("ppt-text") && setIsEditingTitle(false)}
                     />
@@ -348,7 +350,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
                     }`}
                   >
                     <span className={`font-bold ${title ? "text-gray-800" : "text-gray-400"}`}
-                      style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily }}>
+                      style={{ fontSize: `${Math.min(parseInt(fontSize) * 0.6, 28)}px`, fontFamily: slideFont }}>
                       {title || "제목을 추가하려면 클릭하십시오."}
                     </span>
                   </button>
@@ -364,7 +366,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
                       onChange={(e) => setSubtitle(e.target.value)}
                       placeholder="부제목을 입력하십시오"
                       className="w-full text-center text-sm outline-none text-gray-700"
-                      style={{ fontFamily }}
+                      style={{ fontFamily: slideFont }}
                       autoFocus
                       onBlur={() => setIsEditingSubtitle(false)}
                     />
@@ -374,7 +376,7 @@ const PowerPointWindow = ({ onClose, onMinimize, currentQuestType, onQuestComple
                     onClick={(e) => { e.stopPropagation(); setIsEditingSubtitle(true); }}
                     className="w-full border-2 border-dashed border-gray-200 rounded px-3 py-2 hover:border-gray-400 hover:bg-gray-50 transition-colors"
                   >
-                    <span className={`text-sm ${subtitle ? "text-gray-700" : "text-gray-400"}`} style={{ fontFamily }}>
+                    <span className={`text-sm ${subtitle ? "text-gray-700" : "text-gray-400"}`} style={{ fontFamily: slideFont }}>
                       {subtitle || "부제목을 입력하십시오"}
                     </span>
                   </button>

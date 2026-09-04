@@ -44,7 +44,7 @@ const StartScreen = ({
           <Monitor className="w-10 h-10 sm:w-12 sm:h-12 text-primary" />
         </motion.div>
 
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-display text-foreground mb-2 sm:mb-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-logo text-foreground mb-2 sm:mb-3">
           윈도우 탐험대! 🚀
         </h1>
         <p className="text-muted-foreground font-body text-sm sm:text-base md:text-lg mb-4 sm:mb-6 leading-relaxed">
