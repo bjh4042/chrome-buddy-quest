@@ -1,0 +1,86 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import SettingsWindow, { getWindowsPreferences } from "./SettingsWindow";
+import { QuestEngineProvider } from "@/features/quests/useQuestEngine";
+
+beforeEach(() => { localStorage.clear(); vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} }); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+describe("Windows settings practice", () => {
+  it("survives corrupt storage and clamps invalid preference values", () => {
+    localStorage.setItem("windows-expedition-preferences-v1", "broken json");
+    expect(getWindowsPreferences().volume).toBe(60);
+    localStorage.setItem("windows-expedition-preferences-v1", JSON.stringify({ volume: -50, brightness: 500, background: "url(https://invalid.example)" }));
+    expect(getWindowsPreferences().volume).toBe(0);
+    expect(getWindowsPreferences().brightness).toBe(100);
+    expect(getWindowsPreferences().background).toContain("linear-gradient");
+  });
+  it("applies and persists a real wallpaper selection", () => {
+    const changed = vi.fn();
+    render(<SettingsWindow onClose={() => undefined} initialPage="background" onBackgroundChange={changed} />);
+    fireEvent.click(screen.getByRole("button", { name: "초록 숲 배경 적용" }));
+    expect(changed).toHaveBeenCalledOnce();
+    expect(getWindowsPreferences().background).toContain("#123d32");
+    expect(screen.getByRole("button", { name: "초록 숲 배경 적용" })).toHaveAttribute("aria-pressed", "true");
+  });
+  it("uses the same Wi-Fi practice credentials and quest event as the desktop panel", () => {
+    const emit = vi.fn(() => "pass" as const);
+    render(<QuestEngineProvider value={{ currentQuest: "wifi-connect", emit }}><SettingsWindow onClose={() => undefined} initialPage="network" /></QuestEngineProvider>);
+    expect(getWindowsPreferences().network).toBe("학교 연습 Wi-Fi");
+    const homeNetwork = screen.getByText("우리집 WiFi").closest(".ws-card") as HTMLElement;
+    fireEvent.click(within(homeNetwork).getByRole("button", { name: "연결" }));
+    fireEvent.change(screen.getByLabelText("연습 네트워크 보안 키"), { target: { value: "wrong" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("12345678");
+    expect(emit).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText("연습 네트워크 보안 키"), { target: { value: "12345678" } });
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+    expect(getWindowsPreferences().network).toBe("우리집 WiFi");
+    expect(emit).toHaveBeenCalledWith({ type: "WIFI_CONNECTED", ssid: "우리집 WiFi", password: "12345678" });
+    expect(localStorage.getItem("windows-expedition-preferences-v1")).not.toContain("12345678");
+  });
+  it("portals a small-window dialog into the visual viewport and keeps submit in its footer", () => {
+    vi.stubGlobal("visualViewport", { width: 320, height: 360, offsetLeft: 0, offsetTop: 0, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+    render(<div data-testid="tiny-app-window" style={{ width: 100, height: 80, overflow: "hidden", transform: "scale(.5)" }}><SettingsWindow onClose={() => undefined} initialPage="network" /></div>);
+    const homeNetwork = screen.getByText("우리집 WiFi").closest(".ws-card") as HTMLElement;
+    fireEvent.click(within(homeNetwork).getByRole("button", { name: "연결" }));
+    const dialog = screen.getByRole("dialog", { name: "Wi-Fi 연결 연습" });
+    expect(screen.getByTestId("tiny-app-window")).not.toContainElement(dialog);
+    const overlay = dialog.closest("[data-viewport-dialog]") as HTMLElement;
+    expect(overlay.parentElement).toBe(document.body);
+    expect(overlay.style.width).toBe("320px");
+    expect(overlay.style.height).toBe("360px");
+    const button = within(dialog).getByRole("button", { name: "다음" }) as HTMLButtonElement;
+    expect(button.closest("[data-dialog-footer]")).not.toBeNull();
+    expect(button.closest("[data-dialog-body]")).toBeNull();
+    expect(button.form).toBe(within(dialog).getByLabelText("연습 네트워크 보안 키").closest("form"));
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Wi-Fi 연결 연습" })).not.toBeInTheDocument();
+  });
+  it("requires confirmed PIN and rejects wrong unlock and unauthenticated removal", () => {
+    render(<SettingsWindow onClose={() => undefined} initialPage="accounts" />);
+    fireEvent.click(screen.getAllByRole("button", { name: "설정" })[0]);
+    let dialog = screen.getByRole("dialog", { name: "PIN 설정" });
+    fireEvent.change(within(dialog).getByLabelText("새 연습용 암호"), { target: { value: "2468" } });
+    fireEvent.change(within(dialog).getByLabelText("연습용 암호 확인"), { target: { value: "2469" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "확인" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("두 번 입력한 내용이 다릅니다");
+    fireEvent.change(within(dialog).getByLabelText("연습용 암호 확인"), { target: { value: "2468" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "확인" }));
+    expect(localStorage.getItem("windows-expedition-preferences-v1") || "").not.toContain("2468");
+    fireEvent.click(screen.getByRole("button", { name: "잠금 테스트" }));
+    fireEvent.change(screen.getByLabelText("잠금 해제용 연습 암호"), { target: { value: "0000" } });
+    fireEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("맞지 않습니다");
+    fireEvent.change(screen.getByLabelText("잠금 해제용 연습 암호"), { target: { value: "2468" } });
+    fireEvent.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.queryByRole("dialog", { name: "연습 잠금 화면" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "제거" }));
+    dialog = screen.getByRole("dialog", { name: "PIN 제거" });
+    fireEvent.change(within(dialog).getByLabelText("현재 연습용 암호"), { target: { value: "0000" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "제거" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("현재 연습용 암호가 맞지 않습니다");
+    fireEvent.change(within(dialog).getByLabelText("현재 연습용 암호"), { target: { value: "2468" } });
+    fireEvent.click(within(dialog).getByRole("button", { name: "제거" }));
+    expect(screen.getByRole("button", { name: "잠금 테스트" })).toBeDisabled();
+  });
+});

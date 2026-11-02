@@ -1,0 +1,22 @@
+import { fitWindowBox, resizeWindowBox } from '@/lib/windowGeometry';
+import { Minus, Square, X, Copy } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+interface WindowFrameProps {title:string;icon:React.ReactNode;onClose:()=>void;onMinimize?:()=>void;children:React.ReactNode;toolbar?:React.ReactNode;highlightClose?:boolean;}
+export default function WindowFrame({title,icon,onClose,onMinimize,children,toolbar,highlightClose}:WindowFrameProps){
+  const ref=useRef<HTMLDivElement>(null);const [max,setMax]=useState(false);
+  const [box,setBox]=useState({x:12,y:48,w:760,h:520});
+  const drag=useRef<{kind:'move'|'resize';sx:number;sy:number;x:number;y:number;w:number;h:number;sent:boolean}|null>(null);
+  const app=title.includes('Excel')?'excel':title.includes('PowerPoint')?'ppt':title.includes('Edge')?'edge':title.includes('한글')?'hangul':title.includes('설정')?'settings':title.includes('메모장')?'notepad':'mypc';
+  useEffect(()=>{const p=ref.current?.parentElement;if(!p)return;const fit=()=>{const w=p.clientWidth,h=p.clientHeight;if(w<1||h<1)return;setBox(b=>fitWindowBox(b,w,h));};fit();const observer=new ResizeObserver(fit);observer.observe(p);return()=>observer.disconnect();},[]);
+  useEffect(()=>{const move=(e:PointerEvent)=>{const d=drag.current,p=ref.current?.parentElement;if(!d||!p)return;const dx=e.clientX-d.sx,dy=e.clientY-d.sy;const pw=p.clientWidth,ph=p.clientHeight;setBox(d.kind==='move'?{x:Math.max(0,Math.min(pw-d.w,d.x+dx)),y:Math.max(0,Math.min(ph-36,d.y+dy)),w:d.w,h:d.h}:resizeWindowBox({x:d.x,y:d.y,w:d.w,h:d.h},dx,dy,pw,ph));if(!d.sent&&Math.abs(dx)+Math.abs(dy)>35){d.sent=true;window.dispatchEvent(new CustomEvent('window-interacted',{detail:{kind:d.kind,app}}));}};const up=()=>{drag.current=null;};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);return()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};},[app]);
+  function begin(e:React.PointerEvent,kind:'move'|'resize'){if(max||(e.target as HTMLElement).closest('button,input,select'))return;e.preventDefault();e.stopPropagation();drag.current={kind,sx:e.clientX,sy:e.clientY,...box,sent:false};e.currentTarget.setPointerCapture(e.pointerId);}
+  return <section ref={ref} role="region" aria-label={title} onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()} onContextMenu={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()} onTouchMove={e=>e.stopPropagation()} className="window-frame absolute bg-[#fafafa] text-gray-900 border border-black/10 shadow-2xl flex flex-col overflow-hidden z-30 rounded-lg" style={max?{inset:0,borderRadius:0}:{left:box.x,top:box.y,width:box.w,height:box.h,maxWidth:'100%',maxHeight:'100%'}}>
+    <div onPointerDown={e=>begin(e,'move')} onDoubleClick={e=>{if(!(e.target as HTMLElement).closest('button'))setMax(v=>!v);}} className="flex items-center justify-between pl-3 h-9 min-h-9 bg-[#f3f3f3] select-none touch-none">
+      <div className="flex items-center gap-2 overflow-hidden">{icon}<span className="text-xs truncate">{title}</span></div>
+      <div className="flex h-full"><button type="button" aria-label="최소화" title="최소화" disabled={!onMinimize} onClick={onMinimize} className="px-4 hover:bg-black/5 disabled:opacity-30"><Minus size={14}/></button><button type="button" aria-label={max?'이전 크기로':'최대화'} title={max?'이전 크기로':'최대화'} onClick={()=>{setMax(v=>!v);window.dispatchEvent(new CustomEvent('window-maximized',{detail:{app}}));}} className="px-4 hover:bg-black/5">{max?<Copy size={12}/>:<Square size={12}/>}</button><button type="button" aria-label="닫기" title="닫기" onClick={onClose} className={`px-4 hover:bg-red-600 hover:text-white ${highlightClose?'ring-2 ring-yellow-400':''}`}><X size={16}/></button></div>
+    </div>
+    {toolbar&&<div className="window-frame-toolbar border-b border-gray-200 bg-[#f7f7f7] overflow-auto shrink-0" style={{maxHeight:'42%'}}>{toolbar}</div>}
+    <div className="flex-1 min-h-0 overflow-auto flex flex-col">{children}</div>
+    {!max&&<div role="separator" aria-label="창 크기 조절" title="창 크기 조절" onPointerDown={e=>begin(e,'resize')} className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize touch-none z-40"><span className="absolute bottom-1 right-1 w-2 h-2 border-b-2 border-r-2 border-gray-400"/></div>}
+  </section>;
+}

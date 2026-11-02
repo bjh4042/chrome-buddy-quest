@@ -1,0 +1,123 @@
+.windows-welcome {
+  --welcome-accent: #0067c0;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3.6vh, 38px) 20px 18px;
+  background-color: #b2ccdd;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #1b1b1b;
+  font-family: var(--font-windows-ui);
+  font-size: 14px;
+  line-height: 1.5;
+  color-scheme: light;
+}
+.welcome-window {
+  width: min(100%, 580px);
+  flex: none;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.75);
+  border-radius: 8px;
+  background: #f2f5fa;
+  box-shadow: 0 24px 64px rgba(0,28,72,.24), 0 3px 8px rgba(0,0,0,.1), 0 0 0 1px rgba(0,0,0,.08);
+  animation: welcome-appear .25s ease-out;
+}
+.welcome-titlebar {
+  min-height: 48px;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #e2e7ee;
+  background: #edf1f8;
+  font-size: 12px;
+}
+.welcome-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; }
+.welcome-brand-divider { margin: 0 6px; color: #8b94a3; }
+.welcome-windows-mark { display: grid; grid-template-columns: repeat(2,1fr); gap: 2px; width: 17px; height: 17px; flex: none; }
+.welcome-windows-mark i { background: #0078d4; }
+.welcome-version { border: 1px solid #d5dee9; border-radius: 4px; padding: 1px 6px; color: #556478; font-size: 10px; letter-spacing: .03em; }
+.welcome-content { padding: 28px 40px 20px; }
+.welcome-app-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto 17px; border: 1px solid #fff; border-radius: 12px; background: linear-gradient(145deg,#fff,#e1edfb); box-shadow: 0 3px 10px #bdd2e555, inset 0 -1px 0 #bfd1e366; }
+.welcome-app-icon .welcome-windows-mark { width: 32px; height: 32px; gap: 3px; }
+.welcome-eyebrow { margin: 0 0 5px; text-align: center; font-size: 12px; font-weight: 500; color: #58677b; }
+.welcome-content h1 { margin: 0; text-align: center; font-family: var(--font-windows-ui); font-size: clamp(28px,3vw,36px); font-weight: 600; letter-spacing: -.055em; line-height: 1.35; }
+.welcome-description { margin: 10px 0 0; text-align: center; font-size: 14px; line-height: 1.65; color: #566172; word-break: keep-all; }
+.welcome-mobile-break { display: none; }
+.welcome-facts { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 14px; margin: 17px 0 23px; color: #526174; font-size: 12px; }
+.welcome-facts > span { display: inline-flex; align-items: center; gap: 6px; }
+.welcome-facts svg { color: #0078d4; }
+.welcome-facts .welcome-fact-divider { width: 1px; height: 12px; background: #cdd5df; }
+.welcome-actions { display: grid; gap: 9px; }
+.welcome-actions button { box-sizing: border-box; min-width: 0; width: 100%; border-radius: 4px; text-align: left; font: inherit; cursor: pointer; transition: background-color .12s, border-color .12s; }
+.welcome-primary { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 12px 17px; border: 1px solid #0063b8; border-bottom-color: #004e91; background: var(--welcome-accent); color: white; box-shadow: 0 1px 2px #0000000d; }
+.welcome-primary span { flex: 1; font-weight: 600; }
+.welcome-primary:hover { background: #005fb3; }
+.welcome-primary:active { background: #00559f; color: #e3edff; }
+.welcome-secondary { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; border: 1px solid #dce1e9; border-bottom-color: #cbd2dc; background: #ffffffcc; color: #202630; box-shadow: 0 1px 2px #00000004; }
+.welcome-secondary:hover { background: #f9fbff; border-color: #abc7e6; }
+.welcome-secondary:active { background: #eaf0f8; }
+.welcome-action-icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; color: #0071c5; flex: none; }
+.welcome-secondary > span:nth-child(2) { flex: 1; min-width: 0; }
+.welcome-secondary strong { display: block; font-size: 13px; font-weight: 600; }
+.welcome-secondary small { display: block; margin-top: 2px; color: #697384; font-size: 11px; line-height: 1.4; }
+.welcome-secondary > svg { color: #738093; flex: none; }
+.windows-welcome :is(button,a,summary):focus-visible { outline: 2px solid #005fb8; outline-offset: 3px; }
+.welcome-primary:focus-visible { outline-color: #003d73; }
+.welcome-progress { margin: -5px 0 18px; padding: 12px 14px; border: 1px solid #dce5ef; border-radius: 4px; background: #eaf1fa; font-size: 12px; }
+.welcome-progress-heading { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; }
+.welcome-progress-heading strong { font-weight: 600; color: #005fae; }
+.welcome-progress-heading strong span { font-weight: 400; color: #586579; }
+.welcome-progress-track { height: 3px; margin-top: 9px; overflow: hidden; border-radius: 2px; background: #d3dce8; }
+.welcome-progress-track > span { display: block; height: 100%; background: #0067c0; }
+.welcome-progress p { margin: 8px 0 0; color: #536277; overflow-wrap: anywhere; }
+.welcome-reset { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; width: 100%; min-height: 36px; margin-top: 9px; padding: 6px; border-radius: 4px; background: transparent; color: #59677a; font: inherit; font-size: 11px; cursor: pointer; }
+.welcome-reset:hover { background: #e3eaf3; color: #1f2f46; }
+.welcome-guidance { margin-top: 21px; padding-top: 14px; border-top: 1px solid #dfe5ee; color: #586679; font-size: 11px; line-height: 1.65; }
+.welcome-guidance summary { width: fit-content; cursor: pointer; color: #526176; }
+.welcome-guidance p { margin: 10px 0 0; overflow-wrap: anywhere; }
+.welcome-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 14px 26px; border-top: 1px solid #dde4ee; background: #e8eef7; font-size: 11px; }
+.welcome-profile { display: inline-flex; align-items: center; gap: 9px; color: #445267; }
+.welcome-profile > span { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid #d6deea; border-radius: 50%; background: #f8fbff; color: #5d7796; }
+.welcome-footer a { display: inline-flex; align-items: center; gap: 6px; padding: 6px 0; color: #005da9; text-decoration: none; }
+.welcome-footer a:hover { text-decoration: underline; }
+.welcome-caption { margin: 14px 0 0; padding: 3px 10px; border-radius: 4px; background: #dbe9f3e8; color: #294865; text-align: center; font-size: 11px; }
+@keyframes welcome-appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (max-width: 480px) {
+  .windows-welcome { padding: 14px 12px; background-position: 58% center; }
+  .welcome-titlebar { padding: 12px 15px; }
+  .welcome-content { padding: 23px 21px 18px; }
+  .welcome-mobile-break { display: initial; }
+  .welcome-footer { padding: 12px 18px; gap: 6px; }
+  .welcome-profile { font-size: 10px; }
+  .welcome-app-icon { width: 54px; height: 54px; margin-bottom: 14px; }
+  .welcome-app-icon .welcome-windows-mark { width: 28px; height: 28px; }
+}
+@media (max-height: 660px) {
+  .windows-welcome { justify-content: flex-start; padding-top: 14px; }
+  .welcome-window { margin-block: auto; }
+  .welcome-content { padding-top: 18px; padding-bottom: 14px; }
+  .welcome-app-icon { width: 44px; height: 44px; margin-bottom: 10px; border-radius: 8px; }
+  .welcome-app-icon .welcome-windows-mark { width: 25px; height: 25px; gap: 2px; }
+  .welcome-content h1 { font-size: 28px; }
+  .welcome-description { margin-top: 6px; font-size: 13px; }
+  .welcome-facts { margin: 12px 0 16px; }
+  .welcome-guidance { margin-top: 16px; padding-top: 10px; }
+  .welcome-footer { padding-block: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-window { animation: none; }
+  .welcome-actions button { transition: none; }
+}
+@media (forced-colors: active) {
+  .welcome-window, .welcome-titlebar, .welcome-footer, .welcome-caption { background: Canvas; color: CanvasText; }
+  .welcome-windows-mark i, .welcome-progress-track > span { background: Highlight; }
+  .welcome-primary { background: Highlight; color: HighlightText; }
+}
