@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
-import { ChevronRight, Image as ImageIcon, FolderOpen, Monitor, Music, Film, FileText, HardDrive } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { AppIcon } from "@/components/icons/WindowsIcon";
 import ViewportDialog from "./ViewportDialog";
 
 interface ImagePickerDialogProps {
@@ -21,15 +22,15 @@ const SAMPLE_IMAGES = [
 ];
 
 const SIDEBAR_ITEMS = [
-  { icon: ImageIcon, label: "갤러리" },
-  { icon: Monitor, label: "바탕 화면" },
-  { icon: FolderOpen, label: "Downloads", active: true },
-  { icon: FileText, label: "문서" },
-  { icon: ImageIcon, label: "사진" },
-  { icon: Music, label: "음악" },
-  { icon: Film, label: "동영상" },
-  { icon: HardDrive, label: "내 드라이브" },
-];
+  { icon: 'pictures', label: "갤러리", active: false },
+  { icon: 'desktop', label: "바탕 화면", active: false },
+  { icon: 'downloads', label: "Downloads", active: true },
+  { icon: 'documents', label: "문서", active: false },
+  { icon: 'pictures', label: "사진", active: false },
+  { icon: 'music', label: "음악", active: false },
+  { icon: 'videos', label: "동영상", active: false },
+  { icon: 'drive', label: "내 드라이브", active: false },
+] as const;
 
 const ImagePickerDialog = ({ onSelect, onClose, isQuest }: ImagePickerDialogProps) => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
@@ -79,14 +80,14 @@ const ImagePickerDialog = ({ onSelect, onClose, isQuest }: ImagePickerDialogProp
   return (
     <ViewportDialog title="그림 넣기" onClose={onClose} bodyClassName="!p-0" footer={footer}>
       <div className="flex min-w-0 items-center gap-1 border-b border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-600" aria-label="현재 그림 폴더">
-        <FolderOpen className="h-3.5 w-3.5 shrink-0 text-yellow-500" />
-        <span>내 PC</span><ChevronRight className="h-3 w-3 shrink-0" /><span>Downloads</span>
+        <AppIcon name="this-pc" size={16} className="shrink-0" alt="" />
+        <span>내 PC</span><ChevronRight className="h-3 w-3 shrink-0" /><AppIcon name="downloads" size={16} className="shrink-0" alt="" /><span>Downloads</span>
       </div>
       <div className="flex min-w-0">
         <aside className="hidden w-28 shrink-0 border-r border-gray-200 bg-gray-50 py-1 sm:block" aria-label="연습 그림 위치">
-          {SIDEBAR_ITEMS.map(({ icon: Icon, label, active }) => (
+          {SIDEBAR_ITEMS.map(({ icon, label, active }) => (
             <div key={label} className={`flex items-center gap-1.5 px-2 py-1.5 text-[11px] ${active ? "bg-blue-100 font-medium text-blue-700" : "text-gray-400"}`} aria-current={active ? "location" : undefined}>
-              <Icon className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{label}</span>
+              <AppIcon name={icon} size={18} className="shrink-0" alt="" /><span className="truncate">{label}</span>
             </div>
           ))}
           <p className="px-2 pt-2 text-[10px] leading-relaxed text-gray-500">이 연습의 그림은 Downloads 폴더에 있습니다.</p>

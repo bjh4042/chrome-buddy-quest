@@ -1,6 +1,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Search, ChevronLeft, ChevronRight, RotateCw, Home, Plus, X, Star, History, Download, MoreHorizontal, ShieldCheck, FolderOpen, Pencil, Trash2 } from 'lucide-react';
 import WindowFrame from './WindowFrame';
+import { AppIcon } from '../icons/WindowsIcon';
 import ViewportDialog from './ViewportDialog';
 import type { QuestType } from '@/types/quest';
 import type { LearningEvent } from '@/features/quests/questEvents';
@@ -27,7 +28,7 @@ const iconButton = 'shrink-0 rounded p-1.5 hover:bg-slate-200 disabled:opacity-3
 const handoutName = '안전한_인터넷_사용_안내.txt';
 const handoutContent = '안전한 인터넷 사용\n1. 주소의 실제 도메인을 확인합니다.\n2. 개인정보와 진짜 비밀번호를 입력하지 않습니다.\n3. 모르는 파일은 열기 전에 선생님께 물어봅니다.\n4. 출처와 날짜를 확인합니다.';
 
-const EdgeIcon = ({ className = 'w-4 h-4' }: { className?: string }) => <svg viewBox="0 0 24 24" className={className} aria-hidden="true"><path fill="#087ccb" d="M12 2a10 10 0 1 0 10 10c0-.7-.1-1.5-.3-2.2-1.2 3.6-4 5.5-7.5 5.5-3.2 0-5.5-1.3-5.5-3.7 0-1.6 1.4-2.8 3.1-2.8 2.3 0 4.1 1 4.5 3.3 2-4.9-1-8.4-5.3-7.7C6.6 5 4.5 8.6 4.5 11.5c0-5 3.3-8.6 7.5-9.5Z"/><path fill="#00bdaf" d="M4.5 14c1.4 4 6 5 9.8 3.5 3.7-1.4 5.5-4.1 7.4-7.7C22.9 17.9 16 23.3 9.3 21.6 5.7 20.7 3.8 17.7 4.5 14Z"/></svg>;
+const EdgeIcon = ({ className = "w-4 h-4" }: { className?: string }) => <AppIcon name="edge" className={className} />;
 
 function highlightPage(node: ReactNode, query: string, selected: number) {
   let count = 0;

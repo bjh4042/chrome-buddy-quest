@@ -1,0 +1,127 @@
+{
+  "retrieved": "2026-11-03",
+  "upstream": "https://github.com/microsoft/fluentui-system-icons",
+  "icons": [
+    {
+      "name": "search",
+      "file": "search.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Search/SVG/ic_fluent_search_24_regular.svg",
+      "sha256": "dc8ec761e8cdc52032b86e15c424716ded96d168970b5b611257253a41484b62",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "task-view",
+      "file": "task-view.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Window%20Multiple/SVG/ic_fluent_window_multiple_24_regular.svg",
+      "sha256": "f761eecc7e527ddd571a86918ac10f303ce91e7daea1406ca4fd70c6752be99d",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "volume",
+      "file": "volume.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Speaker%202/SVG/ic_fluent_speaker_2_24_regular.svg",
+      "sha256": "7e8c26c6b8283df8b41e786b0684fb37355bbafd626ea6567ae103f286b6c0e3",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "volume-low",
+      "file": "volume-low.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Speaker%201/SVG/ic_fluent_speaker_1_24_regular.svg",
+      "sha256": "54b67e40cfb37179b212d8ae8eef98bd645f52194e9179c0a35fd57cd5c45392",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "volume-mute",
+      "file": "volume-mute.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Speaker%20Mute/SVG/ic_fluent_speaker_mute_24_regular.svg",
+      "sha256": "81ec1f94fe5f2bb9d677b37bd920a2dc7f1bcffac073f0d5f799340a75501170",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "battery",
+      "file": "battery.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Battery%205/SVG/ic_fluent_battery_5_24_regular.svg",
+      "sha256": "13617f43d0dd76ef007108b4b62ba3f596620b4b9897c3c2782fc709b18c13ef",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "power",
+      "file": "power.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Power/SVG/ic_fluent_power_24_regular.svg",
+      "sha256": "370bb663ee39f2c327c1f615b1d2a5725803c5372867159a3f90067732265083",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "brightness",
+      "file": "brightness.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Brightness%20High/SVG/ic_fluent_brightness_high_24_regular.svg",
+      "sha256": "e61d78b040e20cd79943983d4104e13a71d6c0c0861bea24065aaa6159febe26",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "bluetooth",
+      "file": "bluetooth.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Bluetooth/SVG/ic_fluent_bluetooth_24_regular.svg",
+      "sha256": "881911487f17464c2a78c41f9987421ef58bdce0ffe899531774a45d3e219631",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "airplane",
+      "file": "airplane.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Airplane/SVG/ic_fluent_airplane_24_regular.svg",
+      "sha256": "5f6342f0d6409e657e45eb39d3e2ea95f51e8461d5ca9a787130045e4c47e322",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "night-light",
+      "file": "night-light.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Weather%20Moon/SVG/ic_fluent_weather_moon_24_regular.svg",
+      "sha256": "7b8c77347c704ca3f76a5fed4865f9011caf4663d011850043067ca8ee490ee8",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "accessibility",
+      "file": "accessibility.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Accessibility/SVG/ic_fluent_accessibility_24_regular.svg",
+      "sha256": "18769859582187e3ab5efb7f48682f9339d2054fb7cb4e9b2d80d8e595f0a72d",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "cast",
+      "file": "cast.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Cast/SVG/ic_fluent_cast_24_regular.svg",
+      "sha256": "cb28b33e2bcabf5cc9c6bbe9cfded782cc00a12463b82a0487ebaee70af6b0e6",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    },
+    {
+      "name": "settings",
+      "file": "settings.svg",
+      "source_url": "https://github.com/microsoft/fluentui-system-icons/blob/main/assets/Settings/SVG/ic_fluent_settings_24_regular.svg",
+      "sha256": "5ac05e6e11c9ec9f24703091c42ca1f5c91f4032cb0eee35c892d1872a38871b",
+      "license": "MIT; Copyright (c) 2020 Microsoft Corporation",
+      "usage": "Official 24px Regular SVG path embedded unchanged; source fill replaced by currentColor at render time"
+    }
+  ],
+  "custom_geometry": {
+    "wifi": "Original SVG arc-and-dot geometry created for this simulator",
+    "wifi-off": "Original SVG arc-and-dot geometry with diagonal disconnect line created for this simulator"
+  },
+  "notes": [
+    "task-view uses the Fluent Window Multiple equivalent: overlapping windows, no monitor stand.",
+    "Fluent equivalents are not asserted to be byte-identical to proprietary Windows shell assets.",
+    "Component uses no external network, fonts, packages, or img requests."
+  ]
+}

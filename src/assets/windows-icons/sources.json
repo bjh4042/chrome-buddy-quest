@@ -1,0 +1,156 @@
+[
+  {
+    "source": "https://www.microsoft.com/content/dam/microsoft/bade/images/icons/en-us/m365-app-icons-fy26/Excel-Icon-FY26.svg",
+    "status": 200,
+    "type": "image/svg+xml",
+    "bytes": 4928,
+    "sha256": "ff01cdad545c6f1c0bff371c1f1758ad228174520c718c679bd454f6b4fcacf8",
+    "upstream_file": "Excel-Icon-FY26.svg",
+    "file": "excel.svg",
+    "transformation": "unchanged",
+    "bundled_sha256": "ff01cdad545c6f1c0bff371c1f1758ad228174520c718c679bd454f6b4fcacf8"
+  },
+  {
+    "source": "https://www.microsoft.com/content/dam/microsoft/bade/images/icons/en-us/m365-app-icons-fy26/PowerPoint-Icon-FY26.svg",
+    "status": 200,
+    "type": "image/svg+xml",
+    "bytes": 6088,
+    "sha256": "9bdf04481c14b24f419bad93903daff9884ad5a4b957a77241ddc0294ce5b423",
+    "upstream_file": "PowerPoint-Icon-FY26.svg",
+    "file": "powerpoint.svg",
+    "transformation": "unchanged",
+    "bundled_sha256": "9bdf04481c14b24f419bad93903daff9884ad5a4b957a77241ddc0294ce5b423"
+  },
+  {
+    "source": "https://edgecdn-embza6g8cacagcbn.z01.azurefd.net/welcome/static/favicon.png",
+    "status": 200,
+    "type": "image/png",
+    "bytes": 7904,
+    "sha256": "4d755ac02a070a1b4bb1b6f1c88ab493440109a8ac1e314aaced92f94cdc98e9",
+    "upstream_file": "edge-official-favicon.png",
+    "file": "edge.png",
+    "transformation": "unchanged",
+    "bundled_sha256": "4d755ac02a070a1b4bb1b6f1c88ab493440109a8ac1e314aaced92f94cdc98e9"
+  },
+  {
+    "source": "https://github.com/microsoft/PowerToys/blob/main/src/modules/cmdpal/ext/Microsoft.CmdPal.Ext.Indexer/Assets/FileExplorer.svg",
+    "bytes": 10102,
+    "sha256": "35ef9673671c71790b8854f7b3d65f950b5e5e01407d2cc8ddfc4908a01e4936",
+    "license_note": "MIT repo license; trademark rights separate",
+    "svg_root": {
+      "width": "16",
+      "height": "16",
+      "viewBox": "0 0 16 16",
+      "fill": "none"
+    },
+    "upstream_file": "FileExplorer.svg",
+    "file": "file-explorer.svg",
+    "transformation": "unchanged",
+    "bundled_sha256": "35ef9673671c71790b8854f7b3d65f950b5e5e01407d2cc8ddfc4908a01e4936"
+  },
+  {
+    "source": "https://store-images.s-microsoft.com/image/apps.41930.13825011251621706.e8a531ea-e643-41b9-8969-8a0182f70030.40b3aa63-5e70-4bee-b320-40ca636ec530",
+    "bytes": 2134,
+    "sha256": "caa32604f6879d77bfa6513456f532878ac1bf01b72bab8d0a220f8e5c8bbe1e",
+    "license_note": "Microsoft product brand asset, no general MIT grant observed",
+    "dimensions": [
+      150,
+      150
+    ],
+    "content_bbox": [
+      49,
+      47,
+      102,
+      109
+    ],
+    "upstream_file": "Notepad-store.png",
+    "file": "notepad.png",
+    "transformation": "transparent whitespace crop only; no resampling",
+    "bundled_sha256": "36add191b9f3f81a3157e8466e38b028a65e24d335c4313722b576edae64c995"
+  },
+  {
+    "file": "desktop.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "d7c1a5315f597a8143204eace75f7490469450e805e4ff10b434fd056e467d04"
+  },
+  {
+    "file": "documents.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "15db0f1fc4097e2f3d443e8c4c9a2da5337a28b464ede254df1afb4a0ca05c48"
+  },
+  {
+    "file": "downloads.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "824a5c2545a503330975b3c8ac9a3c8382c71e982d5224a7c1d47e957a20728c"
+  },
+  {
+    "file": "drive.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "452b0133f53fe9a55a2ec692ca536f48536877c0be10c18b9597c16bd0bfdceb"
+  },
+  {
+    "file": "folder.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "5e43d458e071e421db06d6c1afca06d0e17b786a13ca23ffcb60c25bd1120b42"
+  },
+  {
+    "file": "music.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "7f6d4b7450ce4448f638ee8f2a9826f1f654db4e7e83939dc0a4270985fb7d16"
+  },
+  {
+    "file": "pictures.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "c3e4deaf1a437e81395a4bc7525c6290a53c227d1500809642207be08a2f12be"
+  },
+  {
+    "file": "recycle-bin-full.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "f8e36246ee19c5f50f3bfd1e055725870dfd6e8724f175dc6067776b66a14816"
+  },
+  {
+    "file": "recycle-bin.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "e3268e7e100156c2a6223eda81fcff1dd98d70c994d414947d3102404b3e9b6c"
+  },
+  {
+    "file": "search.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "5ccd2264f0f662845c4f1ad151c5ada0920d5c89eba237d449d74da339810acf"
+  },
+  {
+    "file": "settings.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "2cd55bdc8751e1aa9b9eb03b9a0b4815cc5c0fc481ffc43a784043c960ab7e2b"
+  },
+  {
+    "file": "start.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "d527c9eb0bc1cb54392a90beeabf1d771da72b84eab6a2587a8c1b183bbc7ce1"
+  },
+  {
+    "file": "task-view.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "d3f0ad42923fa73d81ac5edb26e84c5c436a36171ef4674227fb62e624f31c14"
+  },
+  {
+    "file": "text-file.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "004edebd41feade662f4ae0a0de6110215a8d66761b603345bd3aa79149c896a"
+  },
+  {
+    "file": "this-pc.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "51f363d7ab01ebac185896174b63d273252dd8443ae03e3a1bc6582e5e4a2996"
+  },
+  {
+    "file": "videos.svg",
+    "source": "Project-authored Windows-style reference vector; not an extracted Windows resource",
+    "sha256": "6540ce6fbdc4286fdf2d0889d7cca7440cd4aa48ff2bb372f90dc6a390f31ddd"
+  },
+  {
+    "file": "hangul.svg",
+    "source": "Hancom Docs official SvgIcLandingHwp, see hancom-provenance.json",
+    "transformation": "React SVG attributes normalized only; original paths, colors and gradients preserved"
+  }
+]

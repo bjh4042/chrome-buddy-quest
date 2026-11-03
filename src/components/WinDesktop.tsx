@@ -1,29 +1,22 @@
 import { useState, useCallback, useRef, useEffect, useLayoutEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FolderOpen, Trash2, Star as StarIcon,
-  ChevronRight, Power, Search,
-  FileText, Folder, Monitor, Volume2, Volume1, VolumeX, Wifi, Lock, Check,
-  Bluetooth, Plane, Moon, Accessibility, Cast, Settings as SettingsIcon, ChevronLeft
-} from "lucide-react";
+import { Star as StarIcon, ChevronRight, Lock, Check, ChevronLeft, Eye, ArrowDownUp, RotateCw, Copy, Scissors, Pencil, Info, Link } from "lucide-react";
+import { AppIcon } from "./icons/WindowsIcon";
+import { WindowsGlyph } from "./icons/WindowsGlyph";
+import "./WinDesktopIcons.css";
 import type { QuestType } from "@/types/quest";
 import { WRONG_CLICK_HINTS } from "@/types/quest";
 import MyPcWindow from "./apps/MyPcWindow";
-import EdgeWindow, { EdgeIcon } from "./apps/EdgeWindow";
-import HangulWindow, { HangulIcon } from "./apps/HangulWindow";
-import ExcelWindow, { ExcelIcon } from "./apps/ExcelWindow";
-import PowerPointWindow, { PptIcon } from "./apps/PowerPointWindow";
+import EdgeWindow from "./apps/EdgeWindow";
+import HangulWindow from "./apps/HangulWindow";
+import ExcelWindow from "./apps/ExcelWindow";
+import PowerPointWindow from "./apps/PowerPointWindow";
 import SettingsWindow, { getWindowsPreferences, updateWindowsPreferences } from "./apps/SettingsWindow";
 import WindowFrame from "./apps/WindowFrame";
-import { loadPracticeFiles, validFileName } from "@/lib/browserPractice";
+import { FILES_KEY, loadPracticeFiles, validFileName } from "@/lib/browserPractice";
 import { useQuestEmit } from "@/features/quests/useQuestEngine";
 import FingerGuide from "./FingerGuide";
 import WrongClickHint from "./WrongClickHint";
-import desktopMypcImg from "@/assets/desktop-mypc.png";
-import desktopTrashImg from "@/assets/desktop-trash.png";
-import desktopExcelImg from "@/assets/desktop-excel.png";
-import desktopPptImg from "@/assets/desktop-ppt.png";
-import desktopHangulImg from "@/assets/desktop-hangul.png";
 
 interface WinDesktopProps {
   currentQuestType: QuestType;
@@ -135,6 +128,15 @@ function useKoreanClock() {
 
 const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePractice = false }: WinDesktopProps) => {
   const emit = useQuestEmit();
+  const [recycleHasItems, setRecycleHasItems] = useState(() => loadPracticeFiles().some(file => file.deleted));
+  useEffect(() => {
+    const refresh = () => setRecycleHasItems(loadPracticeFiles().some(file => file.deleted));
+    const stored = (event: StorageEvent) => { if (event.key === FILES_KEY) refresh(); };
+    window.addEventListener('win-files-changed', refresh);
+    window.addEventListener('win-explorer-files-changed', refresh);
+    window.addEventListener('storage', stored);
+    return () => { window.removeEventListener('win-files-changed', refresh); window.removeEventListener('win-explorer-files-changed', refresh); window.removeEventListener('storage', stored); };
+  }, []);
   const desktopRootRef=useRef<HTMLDivElement>(null);
   const [guideAnchor,setGuideAnchor]=useState<{x:string;y:string}|null>(null);
   const [settingsPage, setSettingsPage] = useState('system');
@@ -745,7 +747,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             id="mypc"
             selected={selectedIcon === "mypc"}
             onSelect={setSelectedIcon}
-            icon={<img src={desktopMypcImg} alt="내 PC" className="w-10 h-10 object-contain" />}
+            icon={<AppIcon name="this-pc" size={48} alt="내 PC" />}
             label="내 PC"
             highlight={isHighlighted("mypc")}
             intense={intensifyHighlight && isHighlighted("mypc")}
@@ -755,7 +757,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             id="trash"
             selected={selectedIcon === "trash"}
             onSelect={setSelectedIcon}
-            icon={<img src={desktopTrashImg} alt="휴지통" className="w-10 h-10 object-contain" />}
+            icon={<AppIcon name={recycleHasItems || (currentQuestType === "delete-file" && !fileToDelete) ? "recycle-bin-full" : "recycle-bin"} size={48} alt="휴지통" />}
             label="휴지통"
             onClick={(e) => { e.stopPropagation(); try{localStorage.setItem('win-explorer-open-folder','휴지통');}catch{/* event fallback */} setOpenApp('mypc');window.dispatchEvent(new CustomEvent('win-open-folder',{detail:'휴지통'})); }}
           />
@@ -763,7 +765,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             id="hangul"
             selected={selectedIcon === "hangul"}
             onSelect={setSelectedIcon}
-            icon={<img src={desktopHangulImg} alt="한글" className="w-10 h-10 object-contain" />}
+            icon={<AppIcon name="hangul" size={48} alt="한글" />}
             label="한글"
             highlight={isHighlighted("hangul")}
             intense={intensifyHighlight && isHighlighted("hangul")}
@@ -773,7 +775,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             id="excel"
             selected={selectedIcon === "excel"}
             onSelect={setSelectedIcon}
-            icon={<img src={desktopExcelImg} alt="Excel" className="w-10 h-10 object-contain" />}
+            icon={<AppIcon name="excel" size={48} alt="Excel" />}
             label="Excel"
             highlight={isHighlighted("excel")}
             intense={intensifyHighlight && isHighlighted("excel")}
@@ -783,7 +785,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             id="ppt"
             selected={selectedIcon === "ppt"}
             onSelect={setSelectedIcon}
-            icon={<img src={desktopPptImg} alt="PowerPoint" className="w-10 h-10 object-contain" />}
+            icon={<AppIcon name="powerpoint" size={48} alt="PowerPoint" />}
             label="PowerPoint"
             highlight={isHighlighted("ppt")}
             intense={intensifyHighlight && isHighlighted("ppt")}
@@ -803,8 +805,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                 onTouchEnd={handleFileTouchEnd}
                 onTouchCancel={handleFileTouchEnd}
               >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <FileText className="w-8 h-8 text-blue-300" />
+                <div className="win-native-desktop-icon-art">
+                  <AppIcon name="text-file" size={48} />
                 </div>
                 <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">삭제할 파일.txt</span>
               </div>
@@ -831,8 +833,8 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                   }
                 }}
               >
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <Folder className="w-7 h-7 text-yellow-400" />
+                <div className="win-native-desktop-icon-art">
+                  <AppIcon name="folder" size={48} />
                 </div>
                 {renamingFolder ? (
                   <input
@@ -883,7 +885,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                       sel ? "bg-blue-500/40 ring-1 ring-blue-300/70" : "hover:bg-white/10 animate-pulse-highlight"
                     }`}
                   >
-                    <FileText className="w-8 h-8 text-blue-300" />
+                    <AppIcon name="text-file" size={48} />
                     <span className="text-[10px] text-white text-center drop-shadow-sm">파일{id}.txt</span>
                   </div>
                 );
@@ -908,7 +910,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                   : "border-white/40 bg-white/5"
               }`}
             >
-              <Folder className={`w-12 h-12 ${dropSuccess ? "text-green-400" : "text-yellow-400"}`} />
+              <AppIcon name="folder" size={48} />
               <span className="text-xs text-white font-display">
                 {dropSuccess ? "성공! ✨" : "여기에 넣어주세요!"}
               </span>
@@ -926,7 +928,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                 onClick={e => e.stopPropagation()}
               >
                 <div className="flex flex-col items-center gap-0.5 p-2 rounded-md bg-blue-500/30 w-20">
-                  <FileText className="w-8 h-8 text-blue-300" />
+                  <AppIcon name="text-file" size={48} />
                   <span className="text-[10px] text-white text-center drop-shadow-sm">보고서.txt</span>
                 </div>
               </div>
@@ -983,16 +985,16 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
               style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
               onClick={(e) => e.stopPropagation()}
             >
-              <CtxItem icon="👁️" label="보기" />
-              <CtxItem icon="↕️" label="정렬 기준" />
-              <CtxItem icon="🔄" label="새로 고침" onClick={()=>{setContextMenuOpen(false);notify("바탕 화면을 새로 고쳤어요. 파일이 삭제되지는 않아요.");}} />
+              <CtxItem icon={<Eye size={16} />} label="보기" />
+              <CtxItem icon={<ArrowDownUp size={16} />} label="정렬 기준" />
+              <CtxItem icon={<RotateCw size={16} />} label="새로 고침" onClick={()=>{setContextMenuOpen(false);notify("바탕 화면을 새로 고쳤어요. 파일이 삭제되지는 않아요.");}} />
               <div className="border-t border-gray-100 my-0.5" />
               <div className="relative" onMouseEnter={() => setSubMenuOpen(true)} onMouseLeave={() => setSubMenuOpen(false)}
                 onClick={() => setSubMenuOpen(true)}>
                 <button className={`w-full text-left px-3 py-1.5 text-xs flex items-center justify-between hover:bg-blue-50 ${
                   currentQuestType === "create-file" ? "bg-blue-50 text-blue-600 font-bold" : "text-gray-700"
                 }`}>
-                  <span>📁 새로 만들기</span>
+                  <span className="flex items-center gap-2"><AppIcon name="folder" size={16} />새로 만들기</span>
                   <ChevronRight className="w-3 h-3" />
                 </button>
                 <AnimatePresence>
@@ -1008,16 +1010,16 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                         className={`w-full text-left px-3 py-1.5 text-xs hover:bg-blue-50 ${
                           currentQuestType === "create-file" ? "bg-yellow-50 text-blue-600 font-bold animate-pulse-highlight" : "text-gray-700"
                         }`}
-                      >📂 폴더</button>
-                      <button onClick={()=>{activateApp("mypc");setContextMenuOpen(false);notify("파일 탐색기의 새로 만들기에서 텍스트 문서를 만들어 보세요.");}} className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50">📄 텍스트 문서</button>
-                      <button disabled title="이 연습 버전에서는 지원하지 않습니다." className="w-full text-left px-3 py-1.5 text-xs text-gray-400">📋 바로 가기</button>
+                      ><AppIcon name="folder" size={16} className="inline-block mr-2" />폴더</button>
+                      <button onClick={()=>{activateApp("mypc");setContextMenuOpen(false);notify("파일 탐색기의 새로 만들기에서 텍스트 문서를 만들어 보세요.");}} className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50"><AppIcon name="text-file" size={16} className="inline-block mr-2" />텍스트 문서</button>
+                      <button disabled title="이 연습 버전에서는 지원하지 않습니다." className="w-full text-left px-3 py-1.5 text-xs text-gray-400"><Link size={16} className="inline-block mr-2" />바로 가기</button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
               <div className="border-t border-gray-100 my-0.5" />
-              <CtxItem icon="🖥️" label="디스플레이 설정" onClick={()=>openSettings("display")} />
-              <CtxItem icon="🎨" label="개인 설정" onClick={()=>openSettings("background")} />
+              <CtxItem icon={<AppIcon name="desktop" size={16} />} label="디스플레이 설정" onClick={()=>openSettings("display")} />
+              <CtxItem icon={<WindowsGlyph name="settings" size={16} />} label="개인 설정" onClick={()=>openSettings("background")} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1033,18 +1035,18 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
               style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
               onClick={(e) => e.stopPropagation()}
             >
-              <CtxItem icon="📋" label="복사" />
-              <CtxItem icon="✂️" label="잘라내기" />
-              <CtxItem icon="✏️" label="이름 바꾸기" />
+              <CtxItem icon={<Copy size={16} />} label="복사" />
+              <CtxItem icon={<Scissors size={16} />} label="잘라내기" />
+              <CtxItem icon={<Pencil size={16} />} label="이름 바꾸기" />
               <div className="border-t border-gray-100 my-0.5" />
               <button
                 onClick={handleDeleteFile}
                 className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 hover:bg-red-50 text-red-600 font-bold bg-red-50 animate-pulse-highlight"
               >
-                <Trash2 className="w-3 h-3" /> 삭제
+                <AppIcon name="recycle-bin" size={16} /> 삭제
               </button>
               <div className="border-t border-gray-100 my-0.5" />
-              <CtxItem icon="📋" label="속성" />
+              <CtxItem icon={<Info size={16} />} label="속성" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1060,9 +1062,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
               style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
               onClick={(e) => e.stopPropagation()}
             >
-              <CtxItem icon="📂" label="열기" />
-              <CtxItem icon="📋" label="복사" />
-              <CtxItem icon="✂️" label="잘라내기" />
+              <CtxItem icon={<AppIcon name="folder" size={16} />} label="열기" />
+              <CtxItem icon={<Copy size={16} />} label="복사" />
+              <CtxItem icon={<Scissors size={16} />} label="잘라내기" />
               <div className="border-t border-gray-100 my-0.5" />
               <button
                 onClick={handleRenameFolder}
@@ -1070,12 +1072,12 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                   currentQuestType === "rename-folder" ? "bg-yellow-50 text-blue-600 font-bold animate-pulse-highlight" : "text-gray-700"
                 }`}
               >
-                <span>✏️</span> 이름 바꾸기
+                <Pencil size={16} aria-hidden="true" /> 이름 바꾸기
                 <span className="ml-auto text-[10px] text-gray-400">F2</span>
               </button>
               <div className="border-t border-gray-100 my-0.5" />
-              <CtxItem icon="🗑️" label="삭제" />
-              <CtxItem icon="📋" label="속성" />
+              <CtxItem icon={<AppIcon name="recycle-bin" size={16} />} label="삭제" />
+              <CtxItem icon={<Info size={16} />} label="속성" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1116,7 +1118,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             <PowerPointWindow active={openApp==="ppt"} onClose={() => handleCloseApp("ppt")} onMinimize={() => handleMinimize("ppt")} currentQuestType={currentQuestType} onQuestComplete={triggerSuccess} /></div>
           )}
           {runningApps.includes('settings') && <div key="settings" className="absolute inset-0" style={{display:openApp==='settings'?'block':'none'}}><SettingsWindow onClose={()=>handleCloseApp('settings')} onMinimize={()=>handleMinimize('settings')} initialPage={settingsPage} onBackgroundChange={setBackground} onVolumeChange={setVolume}/></div>}
-          {runningApps.includes('notepad') && <div key="notepad" className="absolute inset-0" style={{display:openApp==='notepad'?'block':'none'}}><WindowFrame title="제목 없음 - 메모장" icon={<FileText size={16}/>} onClose={()=>handleCloseApp('notepad')} onMinimize={()=>handleMinimize('notepad')} toolbar={<div className="flex gap-3 px-3 py-2 text-xs"><button onClick={()=>{try{localStorage.setItem('win-notepad',notepad);notify('메모를 저장했어요.');}catch{notify('저장 공간을 확인하세요.');}}}>저장</button><button onClick={()=>{try{setNotepad(localStorage.getItem('win-notepad')||'');}catch{notify('저장된 메모를 읽을 수 없어요.');}}}>열기</button><button onClick={()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([notepad],{type:'text/plain;charset=utf-8'}));a.download='탐험대 메모.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}}>텍스트 파일 다운로드</button></div>}><textarea aria-label="메모장 문서" onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();try{localStorage.setItem("win-notepad",notepad);notify("메모를 저장했어요.");}catch{notify("저장할 수 없습니다. 텍스트 파일 다운로드를 이용하세요.");}}}} placeholder="여기에 글을 입력하세요." className="flex-1 min-h-64 p-4 resize-none outline-none select-text" value={notepad} onChange={e=>setNotepad(e.target.value)}/></WindowFrame></div>}
+          {runningApps.includes('notepad') && <div key="notepad" className="absolute inset-0" style={{display:openApp==='notepad'?'block':'none'}}><WindowFrame title="제목 없음 - 메모장" icon={<AppIcon name="notepad" size={16}/>}  onClose={()=>handleCloseApp('notepad')} onMinimize={()=>handleMinimize('notepad')} toolbar={<div className="flex gap-3 px-3 py-2 text-xs"><button onClick={()=>{try{localStorage.setItem('win-notepad',notepad);notify('메모를 저장했어요.');}catch{notify('저장 공간을 확인하세요.');}}}>저장</button><button onClick={()=>{try{setNotepad(localStorage.getItem('win-notepad')||'');}catch{notify('저장된 메모를 읽을 수 없어요.');}}}>열기</button><button onClick={()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([notepad],{type:'text/plain;charset=utf-8'}));a.download='탐험대 메모.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}}>텍스트 파일 다운로드</button></div>}><textarea aria-label="메모장 문서" onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();try{localStorage.setItem("win-notepad",notepad);notify("메모를 저장했어요.");}catch{notify("저장할 수 없습니다. 텍스트 파일 다운로드를 이용하세요.");}}}} placeholder="여기에 글을 입력하세요." className="flex-1 min-h-64 p-4 resize-none outline-none select-text" value={notepad} onChange={e=>setNotepad(e.target.value)}/></WindowFrame></div>}
         </AnimatePresence>
       </div>
 
@@ -1129,13 +1131,14 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}
-            className="absolute bottom-14 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-[min(384px,calc(100vw-1rem))] p-3 sm:p-5 z-40 max-h-[calc(100vh-4rem)] overflow-y-auto"
+            style={{ x: "-50%" }}
+            className="absolute bottom-14 left-1/2 bg-white/95 backdrop-blur-xl rounded-xl border border-gray-200 shadow-2xl w-[min(384px,calc(100vw-1rem))] p-3 sm:p-5 z-40 max-h-[calc(100%-4rem)] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className={`flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4 ${
               currentQuestType === "start-search" ? "ring-2 ring-yellow-400 animate-pulse-highlight" : ""
             }`}>
-              <Search className="w-4 h-4 text-gray-400" />
+              <WindowsGlyph name="search" size={16} className="text-gray-500" />
               <input
                 value={startSearch}
                 onChange={(e) => setStartSearch(e.target.value)}
@@ -1146,20 +1149,20 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             </div>
             {currentQuestType === "start-search" && startSearch.trim().length > 0 && (
               <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200 text-[11px] text-blue-700">
-                🔍 "{startSearch}" 검색 결과
+                <WindowsGlyph name="search" size={14} className="inline-block mr-1" /> "{startSearch}" 검색 결과
               </div>
             )}
             <p className="text-xs font-medium text-gray-600 mb-2">고정됨</p>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {[
-                { icon: <EdgeIcon className="w-6 h-6" />, label: "Edge" },
-                { icon: <HangulIcon className="w-6 h-6" />, label: "한글" },
-                { icon: <ExcelIcon className="w-6 h-6" />, label: "Excel" },
-                { icon: <PptIcon className="w-6 h-6" />, label: "PowerPoint" },
-                { icon: <FolderOpen className="w-6 h-6 text-yellow-500" />, label: "파일 탐색기" },
-                { icon: <Monitor className="w-6 h-6 text-blue-500" />, label: "설정" },
-                { icon: <FileText className="w-6 h-6 text-blue-400" />, label: "메모장" },
-                { icon: <Folder className="w-6 h-6 text-yellow-500" />, label: "문서" },
+                { icon: <AppIcon name="edge" size={32} />, label: "Edge" },
+                { icon: <AppIcon name="hangul" size={32} />, label: "한글" },
+                { icon: <AppIcon name="excel" size={32} />, label: "Excel" },
+                { icon: <AppIcon name="powerpoint" size={32} />, label: "PowerPoint" },
+                { icon: <AppIcon name="file-explorer" size={32} />, label: "파일 탐색기" },
+                { icon: <AppIcon name="settings" size={32} />, label: "설정" },
+                { icon: <AppIcon name="notepad" size={32} />, label: "메모장" },
+                { icon: <AppIcon name="documents" size={32} />, label: "문서" },
               ].filter(app=>!startSearch.trim()||app.label.toLowerCase().includes(startSearch.trim().toLowerCase())).map((app) => (
                 <button key={app.label} onClick={()=>{const apps:Record<string,OpenApp>={Edge:'edge','한글':'hangul',Excel:'excel',PowerPoint:'ppt','파일 탐색기':'mypc','설정':'settings','메모장':'notepad','문서':'mypc'};if(app.label==='문서'){try{localStorage.setItem('win-explorer-open-folder','문서');}catch{}window.dispatchEvent(new CustomEvent('win-open-folder',{detail:'문서'}));}activateApp(apps[app.label]||'mypc');}} className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-gray-100 transition-colors">
                   {app.icon}
@@ -1180,7 +1183,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                   currentQuestType === "shutdown" ? "animate-pulse-highlight bg-red-50" : ""
                 }`}
               >
-                <Power className="w-4 h-4 text-gray-600" />
+                <WindowsGlyph name="power" size={20} className="text-gray-700" />
               </button>
             </div>
             <AnimatePresence>
@@ -1197,7 +1200,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                     className={`w-full text-left px-3 py-2 text-xs hover:bg-red-50 ${
                       currentQuestType === "shutdown" ? "bg-red-50 font-bold text-red-600 animate-pulse-highlight" : "text-gray-700"
                     }`}
-                  >🔴 시스템 종료</button>
+                  ><WindowsGlyph name="power" size={16} className="inline-block mr-2" />시스템 종료</button>
                   <button onClick={()=>{setOpenApp(null);setRunningApps([]);setStartMenuOpen(false);setShutdownStep(0);notify("연습용 PC를 다시 시작했어요. 저장한 파일은 남아 있어요.");}} className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-100">다시 시작</button>
                 </motion.div>
               )}
@@ -1220,36 +1223,31 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
       )}
 
       {/* Taskbar */}
-      <div className="h-12 shrink-0 bg-[#e8f0fc]/95 backdrop-blur-xl flex items-center justify-center px-3 z-50 border-t border-white/10">
-        <div className="flex items-center gap-1">
+      <div className="win-native-taskbar shrink-0 bg-[#e8f0fc]/95 backdrop-blur-xl z-50 border-t border-white/10">
+        <div className="win-native-taskbar-apps" aria-label="작업 표시줄 앱">
           <button
             aria-label="시작" title="시작" onClick={(e) => { e.stopPropagation(); handleStartClick(); }}
             className={`p-2 rounded-md hover:bg-white/10 transition-colors ${isHighlighted("start") ? "animate-pulse-highlight" : ""}`}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20">
-              <rect x="1" y="1" width="8" height="8" rx="1.5" fill="#4FC3F7" />
-              <rect x="11" y="1" width="8" height="8" rx="1.5" fill="#4FC3F7" opacity="0.7" />
-              <rect x="1" y="11" width="8" height="8" rx="1.5" fill="#4FC3F7" opacity="0.7" />
-              <rect x="11" y="11" width="8" height="8" rx="1.5" fill="#4FC3F7" opacity="0.5" />
-            </svg>
+            <AppIcon name="start" size={24} />
           </button>
           <button title="검색" aria-label="검색" onClick={()=>{setStartMenuOpen(true);setStartSearch('');}} className="p-2 rounded-md hover:bg-white/50 transition-colors">
-            <Search className="w-5 h-5 text-gray-700" />
+            <WindowsGlyph name="search" size={24} className="text-gray-700" />
           </button>
           <button title="파일 탐색기" aria-label="파일 탐색기" onClick={()=>activateApp('mypc')} className="p-2 rounded-md hover:bg-white/50 transition-colors">
-            <FolderOpen className="w-5 h-5 text-yellow-400" />
+            <AppIcon name="file-explorer" size={24} />
           </button>
           <button aria-label="Microsoft Edge" title="Microsoft Edge"
             onClick={(e) => { e.stopPropagation(); handleBrowserClick(); }}
             className={`p-2 rounded-md hover:bg-white/10 transition-colors ${isHighlighted("edge") ? "animate-pulse-highlight" : ""}`}
           >
-            <EdgeIcon className="w-5 h-5" />
+            <AppIcon name="edge" size={24} />
           </button>
-          <button title="작업 보기" aria-label="작업 보기" onClick={()=>setTaskView(v=>!v)} className="p-2 hover:bg-white/60 rounded"><Monitor size={18}/></button>
-          {runningApps.filter(a=>!['edge','mypc'].includes(a)).map(a=><button key={a} title={a} aria-label={{hangul:'한글',excel:'Excel',ppt:'PowerPoint',settings:'설정',notepad:'메모장'}[a]||a} onClick={()=>setOpenApp(openApp===a?null:a)} className={`px-2 py-1 rounded text-xs ${openApp===a?'bg-white border-b-2 border-blue-600':'hover:bg-white/50'}`}>{a==='hangul'?<HangulIcon className="w-5 h-5"/>:a==='excel'?<ExcelIcon className="w-5 h-5"/>:a==='ppt'?<PptIcon className="w-5 h-5"/>:a==='settings'?<SettingsIcon size={18}/>:<FileText size={18}/>}</button>)}
+          <button title="작업 보기" aria-label="작업 보기" onClick={()=>setTaskView(v=>!v)} className="p-2 hover:bg-white/60 rounded"><WindowsGlyph name="task-view" size={24}/></button>
+          {runningApps.filter(a=>!['edge','mypc'].includes(a)).map(a=><button key={a} title={a} aria-label={{hangul:'한글',excel:'Excel',ppt:'PowerPoint',settings:'설정',notepad:'메모장'}[a]||a} onClick={()=>setOpenApp(openApp===a?null:a)} className={`px-2 py-1 rounded text-xs ${openApp===a?'bg-white border-b-2 border-blue-600':'hover:bg-white/50'}`}><AppIcon name={a==='hangul'?'hangul':a==='excel'?'excel':a==='ppt'?'powerpoint':a==='settings'?'settings':'notepad'} size={24}/></button>)}
 
         </div>
-        <div className="absolute right-3 flex items-center gap-2 text-gray-700 text-xs">
+        <div className="win-native-taskbar-tray flex items-center gap-1 text-gray-700 text-xs">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -1262,9 +1260,9 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
             }`}
             title="빠른 설정" aria-label="빠른 설정"
           >
-            <Wifi className={`w-4 h-4 ${wifiConnected ? "text-blue-600" : ""}`} />
-            {volume === 0 ? <VolumeX className="w-4 h-4" /> : volume < 50 ? <Volume1 className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            <span>🔋</span>
+            <WindowsGlyph name={wifiConnected && wifiEnabled && !airplane ? "wifi" : "wifi-off"} size={16} className={wifiConnected ? "text-blue-600" : ""} />
+            <WindowsGlyph name={volume === 0 ? "volume-mute" : volume < 50 ? "volume-low" : "volume"} size={16} />
+            <WindowsGlyph name="battery" size={18} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setCalendarOpen(o => !o); }}
@@ -1291,24 +1289,24 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                     {/* Tile grid */}
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       <QSTile
-                        icon={<Wifi className="w-5 h-5" />}
+                        icon={<WindowsGlyph name="wifi" size={20} />}
                         label={wifiConnected ? wifiSelected || "Wi-Fi" : "Wi-Fi"}
                         active={wifiConnected}
                         chevron
                         highlight={isHighlighted("wifi")}
                         onClick={() => setWifiSubOpen(true)} onToggle={()=>{setWifiEnabled(v=>!v);setWifiConnected(false);updateWindowsPreferences({wifi:!wifiEnabled,network:""});}}
                       />
-                      <QSTile icon={<Bluetooth className="w-5 h-5" />} label={bluetooth?"Bluetooth 켜짐":"Bluetooth"} active={bluetooth} onClick={()=>{setBluetooth(v=>!v);updateWindowsPreferences({bluetooth:!bluetooth});}} />
-                      <QSTile icon={<Plane className="w-5 h-5" />} label="비행기 모드" active={airplane} onClick={()=>{setAirplane(v=>!v);setWifiConnected(false);updateWindowsPreferences({wifi:airplane,network:""});}} />
-                      <QSTile icon={<Moon className="w-5 h-5" />} label="야간 모드" active={nightLight} onClick={()=>setNightLight(v=>!v)} />
-                      <QSTile icon={<Accessibility className="w-5 h-5" />} label="접근성" chevron onClick={()=>openSettings("accessibility")} />
-                      <QSTile icon={<Cast className="w-5 h-5" />} label="디스플레이" chevron onClick={()=>openSettings("display")} />
+                      <QSTile icon={<WindowsGlyph name="bluetooth" size={20} />} label={bluetooth?"Bluetooth 켜짐":"Bluetooth"} active={bluetooth} onClick={()=>{setBluetooth(v=>!v);updateWindowsPreferences({bluetooth:!bluetooth});}} />
+                      <QSTile icon={<WindowsGlyph name="airplane" size={20} />} label="비행기 모드" active={airplane} onClick={()=>{setAirplane(v=>!v);setWifiConnected(false);updateWindowsPreferences({wifi:airplane,network:""});}} />
+                      <QSTile icon={<WindowsGlyph name="night-light" size={20} />} label="야간 모드" active={nightLight} onClick={()=>setNightLight(v=>!v)} />
+                      <QSTile icon={<WindowsGlyph name="accessibility" size={20} />} label="접근성" chevron onClick={()=>openSettings("accessibility")} />
+                      <QSTile icon={<WindowsGlyph name="cast" size={20} />} label="디스플레이" chevron onClick={()=>openSettings("display")} />
                     </div>
-                    <label className="flex items-center gap-3 text-xs mb-3">☀ <input aria-label="밝기" className="flex-1 accent-blue-600" type="range" min="20" max="100" value={brightness} onChange={e=>{setBrightness(Number(e.target.value));updateWindowsPreferences({brightness:Number(e.target.value)});}}/><span>{brightness}</span></label>
+                    <label className="flex items-center gap-3 text-xs mb-3"> <WindowsGlyph name="brightness" size={20} /> <input aria-label="밝기" className="flex-1 accent-blue-600" type="range" min="20" max="100" value={brightness} onChange={e=>{setBrightness(Number(e.target.value));updateWindowsPreferences({brightness:Number(e.target.value)});}}/><span>{brightness}</span></label>
                     {/* Volume slider */}
                     <div className="border-t border-gray-200 pt-3">
                       <div className="flex items-center gap-3">
-                        <button aria-label={volume===0?"음소거 해제":"음소거"} title={volume===0?"음소거 해제":"음소거"} onClick={()=>{const next=volume===0?lastVolume||30:0;if(volume>0)setLastVolume(volume);setVolume(next);updateWindowsPreferences({volume:next});}}>{volume === 0 ? <VolumeX className="w-5 h-5 text-gray-700" /> : volume < 50 ? <Volume1 className="w-5 h-5 text-gray-700" /> : <Volume2 className="w-5 h-5 text-gray-700" />}</button>
+                        <button aria-label={volume===0?"음소거 해제":"음소거"} title={volume===0?"음소거 해제":"음소거"} onClick={()=>{const next=volume===0?lastVolume||30:0;if(volume>0)setLastVolume(volume);setVolume(next);updateWindowsPreferences({volume:next});}}><WindowsGlyph name={volume === 0 ? "volume-mute" : volume < 50 ? "volume-low" : "volume"} size={20} className="text-gray-700" /></button>
                         <input
                           type="range"
                           min={0}
@@ -1325,7 +1323,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                     </div>
                     <div className="flex justify-end pt-3">
                       <button aria-label="모든 설정" title="모든 설정" onClick={()=>openSettings()} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
-                        <SettingsIcon className="w-4 h-4 text-gray-500" />
+                        <WindowsGlyph name="settings" size={20} className="text-gray-600" />
                       </button>
                     </div>
                   </>
@@ -1335,7 +1333,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                       <button onClick={() => { setWifiSubOpen(false); if(!wifiConnected)setWifiSelected(null); setWifiPassword(""); setWifiError(""); }} className="p-1 hover:bg-gray-100 rounded">
                         <ChevronLeft className="w-4 h-4 text-gray-600" />
                       </button>
-                      <Wifi className="w-4 h-4 text-blue-500" />
+                      <WindowsGlyph name="wifi" size={16} className="text-blue-500" />
                       <span className="font-display text-sm text-gray-800">Wi-Fi 네트워크</span>
                     </div>
                     <label className="flex items-center justify-between text-sm mb-3">Wi-Fi <input aria-label="Wi-Fi 켜기" type="checkbox" checked={wifiEnabled&&!airplane} onChange={e=>{setWifiEnabled(e.target.checked);updateWindowsPreferences({wifi:e.target.checked,...(!e.target.checked?{network:""}:{})});setAirplane(false);if(!e.target.checked)setWifiConnected(false);}}/></label>
@@ -1354,7 +1352,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
                               net.target && currentQuestType === "wifi-connect" ? "animate-pulse-highlight bg-yellow-50" : ""
                             }`}
                           >
-                            <Wifi className={`w-4 h-4 ${net.strength >= 3 ? "text-blue-500" : "text-gray-400"}`} />
+                            <WindowsGlyph name="wifi" size={16} className={net.strength >= 3 ? "text-blue-500" : "text-gray-400"} />
                             <span className="text-xs text-gray-800 flex-1">{net.name}</span>
                             {net.secure && <Lock className="w-3 h-3 text-gray-400" />}
                           </button>
@@ -1431,7 +1429,7 @@ const WinDesktop = ({ currentQuestType, onQuestComplete, instruction, freePracti
       {taskView&&<div className="absolute inset-0 z-[95] bg-slate-800/80 backdrop-blur-md p-8 flex flex-col items-center justify-center gap-4" onClick={()=>setTaskView(false)}><h2 className="text-white text-xl">열려 있는 앱</h2><div className="flex flex-wrap gap-3">{runningApps.map(a=><button key={a} onClick={e=>{e.stopPropagation();setOpenApp(a);setTaskView(false);if(currentQuestType==='shortcut-alt-tab'&&runningApps.length>=2&&a!==openApp)triggerSuccess();}} className="bg-white rounded-xl p-6 shadow">{{mypc:'파일 탐색기',edge:'Edge',hangul:'한글',excel:'Excel',ppt:'PowerPoint',settings:'설정',notepad:'메모장'}[a]}</button>)}</div><p className="text-white/80 text-xs">실제 Alt+Tab은 기기가 처리할 수 있어요. 이 화면에서 앱을 선택해 전환하세요.</p></div>}
       {nightLight&&<div className="absolute inset-0 bg-amber-400/10 pointer-events-none z-[90]"/>}
       {notice&&<div role="status" className="absolute bottom-16 left-1/2 -translate-x-1/2 z-[110] bg-white shadow-xl border rounded-xl px-5 py-3 text-sm max-w-[90%]">{notice}</div>}
-      {powerState!=='on'&&<div className="absolute inset-0 z-[96] bg-[#102447] text-white flex flex-col gap-5 items-center justify-center"><Power size={42}/><h2 className="text-2xl">{powerState==='off'?'연습용 PC가 종료되었습니다':'절전 모드입니다'}</h2><p className="text-sm">실제 컴퓨터 전원은 바뀌지 않습니다.</p><button className="bg-white text-blue-800 rounded-lg px-6 py-3" onClick={()=>{setPowerState('on');setShutdownStep(0);}}>연습용 PC 켜기</button></div>}
+      {powerState!=='on'&&<div className="absolute inset-0 z-[96] bg-[#102447] text-white flex flex-col gap-5 items-center justify-center"><WindowsGlyph name="power" size={42}/><h2 className="text-2xl">{powerState==='off'?'연습용 PC가 종료되었습니다':'절전 모드입니다'}</h2><p className="text-sm">실제 컴퓨터 전원은 바뀌지 않습니다.</p><button className="bg-white text-blue-800 rounded-lg px-6 py-3" onClick={()=>{setPowerState('on');setShutdownStep(0);}}>연습용 PC 켜기</button></div>}
       {/* Success overlay */}
       <AnimatePresence>
         {showSuccess && (
@@ -1482,14 +1480,14 @@ const DesktopIcon = ({
       onClick(e);
     }}
   >
-    <div className="w-10 h-10 flex items-center justify-center">{icon}</div>
+    <div className="win-native-desktop-icon-art">{icon}</div>
     <span className="text-[10px] text-white text-center leading-tight drop-shadow-sm">{label}</span>
   </div>
 );
 
-const CtxItem = ({ icon, label, onClick }: { icon: string; label: string; onClick?:()=>void }) => (
+const CtxItem = ({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?:()=>void }) => (
   <button onClick={onClick} disabled={!onClick} title={!onClick?"파일 탐색기에서 연습할 수 있어요.":label} className="w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 text-gray-700 hover:bg-blue-50 transition-colors">
-    <span>{icon}</span> {label}
+    <span className="flex shrink-0 items-center justify-center" style={{width:16,height:16}} aria-hidden="true">{icon}</span> {label}
   </button>
 );
 

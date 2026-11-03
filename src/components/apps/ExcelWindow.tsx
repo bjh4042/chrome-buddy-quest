@@ -4,10 +4,10 @@ import WindowFrame from './WindowFrame';
 import type { QuestType } from '@/types/quest';
 import { useQuestEmit } from '@/features/quests/useQuestEngine';
 import { cellPosition, colName, evaluateCell, exportCsv, rangeCells, type CellMap } from '@/lib/excelEngine';
-import excelIconImg from '@/assets/excel-icon.png';
+import { AppIcon } from "../icons/WindowsIcon";
 
 interface ExcelWindowProps { onClose:()=>void; onMinimize?:()=>void; currentQuestType:QuestType; onQuestComplete:()=>void; }
-const ExcelIcon=({className='w-4 h-4'}:{className?:string})=><img src={excelIconImg} alt="Excel" className={`${className} object-contain`}/>;
+const ExcelIcon = ({ className = "w-4 h-4" }: { className?: string }) => <AppIcon name="excel" className={className} alt="Excel" />;
 type CellStyle={bold?:boolean;italic?:boolean;underline?:boolean;align?:'left'|'center'|'right';font?:string;size?:number;fill?:string;format?:'general'|'number'|'won'|'percent';};
 type Sheet={id:string;name:string;cells:CellMap;styles:Record<string,CellStyle>};
 type Workbook={sheets:Sheet[];active:string;name:string;};

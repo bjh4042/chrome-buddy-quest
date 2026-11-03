@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Accessibility, ArrowLeft, Bluetooth, Check, ChevronRight, CircleHelp, Home, ImageIcon, Info, Laptop, LockKeyhole, Monitor, Palette, Search, Settings, Shield, Sun, Upload, UserRound, Volume2, Wifi, X } from "lucide-react";
 import WindowFrame from "./WindowFrame";
+import { AppIcon } from "../icons/WindowsIcon";
 import ViewportDialog from "./ViewportDialog";
 import "./SettingsWindow.css";
 import { useQuestEmit } from "@/features/quests/useQuestEngine";
@@ -171,7 +172,7 @@ export default function SettingsWindow({ onClose, onMinimize, initialPage = "hom
   const isNavActive = (id: string) => id === page || id === "system" && ["display", "sound", "about"].includes(page);
   const matchingPages = Object.entries(pageTitle).filter(([id, title]) => title.toLocaleLowerCase().includes(search.toLocaleLowerCase()) || ({ accounts: "비밀번호 암호 잠금 PIN", background: "배경화면 사진", display: "밝기 화면", sound: "볼륨 음량 소리", privacy: "카메라 마이크 권한", network: "와이파이 Wi-Fi" }[id] || "").toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   void authRevision;
-  return <WindowFrame title="설정" icon={<Settings className="w-4 h-4 text-slate-600" />} onClose={onClose} onMinimize={onMinimize}>
+  return <WindowFrame title="설정" icon={<AppIcon name="settings" className="w-4 h-4" />} onClose={onClose} onMinimize={onMinimize}>
     <div className={`ws-settings ${prefs.dark ? "ws-dark" : ""}`} style={{ fontSize: `${prefs.scale}%` }}>
       <aside className="ws-sidebar">
         <div className="ws-profile"><span className="ws-avatar"><UserRound size={27} /></span><div><strong>탐험대원</strong><small>로컬 연습 계정</small></div></div>

@@ -9,10 +9,10 @@ import type { LearningEvent } from '@/features/quests/questEvents';
 import { useQuestEmit } from '@/features/quests/useQuestEngine';
 import { getFontStack } from '@/lib/fontStacks';
 import { baseStyle, createSlide, formatRange, parsePresentation, replaceText, slideChecklist, styleAt, type Presentation, type RichText, type Slide, type TextStyle } from '@/lib/pptModel';
-import pptIconImg from '@/assets/ppt-icon.png';
+import { AppIcon } from "../icons/WindowsIcon";
 
 interface PowerPointWindowProps { active?:boolean; onClose:()=>void; onMinimize?:()=>void; currentQuestType:QuestType; onQuestComplete:()=>void; }
-const PptIcon=({className='w-4 h-4'}:{className?:string})=><img src={pptIconImg} alt="PowerPoint" className={`${className} object-contain`}/>;
+const PptIcon = ({ className = "w-4 h-4" }: { className?: string }) => <AppIcon name="powerpoint" className={className} alt="PowerPoint" />;
 const KEY='win-explorer-presentation-v1';
 const fonts=['맑은 고딕','바탕','돋움','굴림','궁서','나눔고딕'];
 const sizes=[10,12,14,16,18,20,24,28,32,36,44,54,64,72];

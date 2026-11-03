@@ -7,10 +7,10 @@ import ImagePickerDialog from "./ImagePickerDialog";
 import type { QuestType } from "@/types/quest";
 import { getFontStack } from "@/lib/fontStacks";
 import { cleanHangulHTML, loadHangulDocument, type HangulDocument, emptyHangulDocument } from "@/lib/hangulDocument";
-import hangulIconImg from "@/assets/hangul-icon.png";
+import { AppIcon } from "../icons/WindowsIcon";
 
 interface HangulWindowProps {onClose:()=>void;onMinimize?:()=>void;currentQuestType:QuestType;onQuestComplete:()=>void;}
-const HangulIcon=({className="w-4 h-4"}:{className?:string})=><img src={hangulIconImg} alt="한글" className={`${className} object-contain`} />;
+const HangulIcon = ({ className = "w-4 h-4" }: { className?: string }) => <AppIcon name="hangul" className={className} alt="한글" />;
 const DRAFT_KEY="win-explorer-hangul-draft-v3", SAVES_KEY="win-explorer-hangul-files-v3";
 const fontSizes=["8","9","10","11","12","14","16","18","20","24","28","36"];
 const fonts=["함초롬바탕","맑은 고딕","바탕","돋움","굴림","궁서"];
