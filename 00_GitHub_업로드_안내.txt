@@ -1,0 +1,90 @@
+﻿윈도우 탐험대 — GitHub Pages 업로드 안내
+
+대상 저장소: bjh4042/chrome-buddy-quest
+접속 주소: https://bjh4042.github.io/chrome-buddy-quest/
+
+이 ZIP에는 GitHub Pages용 경로 설정과 자동 배포 파일이 반영되어 있습니다.
+소스 파일을 따로 열어 코드를 수정할 필요 없이 아래 순서대로 진행하세요.
+파일이 많으므로 GitHub Desktop으로 한 번에 반영하는 방법을 권장합니다.
+
+1. ZIP 압축 풀기
+
+받은 ZIP을 우클릭하여 ‘모두 압축 풀기’를 선택하세요.
+압축을 푼 폴더에서 package.json, package-lock.json, index.html,
+src, public, .github 등이 있는 위치를 찾으세요.
+
+2. GitHub Desktop에서 저장소 복제 후 덮어복사
+
+처음 설정하는 경우 GitHub Desktop에 로그인한 뒤
+File → Clone repository → URL에서 다음 주소를 입력하세요.
+https://github.com/bjh4042/chrome-buddy-quest
+
+Local path에 내 컴퓨터에서 사용할 위치를 정하고 Clone을 누르세요.
+이미 이 저장소를 복제했다면 기존 저장소를 선택하고 Fetch origin으로
+최신 상태를 확인하세요. Current branch는 main이어야 합니다.
+
+GitHub Desktop의 Repository → Show in Explorer로 저장소 폴더를 여세요.
+압축을 푼 폴더의 ‘내용물 전체’를 이 chrome-buddy-quest 폴더에 복사하고,
+같은 이름의 파일은 덮어쓰세요. 기존 폴더 안의 파일과 합치는 방식입니다.
+
+복사 후 저장소 폴더 바로 아래에 다음 항목들이 있어야 합니다.
+  .github
+  src
+  public
+  package.json
+  package-lock.json
+  index.html
+  vite.config.ts
+  그 밖의 설정 파일과 안내 문서
+
+압축을 푼 바깥 폴더 자체를 넣어 폴더가 한 겹 더 생기지 않게 하세요.
+기존 저장소의 .git 폴더는 그대로 보존하세요.
+자동 배포 파일이 담긴 .github 폴더도 반드시 복사해야 합니다.
+보이지 않으면 파일 탐색기에서 보기 → 표시 → 숨긴 항목을 확인하세요.
+node_modules와 dist 폴더는 업로드 대상에서 제외합니다.
+
+3. Commit 후 Push
+
+GitHub Desktop으로 돌아오면 Changes에 변경 파일들이 표시됩니다.
+Summary에 ‘GitHub Pages 배포 설정 반영’처럼 변경 내용을 적고
+Commit to main을 누른 다음 Push origin을 누르세요.
+Push가 끝날 때까지 기다리세요.
+
+4. GitHub Pages 배포 방식 한 번 선택
+
+브라우저에서 아래 저장소를 여세요.
+https://github.com/bjh4042/chrome-buddy-quest
+
+Settings → Pages → Build and deployment에서
+Source를 ‘GitHub Actions’로 선택하세요.
+이 설정은 처음 한 번만 하면 됩니다.
+
+5. 자동 배포 완료 확인
+
+저장소 상단 Actions 탭에서 ‘Deploy Windows Expedition’을 여세요.
+가장 최근 실행이 초록색 체크 표시로 완료되는지 확인하세요.
+아직 실행이 없다면 왼쪽의 해당 workflow를 선택하고
+Run workflow에서 main 브랜치를 골라 실행하세요.
+
+빨간색 실패 표시가 나오면 해당 실행의 실패한 단계를 열어 확인하세요.
+실패한 화면이나 오류 문구를 함께 전달하면 원인을 확인할 수 있습니다.
+
+6. 웹앱 접속
+
+배포가 성공하면 아래 주소를 여세요.
+https://bjh4042.github.io/chrome-buddy-quest/
+
+기존 화면이 남아 있으면 Windows에서 Ctrl+F5로 새로고침하세요.
+시작 버튼, 교사용 실습 안내, 그림과 아이콘이 보이는지 확인하세요.
+
+이후 업데이트
+
+이후에도 같은 로컬 저장소에 수정 파일을 반영하고
+GitHub Desktop에서 Commit → Push origin을 하면 자동 배포됩니다.
+배포 완료 여부는 Actions의 초록색 체크로 확인하세요.
+
+실행 방법 참고
+
+내 컴퓨터의 index.html을 더블클릭하는 방식은 이 웹앱의 실행 경로가
+아닙니다. 배포된 위 주소로 접속하세요. 개발용 로컬 실행은 README의
+npm 설치·실행 안내를 따릅니다.

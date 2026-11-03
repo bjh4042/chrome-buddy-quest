@@ -1,6 +1,19 @@
-# 윈도우 탐험대 — 교실 실습 개선판 v1.1
+# 윈도우 탐험대 — 교실 실습 개선판 v1.1.1
 
 2026-11-02. Windows 11 26H2의 기본 메뉴 명칭과 작업 흐름을 참고한 학생용 학습 시뮬레이터입니다. 원본 React/Vite 프로젝트를 유지하면서 기존 프로그램과 학습 판정을 고쳤습니다.
+
+## GitHub Pages 배포 완성본 (2026-11-03)
+
+현재 GitHub main의 `828c21dcf768a5548a3f05f6168c7ca1b5913caa`를 기준으로 배포 경로를 수정했습니다. `src/App.tsx`의 기본 경로, 직접 `index.html` 접속, 시작 화면의 교사용 안내, 안내에서 돌아가기와 404 화면의 복귀 링크를 `/chrome-buddy-quest/` 아래에서 사용할 수 있습니다.
+
+`.github/workflows/deploy.yml`이 main에 Push될 때 의존성 설치 → 타입 검사 → 회귀 테스트 → GitHub Pages 빌드 → 산출물 경로 검사 → dist 게시를 실행합니다. GitHub 저장소의 Settings → Pages → Source는 **GitHub Actions**로 한 번 선택해야 합니다. 이후 같은 주소로 자동 배포합니다.
+
+- 실행 주소: https://bjh4042.github.io/chrome-buddy-quest/
+- 교사용 안내: https://bjh4042.github.io/chrome-buddy-quest/guide.html
+- 배포 전용 로컬 빌드: `npm run build:pages`
+- 일반 루트 주소용 빌드: `npm run build`
+
+압축 파일에는 업로드할 소스가 들어 있습니다. `.github` 폴더를 포함한 모든 내용물을 복제한 저장소 폴더에 덮어 복사합니다. `dist`는 GitHub Actions가 생성하며 ZIP에는 포함하지 않습니다. 상세 업로드 절차는 `00_GitHub_업로드_안내.txt`를 참고하세요.
 
 ## 시작 화면 Windows 11 테마 (2026-11-03)
 

@@ -94,7 +94,7 @@ const StartScreen = ({
 
         <footer className="welcome-footer">
           <span className="welcome-profile"><span><UserRound size={16} aria-hidden="true" /></span>우리 반 컴퓨터 교실</span>
-          <a href="/guide.html" target="_blank" rel="noopener noreferrer"><BookOpen size={15} aria-hidden="true" /> 교사용 실습 안내<span className="sr-only"> 열기 (새 창)</span></a>
+          <a href={`${import.meta.env.BASE_URL}guide.html`} target="_blank" rel="noopener noreferrer"><BookOpen size={15} aria-hidden="true" /> 교사용 실습 안내<span className="sr-only"> 열기 (새 창)</span></a>
         </footer>
       </section>
       <p className="welcome-caption">한 번에 한 주제씩, 나의 속도로 탐험해요.</p>
